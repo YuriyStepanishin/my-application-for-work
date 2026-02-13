@@ -1,0 +1,24 @@
+.app {
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: linear-gradient(180deg, #f3f4f6, #e5e7eb);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+
+  background: white;
+
+  padding: 24px;
+
+  border-radius: 16px;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
