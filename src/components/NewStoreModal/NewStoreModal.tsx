@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { addStore } from '../../api/addStore';
+import styles from './NewStoreModal.module.css';
 
 interface Props {
   department: string;
@@ -47,46 +48,28 @@ export default function NewStoreModal({
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <div
-        style={{
-          background: 'white',
-          padding: 20,
-          borderRadius: 10,
-          width: 300,
-        }}
-      >
-        <h3>Нова ТТ</h3>
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <div className={styles.title}>Заведення нової торгової точки</div>
 
         <input
+          className={styles.input}
           value={store}
           onChange={e => setStore(e.target.value)}
-          placeholder="Назва ТТ"
+          placeholder="Введіть назву"
         />
 
-        <br />
-        <br />
-
-        <button onClick={handleSave} disabled={saving}>
+        <button
+          className={styles.saveButton}
+          onClick={handleSave}
+          disabled={saving}
+        >
           {saving ? 'Збереження...' : 'Зберегти'}
         </button>
 
-        <br />
-        <br />
-
-        <button onClick={onClose}>Скасувати</button>
+        <button className={styles.cancelButton} onClick={onClose}>
+          Скасувати
+        </button>
       </div>
     </div>
   );

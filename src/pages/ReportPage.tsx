@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import styles from './ReportPage.module.css';
 
 import { fetchSheetData } from '../api/sheetApi';
 
@@ -35,54 +36,16 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      {/* mobile container */}
-      <div className="w-full max-w-md min-h-screen flex flex-col">
-        {/* header */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm">
-          <div className="px-5 py-4 flex items-center justify-between">
-            <div className="text-lg font-semibold text-gray-800">Фото звіт</div>
-
-            {storeData && (
-              <button
-                onClick={() => setStoreData(null)}
-                className="
-                  text-sm
-                  text-amber-600
-                  font-medium
-                  active:scale-95
-                "
-              >
-                Назад
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* content */}
-        <div className="flex-1 p-4">
-          <div
-            className="
-              bg-white
-              rounded-2xl
-              shadow-md
-              p-5
-              space-y-4
-            "
-          >
-            {!storeData ? (
-              <StoreSelector
-                data={data}
-                onSelect={store => setStoreData(store)}
-              />
-            ) : (
-              <ReportDetailsForm
-                storeData={storeData}
-                onBack={() => setStoreData(null)}
-              />
-            )}
-          </div>
-        </div>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        {!storeData ? (
+          <StoreSelector data={data} onSelect={store => setStoreData(store)} />
+        ) : (
+          <ReportDetailsForm
+            storeData={storeData}
+            onBack={() => setStoreData(null)}
+          />
+        )}
       </div>
     </div>
   );

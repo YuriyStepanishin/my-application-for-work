@@ -34,6 +34,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
   const [photos, setPhotos] = useState<Photo[]>([]);
 
   const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   function handleStartDate(value: string) {
     setStartDate(value);
@@ -74,10 +75,14 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
       });
 
       if (result.success) {
-        alert('✅ Звіт збережено');
+        setSuccess(true);
 
         setComment('');
         setPhotos([]);
+
+        setTimeout(() => {
+          onBack();
+        }, 1500);
       } else {
         alert(result.error || 'Помилка');
       }
@@ -89,19 +94,15 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
   }
 
   return (
-    <div className={styles.container}>
-      <button className={styles.backButton} onClick={onBack}>
-        ← Назад
-      </button>
+    <div className={styles.wrapper}>
+      {/* STORE TITLE */}
+      <div className={styles.title}>{storeData.store}</div>
 
-      <h2 className={styles.title}>{storeData.store}</h2>
-
-      <div className={styles.info}>
-        {storeData.department}
-        {' • '}
-        {storeData.representative}
+      <div className={styles.subtitle}>
+        {storeData.department} • {storeData.representative}
       </div>
 
+      {/* START DATE */}
       <label className={styles.label}>Дата початку</label>
 
       <input
@@ -111,10 +112,17 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         className={styles.input}
       />
 
+      {/* END DATE (READ ONLY) */}
       <label className={styles.label}>Дата закінчення</label>
 
-      <input type="date" value={endDate} readOnly className={styles.input} />
+      <input
+        type="text"
+        value={endDate}
+        readOnly
+        className={`${styles.input} ${styles.readonly}`}
+      />
 
+      {/* CATEGORY */}
       <label className={styles.label}>Категорія</label>
 
       <select
@@ -125,18 +133,16 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         <option value="">Оберіть категорію</option>
 
         <option value="1">1 (1–6 п.м.)</option>
-
         <option value="2">2 (6–9 п.м.)</option>
-
         <option value="3">3 (9–15 п.м.)</option>
-
         <option value="4">4 (15–30 п.м.)</option>
-
         <option value="5">5 (30+ п.м.)</option>
       </select>
 
+      {/* PHOTO UPLOAD */}
       <PhotoUpload photos={photos} setPhotos={setPhotos} />
 
+      {/* COMMENT */}
       <label className={styles.label}>Коментар</label>
 
       <textarea
@@ -144,14 +150,24 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         onChange={e => setComment(e.target.value)}
         className={styles.textarea}
       />
+      {success && (
+        <div className={styles.successMessage}>✅ Звіт успішно збережено</div>
+      )}
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className={styles.saveButton}
-      >
-        {saving ? 'Збереження...' : 'ЗБЕРЕГТИ'}
-      </button>
+      {/* BOTTOM BUTTONS */}
+      <div className={styles.bottomRow}>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={styles.saveButton}
+        >
+          {saving ? 'Збереження...' : 'ЗБЕРЕГТИ'}
+        </button>
+
+        <button onClick={onBack} className={styles.cancelButton}>
+          Скасувати
+        </button>
+      </div>
     </div>
   );
 }

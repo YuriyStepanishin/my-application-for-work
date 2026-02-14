@@ -1,19 +1,42 @@
 .input {
   width: 100%;
+  height: 56px;
 
-  padding: 14px;
+  padding: 0 16px;
 
   border-radius: 14px;
-  border: 1px solid #d1d5db;
+
+  border: 2px solid #b7cbbd;
+
+  background: #e6f0e8;
 
   font-size: 16px;
+
+  color: #2f4f3a;
+
+  outline: none;
 
   transition: all 0.15s ease;
 }
 
+/* focus state */
 .input:focus {
-  outline: none;
-  border-color: #f59e0b;
+  border-color: #4caf50;
 
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+/* dropdown arrow alignment */
+.input select {
+  width: 100%;
+  height: 100%;
+
+  border: none;
+  background: transparent;
+
+  font-size: 16px;
+
+  color: inherit;
+
+  outline: none;
 }

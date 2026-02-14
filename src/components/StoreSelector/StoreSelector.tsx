@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { SheetRow } from '../../types/sheet';
 
 import NewStoreModal from '../NewStoreModal/NewStoreModal';
+import styles from './StoreSelector.module.css';
 
 interface Props {
   data: SheetRow[];
@@ -64,10 +65,9 @@ export default function StoreSelector({ data, onSelect }: Props) {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Оберіть торгову точку</h2>
-
+    <div className={styles.wrapper}>
       <select
+        className={styles.select}
         value={department}
         onChange={e => {
           setDepartment(e.target.value);
@@ -84,10 +84,8 @@ export default function StoreSelector({ data, onSelect }: Props) {
         ))}
       </select>
 
-      <br />
-      <br />
-
       <select
+        className={styles.select}
         value={representative}
         disabled={!department}
         onChange={e => {
@@ -95,7 +93,7 @@ export default function StoreSelector({ data, onSelect }: Props) {
           setStore('');
         }}
       >
-        <option value="">ТП</option>
+        <option value="">Торговий представник</option>
 
         {representatives.map(r => (
           <option key={r} value={r}>
@@ -104,15 +102,13 @@ export default function StoreSelector({ data, onSelect }: Props) {
         ))}
       </select>
 
-      <br />
-      <br />
-
       <select
+        className={styles.select}
         value={store}
         disabled={!representative}
         onChange={e => setStore(e.target.value)}
       >
-        <option value="">ТТ</option>
+        <option value="">Торгова точка</option>
 
         {stores.map(s => (
           <option key={s} value={s}>
@@ -121,20 +117,17 @@ export default function StoreSelector({ data, onSelect }: Props) {
         ))}
       </select>
 
-      <br />
-      <br />
-
       <button
+        className={styles.newStoreButton}
         onClick={() => setShowModal(true)}
         disabled={!department || !representative}
       >
-        ➕ Нова ТТ
+        ➕ Нова торгова точка (якщо немає в списку)
       </button>
 
-      <br />
-      <br />
-
-      <button onClick={handleConfirm}>Далі →</button>
+      <button className={styles.confirmButton} onClick={handleConfirm}>
+        Далі
+      </button>
 
       {showModal && (
         <NewStoreModal
