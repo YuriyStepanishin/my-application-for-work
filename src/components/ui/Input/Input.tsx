@@ -1,33 +1,6 @@
-interface Props {
-  value: string;
+import styles from './Input.module.css';
+import type { InputHTMLAttributes } from 'react';
 
-  onChange: (value: string) => void;
-
-  placeholder?: string;
-
-  type?: string;
-
-  readOnly?: boolean;
-}
-
-export default function Input({
-  value,
-
-  onChange,
-
-  placeholder,
-
-  type = 'text',
-
-  readOnly = false,
-}: Props) {
-  return (
-    <input
-      type={type}
-      value={value}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      onChange={e => onChange(e.target.value)}
-    />
-  );
+export default function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...props} className={styles.input} />;
 }

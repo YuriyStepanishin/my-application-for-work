@@ -1,37 +1,19 @@
 .input {
   width: 100%;
 
-  padding: 12px 14px;
+  padding: 14px;
 
-  border-radius: 10px;
-
+  border-radius: 14px;
   border: 1px solid #d1d5db;
 
   font-size: 16px;
 
-  outline: none;
-
-  transition: border 0.2s;
+  transition: all 0.15s ease;
 }
 
 .input:focus {
-  border: 1px solid #3b82f6;
-}
+  outline: none;
+  border-color: #f59e0b;
 
-.label {
-  font-size: 14px;
-
-  margin-bottom: 4px;
-
-  display: block;
-
-  color: #374151;
-}
-
-.container {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 4px;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
