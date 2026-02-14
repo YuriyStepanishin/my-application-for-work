@@ -1,35 +1,33 @@
-import styles from './Input.module.css';
-
 interface Props {
-  label?: string;
-
   value: string;
 
   onChange: (value: string) => void;
 
+  placeholder?: string;
+
   type?: string;
 
-  placeholder?: string;
+  readOnly?: boolean;
 }
 
 export default function Input({
-  label,
   value,
+
   onChange,
-  type = 'text',
+
   placeholder,
+
+  type = 'text',
+
+  readOnly = false,
 }: Props) {
   return (
-    <div className={styles.container}>
-      {label && <label className={styles.label}>{label}</label>}
-
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        className={styles.input}
-      />
-    </div>
+    <input
+      type={type}
+      value={value}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      onChange={e => onChange(e.target.value)}
+    />
   );
 }

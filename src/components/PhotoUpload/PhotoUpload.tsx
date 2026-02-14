@@ -1,12 +1,50 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useRef, type ChangeEvent } from 'react';
+import styles from './PhotoUpload.module.css';
 
-type Props = {
-  photos: File[];
-  setPhotos: Dispatch<SetStateAction<File[]>>;
-};
+export interface Photo {
+  base64: string;
+  type: string;
+  name: string;
+}
+
+interface Props {
+  photos: Photo[];
+  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
+}
 
 export default function PhotoUpload({ photos, setPhotos }: Props) {
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+
+  // ============================
+  // File → base64
+  // ============================
+
+  function fileToBase64(file: File): Promise<Photo> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+
+        resolve({
+          base64,
+          type: file.type,
+          name: file.name,
+        });
+      };
+
+      reader.onerror = reject;
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ============================
+  // обробка вибору
+  // ============================
+
+  async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
 
     const files = Array.from(e.target.files);
@@ -16,38 +54,90 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
       return;
     }
 
-    setPhotos(prev => [...prev, ...files]);
+    const newPhotos = await Promise.all(files.map(fileToBase64));
 
+    setPhotos(prev => [...prev, ...newPhotos]);
+
+    // очистити input щоб можна було вибрати те саме фото ще раз
     e.target.value = '';
   }
 
+  // ============================
+  // видалення
+  // ============================
+
   function removePhoto(index: number) {
-    setPhotos(photos.filter((_, i) => i !== index));
+    setPhotos(prev => prev.filter((_, i) => i !== index));
   }
 
+  // ============================
+  // UI
+  // ============================
+
   return (
-    <div>
+    <div className={styles.container}>
+      <label className={styles.label}>Фото (макс 3)</label>
+
+      {/* hidden inputs */}
+
+      {/* камера */}
       <input
+        ref={cameraRef}
         type="file"
         accept="image/*"
         capture="environment"
-        multiple
-        onChange={handlePhotoChange}
+        onChange={handleChange}
+        className={styles.hiddenInput}
       />
 
-      <div>Фото: {photos.length} / 3</div>
+      {/* галерея */}
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleChange}
+        className={styles.hiddenInput}
+      />
 
-      <br />
+      {/* кнопки */}
+      <div className={styles.buttons}>
+        <button
+          type="button"
+          onClick={() => cameraRef.current?.click()}
+          className={styles.button}
+        >
+          📷 Зробити фото
+        </button>
 
-      {photos.map((p, i) => (
-        <div key={i}>
-          <img src={URL.createObjectURL(p)} width="120" />
+        <button
+          type="button"
+          onClick={() => galleryRef.current?.click()}
+          className={styles.button}
+        >
+          🖼 З галереї
+        </button>
+      </div>
 
-          <br />
+      {/* preview */}
+      <div className={styles.previewContainer}>
+        {photos.map((photo, index) => (
+          <div key={index} className={styles.previewItem}>
+            <img
+              src={`data:${photo.type};base64,${photo.base64}`}
+              className={styles.previewImage}
+            />
 
-          <button onClick={() => removePhoto(i)}>Видалити</button>
-        </div>
-      ))}
+            <button
+              type="button"
+              onClick={() => removePhoto(index)}
+              className={styles.removeButton}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

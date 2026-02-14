@@ -1,0 +1,66 @@
+.container {
+  margin-top: 15px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.input {
+  margin-bottom: 10px;
+}
+
+.previewContainer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.previewItem {
+  position: relative;
+}
+
+.previewImage {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.removeButton {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.hiddenInput {
+  display: none;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.button {
+  padding: 10px 16px;
+  border: none;
+  background: #1976d2;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #1565c0;
+}

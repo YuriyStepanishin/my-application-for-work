@@ -1,19 +1,46 @@
-const API_URL =
-  'https://script.google.com/macros/s/AKfycbyNg3tnDGAFGVZE7KRahpV3B3SZIw6hTGvkkR1xnHO220HqVe_PvDpJzpfVV6CVpose/exec';
+import { API_URL } from './config';
 
-export async function addStore(data: {
+// тип для нової ТТ
+export interface AddStorePayload {
   department: string;
   representative: string;
   store: string;
-}) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
+}
 
-    body: JSON.stringify({
-      action: 'addStore',
-      ...data,
-    }),
-  });
+// тип відповіді сервера
+export interface ApiResponse {
+  success: boolean;
+  error?: string;
+}
 
-  return res.json();
+export async function addStore(data: AddStorePayload): Promise<ApiResponse> {
+  try {
+    const formData = new FormData();
+
+    formData.append(
+      'data',
+      JSON.stringify({
+        action: 'addStore',
+        department: data.department,
+        representative: data.representative,
+        store: data.store,
+      })
+    );
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: formData, // ВАЖЛИВО: без headers
+    });
+
+    const result = await res.json();
+
+    return result;
+  } catch (error) {
+    console.error('addStore error:', error);
+
+    return {
+      success: false,
+      error: 'Network error',
+    };
+  }
 }

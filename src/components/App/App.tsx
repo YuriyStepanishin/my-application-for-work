@@ -4,7 +4,6 @@ import { fetchSheetData } from '../../api/sheetApi';
 
 import StoreSelector from '../StoreSelector/StoreSelector';
 import ReportDetailsForm from '../ReportDetailsForm/ReportDetailsForm';
-import ThemeToggle from '../ThemeToggle/ThemeToggle';
 
 import type { SheetRow } from '../../types/sheet';
 
@@ -12,11 +11,11 @@ export default function App() {
   const [data, setData] = useState<SheetRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [storeData, setStoreData] = useState<null | {
+  const [storeData, setStoreData] = useState<{
     department: string;
     representative: string;
     store: string;
-  }>(null);
+  } | null>(null);
 
   useEffect(() => {
     fetchSheetData()
@@ -24,29 +23,25 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return <div className="p-6">Завантаження...</div>;
+  }
+
   return (
-    <div
-      className="
-        min-h-screen
-        bg-white dark:bg-gray-900
-        text-black dark:text-white
-        transition
-      "
-    >
-      {/* кнопка теми */}
-      <div className="p-4 flex justify-end">
-        <ThemeToggle />
-      </div>
-
-      {/* контент */}
-      <div className="p-4">
-        {loading && <div>Loading...</div>}
-
-        {!loading && !storeData && (
+    <div className="min-h-screen flex justify-center items-start p-6">
+      <div
+        className="
+          w-full
+          max-w-2xl
+          bg-white
+          rounded-2xl
+          shadow-xl
+          p-6
+        "
+      >
+        {!storeData ? (
           <StoreSelector data={data} onSelect={store => setStoreData(store)} />
-        )}
-
-        {!loading && storeData && (
+        ) : (
           <ReportDetailsForm
             storeData={storeData}
             onBack={() => setStoreData(null)}

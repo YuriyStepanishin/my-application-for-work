@@ -1,32 +1,62 @@
-const API_URL =
-  'https://script.google.com/macros/s/AKfycbzT-uh2UolI-DkWNaN6koptrFtKOP-9N8VmhdquPQPPThZRCKF3CrtAVAg0chPtLjZM/exec';
+import { API_URL } from './config';
 
-export async function saveReport(data: {
+// тип фото
+export interface PhotoPayload {
+  base64: string;
+  type: string;
+  name: string;
+}
+
+// тип звіту
+export interface SaveReportPayload {
   department: string;
   representative: string;
   store: string;
+
   startDate: string;
   endDate: string;
+
+  category: string;
   comment: string;
-  photos: File[];
-}) {
-  const formData = new FormData();
 
-  formData.append('department', data.department);
-  formData.append('representative', data.representative);
-  formData.append('store', data.store);
-  formData.append('startDate', data.startDate);
-  formData.append('endDate', data.endDate);
-  formData.append('comment', data.comment);
+  photos: PhotoPayload[];
+}
 
-  data.photos.forEach((photo, i) => {
-    formData.append(`photo${i}`, photo);
-  });
+// тип відповіді
+export interface ApiResponse {
+  success: boolean;
+  error?: string;
+}
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    body: formData,
-  });
+// головна функція
+export async function saveReport(
+  data: SaveReportPayload
+): Promise<ApiResponse> {
+  try {
+    const formData = new FormData();
 
-  return await response.json();
+    formData.append(
+      'data',
+      JSON.stringify({
+        action: 'saveReport',
+        ...data,
+      })
+    );
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: formData, // ВАЖЛИВО: без headers
+    });
+
+    const result = await res.json();
+
+    return result;
+  } catch (error) {
+    console.error('saveReport error:', error);
+
+    return {
+      success: false,
+      error: 'Network error',
+    };
+  }
 }
