@@ -12,7 +12,7 @@ interface Props {
     representative: string;
     store: string;
   }) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function StoreSelector({ data, onSelect, onBack }: Props) {
