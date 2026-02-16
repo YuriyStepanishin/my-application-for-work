@@ -12,9 +12,10 @@ interface Props {
     representative: string;
     store: string;
   }) => void;
+  onBack: () => void;
 }
 
-export default function StoreSelector({ data, onSelect }: Props) {
+export default function StoreSelector({ data, onSelect, onBack }: Props) {
   const [department, setDepartment] = useState('');
   const [representative, setRepresentative] = useState('');
   const [store, setStore] = useState('');
@@ -75,7 +76,9 @@ export default function StoreSelector({ data, onSelect }: Props) {
           setStore('');
         }}
       >
-        <option value="">Відділ</option>
+        <option value="" disabled hidden>
+          Відділ
+        </option>
 
         {departments.map(d => (
           <option key={d} value={d}>
@@ -93,7 +96,9 @@ export default function StoreSelector({ data, onSelect }: Props) {
           setStore('');
         }}
       >
-        <option value="">Торговий представник</option>
+        <option value="" disabled hidden>
+          Торговий представник
+        </option>
 
         {representatives.map(r => (
           <option key={r} value={r}>
@@ -108,7 +113,9 @@ export default function StoreSelector({ data, onSelect }: Props) {
         disabled={!representative}
         onChange={e => setStore(e.target.value)}
       >
-        <option value="">Торгова точка</option>
+        <option value="" disabled hidden>
+          Торгова точка
+        </option>
 
         {stores.map(s => (
           <option key={s} value={s}>
@@ -127,6 +134,10 @@ export default function StoreSelector({ data, onSelect }: Props) {
 
       <button className={styles.confirmButton} onClick={handleConfirm}>
         Далі
+      </button>
+
+      <button className={styles.backButton} onClick={onBack}>
+        ← Головна сторінка
       </button>
 
       {showModal && (

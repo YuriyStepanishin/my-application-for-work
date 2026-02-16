@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import LoginPage from './pages/LoginPage';
-import ReportPage from './pages/ReportPage';
+import LoginPage from './pages/LoginPage/LoginPage';
+import ReportPage from './pages/ReportPage/ReportPage';
 import HomePage from './pages/HomePage/HomePage';
 
 import StoreSelector from './components/StoreSelector/StoreSelector';
@@ -13,96 +13,96 @@ import type { SheetRow } from './types/sheet';
 import InstallButton from './components/InstallButton/InstallButton';
 
 export default function App() {
-  // авторизація
   const [email, setEmail] = useState<string | null>(
     localStorage.getItem('auth')
   );
 
-  // екрани
   const [showHome, setShowHome] = useState(false);
   const [showStoreSelector, setShowStoreSelector] = useState(false);
 
-  // дані таблиці
-  const [sheetData, setSheetData] = useState<SheetRow[]>([]);
+  const [sheetData, setSheetData] = useState<SheetRow[]>(
+    JSON.parse(localStorage.getItem('sheetData') || '[]')
+  );
 
-  // вибрана ТТ
   const [selectedStore, setSelectedStore] = useState<{
     department: string;
     representative: string;
     store: string;
   } | null>(null);
-  <InstallButton />;
-  // ============================
-  // LOGIN
-  // ============================
 
+  // LOGIN
   if (!email) {
     return (
-      <LoginPage
-        onSuccess={email => {
-          localStorage.setItem('auth', email);
-          setEmail(email);
-        }}
-      />
+      <>
+        <LoginPage
+          onSuccess={email => {
+            localStorage.setItem('auth', email);
+            setEmail(email);
+          }}
+        />
+        <InstallButton />
+      </>
     );
   }
 
-  // ============================
-  // REPORT PAGE (привітання)
-  // ============================
-
+  // REPORT PAGE
   if (!showHome) {
     return (
-      <ReportPage
-        email={email}
-        onOk={() => setShowHome(true)}
-        onLogout={() => {
-          localStorage.removeItem('auth');
-          setEmail(null);
-        }}
-      />
+      <>
+        <ReportPage
+          email={email}
+          onOk={() => setShowHome(true)}
+          onLogout={() => {
+            localStorage.removeItem('auth');
+            setEmail(null);
+          }}
+        />
+        <InstallButton />
+      </>
     );
   }
 
-  // ============================
   // HOME PAGE
-  // ============================
-
-  if (showHome && !showStoreSelector) {
+  if (!showStoreSelector) {
     return (
-      <HomePage
-        onOpenReport={async () => {
-          const data = await fetchSheetData();
+      <>
+        <HomePage
+          onOpenReport={() => {
+            setShowStoreSelector(true); // миттєвий перехід
 
-          setSheetData(data);
-
-          setShowStoreSelector(true);
-        }}
-      />
+            fetchSheetData().then(data => {
+              setSheetData(data);
+              localStorage.setItem('sheetData', JSON.stringify(data));
+            });
+          }}
+        />
+        <InstallButton />
+      </>
     );
   }
 
-  // ============================
   // STORE SELECTOR
-  // ============================
-
   if (!selectedStore) {
     return (
-      <StoreSelector
-        data={sheetData}
-        onSelect={store => setSelectedStore(store)}
-      />
+      <>
+        <StoreSelector
+          data={sheetData}
+          onSelect={store => setSelectedStore(store)}
+          onBack={() => setShowStoreSelector(false)}
+        />
+        <InstallButton />
+      </>
     );
   }
 
-  // ============================
-  // REPORT DETAILS FORM
-  // ============================
-
+  // REPORT DETAILS
   return (
-    <ReportDetailsForm
-      storeData={selectedStore}
-      onBack={() => setSelectedStore(null)}
-    />
+    <>
+      <ReportDetailsForm
+        storeData={selectedStore}
+        onBack={() => setSelectedStore(null)}
+      />
+      <InstallButton />
+    </>
   );
 }

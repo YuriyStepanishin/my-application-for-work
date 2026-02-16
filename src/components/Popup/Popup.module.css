@@ -1,0 +1,43 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+
+.popup {
+  background: white;
+  padding: 24px 32px;
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+  text-align: center;
+
+  min-width: 250px;
+}
+
+.button {
+  margin-top: 16px;
+
+  padding: 8px 20px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #4caf50;
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 16px;
+}
+
+.button:hover {
+  background: #45a049;
+}

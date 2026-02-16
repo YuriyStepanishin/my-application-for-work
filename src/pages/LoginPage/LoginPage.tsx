@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styles from './LoginPage.module.css';
-import { allowedEmails } from '../config/allowedEmails';
+import { allowedEmails } from '../../config/allowedEmails';
 
 interface Props {
   onSuccess: (email: string) => void;
