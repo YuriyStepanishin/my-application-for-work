@@ -132,11 +132,11 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
       >
         <option value="">Оберіть категорію</option>
 
-        <option value="1">1 (1–6 п.м.)</option>
-        <option value="2">2 (6–9 п.м.)</option>
-        <option value="3">3 (9–15 п.м.)</option>
-        <option value="4">4 (15–30 п.м.)</option>
-        <option value="5">5 (30+ п.м.)</option>
+        <option value="1">1 (1–6 м.)</option>
+        <option value="2">2 (6–9 м.)</option>
+        <option value="3">3 (9–15 м.)</option>
+        <option value="4">4 (15–30 м.)</option>
+        <option value="5">5 (30+ м.)</option>
       </select>
 
       {/* PHOTO UPLOAD */}

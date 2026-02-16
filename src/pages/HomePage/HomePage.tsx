@@ -11,65 +11,72 @@ export default function HomePage({ onOpenReport }: Props) {
         position: 'relative',
         width: '100%',
         height: '100vh',
+        overflow: 'hidden',
       }}
     >
       {/* фон */}
       <img
         src={bg}
         style={{
+          position: 'absolute',
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          top: 0,
+          left: 0,
+          zIndex: 0,
         }}
       />
 
-      {/* ліва кнопка */}
-      <button
-        onClick={() => alert('В розробці')}
+      {/* контейнер кнопок */}
+      <div
         style={{
           position: 'absolute',
-          bottom: '5%',
-          left: '12%',
-          width: '240px',
-          height: '240px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
+          bottom: '20px',
+          left: '0',
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'space-evenly',
+          padding: '0 10px',
+          zIndex: 1,
         }}
       >
-        <img
-          src="/icons/icon_pokaznyky_roboty_warm (1).png"
+        {/* кнопка 1 */}
+        <button
+          onClick={() => alert('В розробці')}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
+            flex: 1,
+            marginRight: '10px',
+            height: '60px',
+            fontSize: '18px',
+            fontWeight: '600',
+            borderRadius: '12px',
+            border: 'none',
+            background: '#ffffffcc',
+            cursor: 'pointer',
           }}
-        />
-      </button>
+        >
+          Показники роботи
+        </button>
 
-      {/* права кнопка → StoreSelector */}
-      <button
-        onClick={onOpenReport}
-        style={{
-          position: 'absolute',
-          bottom: '5%',
-          right: '20%',
-          width: '240px',
-          height: '240px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        <img
-          src="/icons/icon_aktsiya_vitryny_warm (1).png"
+        {/* кнопка 2 */}
+        <button
+          onClick={onOpenReport}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
+            flex: 1,
+            marginLeft: '10px',
+            height: '60px',
+            fontSize: '18px',
+            fontWeight: '600',
+            borderRadius: '12px',
+            border: 'none',
+            background: '#ffffffcc',
+            cursor: 'pointer',
           }}
-        />
-      </button>
+        >
+          Акція вітрини
+        </button>
+      </div>
     </div>
   );
 }

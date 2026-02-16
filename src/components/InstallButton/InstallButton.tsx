@@ -1,69 +1,38 @@
 import { useEffect, useState } from 'react';
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-  }>;
-}
-
 export default function InstallButton() {
-  const [installEvent, setInstallEvent] =
-    useState<BeforeInstallPromptEvent | null>(null);
-
-  const [installed, setInstalled] = useState(false);
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', e => {
+    const handler = (e: Event) => {
       e.preventDefault();
+      setPrompt(e as BeforeInstallPromptEvent);
+    };
 
-      setInstallEvent(e as BeforeInstallPromptEvent);
-    });
+    window.addEventListener('beforeinstallprompt', handler);
 
-    window.addEventListener('appinstalled', () => {
-      setInstalled(true);
-    });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  async function handleInstall() {
-    if (!installEvent) return;
-
-    installEvent.prompt();
-
-    const choice = await installEvent.userChoice;
-
-    if (choice.outcome === 'accepted') {
-      setInstalled(true);
-    }
-
-    setInstallEvent(null);
-  }
-
-  if (installed) {
-    return (
-      <div style={{ color: 'green', marginBottom: 10 }}>
-        ✅ Додаток встановлено
-      </div>
-    );
-  }
-
-  if (!installEvent) return null;
+  if (!prompt) return null;
 
   return (
     <button
-      onClick={handleInstall}
+      onClick={() => prompt.prompt()}
       style={{
-        marginBottom: 15,
-        padding: '10px 16px',
-        background: '#16a34a',
-        color: 'white',
+        position: 'fixed',
+        top: 10,
+        right: 10,
+        padding: '10px 15px',
+        fontSize: '16px',
+        borderRadius: '10px',
         border: 'none',
-        borderRadius: 8,
-        fontSize: 16,
-        cursor: 'pointer',
+        background: '#000',
+        color: '#fff',
+        zIndex: 9999,
       }}
     >
-      📲 Встановити додаток
+      Встановити додаток
     </button>
   );
 }

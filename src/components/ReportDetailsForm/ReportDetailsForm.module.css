@@ -1,5 +1,5 @@
 .wrapper {
-  width: 640px; /* ширше ніж selector */
+  width: (min 640px, 92%); /* ширше ніж selector */
   margin: 40px auto; /* центр по горизонталі + відступ зверху */
 
   padding: 50px 60px; /* великі внутрішні відступи */
@@ -199,4 +199,12 @@
   font-size: 16px;
 
   cursor: pointer;
+}
+@media (max-width: 600px) {
+  .wrapper {
+    width: 94%;
+    padding: 25px 18px;
+    margin: 20px auto;
+    border-radius: 20px;
+  }
 }

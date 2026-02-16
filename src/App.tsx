@@ -10,6 +10,7 @@ import ReportDetailsForm from './components/ReportDetailsForm/ReportDetailsForm'
 import { fetchSheetData } from './api/sheetApi';
 
 import type { SheetRow } from './types/sheet';
+import InstallButton from './components/InstallButton/InstallButton';
 
 export default function App() {
   // авторизація
@@ -30,7 +31,7 @@ export default function App() {
     representative: string;
     store: string;
   } | null>(null);
-
+  <InstallButton />;
   // ============================
   // LOGIN
   // ============================

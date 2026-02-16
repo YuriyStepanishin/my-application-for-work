@@ -105,7 +105,7 @@
   justify-content: center;
   align-items: center;
 
-  width: 420px;
+  width: (min 420px, 92%);
   margin: 0 auto;
 
   padding: 40px 30px;
@@ -118,4 +118,12 @@
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+@media (max-width: 600px) {
+  .wrapper {
+    width: 94%;
+    padding: 25px 18px;
+    margin: 20px auto;
+    border-radius: 20px;
+  }
 }
