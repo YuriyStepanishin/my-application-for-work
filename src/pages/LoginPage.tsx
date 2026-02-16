@@ -1,59 +1,40 @@
 import { useState } from 'react';
-
 import styles from './LoginPage.module.css';
-
-import { sendCode } from '../api/authApi';
+import { allowedEmails } from '../config/allowedEmails';
 
 interface Props {
-  onCodeSent: (email: string) => void;
+  onSuccess: (email: string) => void;
 }
 
-export default function LoginPage({ onCodeSent }: Props) {
+export default function LoginPage({ onSuccess }: Props) {
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
-  const [loading, setLoading] = useState(false);
+  const handleLogin = () => {
+    const normalizedEmail = email.trim().toLowerCase();
 
-  async function handleSend() {
-    if (!email) {
-      alert('Введіть email');
-      return;
+    if (allowedEmails.includes(normalizedEmail)) {
+      onSuccess(normalizedEmail);
+    } else {
+      setError('Email не має доступу');
     }
-
-    try {
-      setLoading(true);
-
-      const res = await sendCode(email);
-
-      if (res.success) {
-        onCodeSent(email);
-      } else {
-        alert('Доступ заборонено');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+  };
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
-        <div className={styles.title}>Вхід у систему</div>
-
         <input
-          type="email"
-          placeholder="Введіть email"
+          className={styles.input}
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className={styles.input}
+          placeholder="Email"
         />
 
-        <button
-          onClick={handleSend}
-          disabled={loading}
-          className={styles.button}
-        >
-          {loading ? 'Надсилання...' : 'Отримати код'}
+        <button className={styles.button} onClick={handleLogin}>
+          Увійти
         </button>
+
+        {error && <div className={styles.error}>{error}</div>}
       </div>
     </div>
   );

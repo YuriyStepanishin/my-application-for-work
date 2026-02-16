@@ -1,51 +1,39 @@
-import { useEffect, useState } from 'react';
 import styles from './ReportPage.module.css';
 
-import { fetchSheetData } from '../api/sheetApi';
+interface Props {
+  email: string;
 
-import StoreSelector from '../components/StoreSelector/StoreSelector';
-import ReportDetailsForm from '../components/ReportDetailsForm/ReportDetailsForm';
+  onLogout: () => void;
 
-import type { SheetRow } from '../types/sheet';
+  onOk: () => void;
+}
 
-export default function ReportPage() {
-  const [data, setData] = useState<SheetRow[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ReportPage({
+  email,
 
-  const [storeData, setStoreData] = useState<{
-    department: string;
-    representative: string;
-    store: string;
-  } | null>(null);
+  onLogout,
 
-  useEffect(() => {
-    fetchSheetData()
-      .then(setData)
-      .finally(() => setLoading(false));
-  }, []);
-
-  // loading screen
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white px-6 py-4 rounded-xl shadow-md">
-          Завантаження...
-        </div>
-      </div>
-    );
-  }
-
+  onOk,
+}: Props) {
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        {!storeData ? (
-          <StoreSelector data={data} onSelect={store => setStoreData(store)} />
-        ) : (
-          <ReportDetailsForm
-            storeData={storeData}
-            onBack={() => setStoreData(null)}
-          />
-        )}
+    <div className={styles.wrapper}>
+      <div className={styles.card}>
+        <h2>Вітаю 👋</h2>
+
+        <div>
+          Ви увійшли як:
+          <div className={styles.email}>{email}</div>
+        </div>
+
+        <div className={styles.info}>
+          <button className={styles.ok} onClick={onOk}>
+            Далі
+          </button>
+
+          <button className={styles.logout} onClick={onLogout}>
+            Вийти
+          </button>
+        </div>
       </div>
     </div>
   );

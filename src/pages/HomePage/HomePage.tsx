@@ -1,9 +1,10 @@
-import { useNavigate } from 'react-router-dom';
-import bg from '../../assets/tea&coffee (1).png';
+import bg from '../../../public/tea&coffee (1).png';
 
-export default function HomePage() {
-  const navigate = useNavigate();
+interface Props {
+  onOpenReport: () => void;
+}
 
+export default function HomePage({ onOpenReport }: Props) {
   return (
     <div
       style={{
@@ -21,70 +22,54 @@ export default function HomePage() {
           objectFit: 'cover',
         }}
       />
-      <div
+
+      {/* ліва кнопка */}
+      <button
+        onClick={() => alert('В розробці')}
         style={{
           position: 'absolute',
           bottom: '5%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: '40px', // відстань між кнопками
+          left: '12%',
+          width: '240px',
+          height: '240px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
         }}
       >
-        {/* кнопка ліва */}
-        <button
-          onClick={() => alert('В розробці')}
+        <img
+          src="/icons/icon_pokaznyky_roboty_warm (1).png"
           style={{
-            position: 'absolute',
-
-            bottom: '5%', // регулює висоту
-            left: '12%', // регулює позицію зліва
-
-            width: '340px',
-            height: '340px',
-
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
           }}
-        >
-          <img
-            src="/icons/icon_pokaznyky_roboty_warm (1).png"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-          />
-        </button>
+        />
+      </button>
 
-        {/* кнопка права */}
-        <button
-          onClick={() => navigate('/report')}
+      {/* права кнопка → StoreSelector */}
+      <button
+        onClick={onOpenReport}
+        style={{
+          position: 'absolute',
+          bottom: '5%',
+          right: '20%',
+          width: '240px',
+          height: '240px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <img
+          src="/icons/icon_aktsiya_vitryny_warm (1).png"
           style={{
-            position: 'absolute',
-
-            bottom: '5%', // така ж висота
-            right: '20%', // позиція справа
-
-            width: '340px',
-            height: '340px',
-
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
           }}
-        >
-          <img
-            src="/icons/icon_aktsiya_vitryny_warm (1).png"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-          />
-        </button>
-      </div>
+        />
+      </button>
     </div>
   );
 }
