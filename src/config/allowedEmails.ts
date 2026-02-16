@@ -1,11 +1,11 @@
 export const allowedEmails = [
   'oliahrynyk32@gmail.com',
-  'Storoshdiana@gmail.com',
+  'storoshdiana@gmail.com',
   'dyug.tany.90@gmail.com',
   'ivsn.denis@gmail.com',
   'anna.stetsyuk25@gmail.com',
   'laptevahm@gmail.com',
-  'Olenkapolonne@gmail.com',
+  'olenkapolonne@gmail.com',
   'glukhovska.84@gmail.com',
   'svetlananagornak1984@gmail.com',
   'vlad-oliynik@ukr.net',
