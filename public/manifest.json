@@ -1,6 +1,6 @@
 {
-  "name": "ORIMI app",
-  "short_name": "ORIMI app",
+  "name": "SODA",
+  "short_name": "SODA app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

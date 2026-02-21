@@ -1,5 +1,5 @@
 const API =
-  'https://script.google.com/macros/s/AKfycbyrHvJ1ZfOP-zDohBFS080KJGRHD4YyRmmiXhNI5airMrz9HW0p_0jHBLue5N9G_2mG/exec';
+  'https://script.google.com/macros/s/AKfycbzQNG_Ykf0zfBbT09kr-4iDBbcwCWm-G5oC2s3EaIOFWHcxaZZCavYlAKaP8pwiygmz/exec';
 
 export async function sendCode(email: string) {
   const res = await fetch(API, {

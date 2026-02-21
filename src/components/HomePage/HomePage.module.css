@@ -1,7 +1,6 @@
-/* фон на весь екран */
+/* ===== ФОН ===== */
 .background {
-  position: fixed; /* fixed краще ніж absolute для mobile */
-
+  position: fixed;
   top: 0;
   left: 0;
 
@@ -13,82 +12,146 @@
   z-index: 0;
 }
 
-/* контейнер кнопок */
+/* ===== КОНТЕЙНЕР ===== */
 .buttonContainer {
   position: fixed;
-
   bottom: 0;
   left: 0;
 
   width: 100%;
 
   display: flex;
-  gap: 12px;
+  gap: 16px;
 
-  padding: 16px;
+  padding: 20px;
 
-  /* safe area для iPhone */
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
 
-  z-index: 1;
+  z-index: 10;
 }
 
-/* кнопка */
+/* ===== ОСНОВНА КНОПКА (СКЛО + ЗОЛОТО) ===== */
 .button {
   flex: 1;
 
   height: 140px;
+  min-height: 120px;
+
+  border-radius: 18px;
+
+  /* напівпрозорий фон */
+  background: rgba(20, 20, 20, 0.35);
+
+  /* glass effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  /* золота рамка */
+  border: 2px solid rgba(212, 175, 55, 0.85);
+
+  /* текст */
+  color: #f5e6c8;
 
   font-size: 22px;
   font-weight: 600;
+  letter-spacing: 0.6px;
 
-  border-radius: 16px;
-  border: none;
+  font-family:
+    'Segoe UI', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
 
-  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
 
   cursor: pointer;
 
-  /* mobile touch оптимізація */
-  min-height: 120px;
+  /* glow */
+  box-shadow:
+    0 0 12px rgba(212, 175, 55, 0.35),
+    inset 0 0 8px rgba(212, 175, 55, 0.15);
 
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  /* читабельність */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
+  transition: all 0.15s ease;
+}
+
+/* hover */
+@media (hover: hover) {
+  .button:hover {
+    background: rgba(20, 20, 20, 0.45);
+
+    box-shadow:
+      0 0 18px rgba(212, 175, 55, 0.6),
+      inset 0 0 12px rgba(212, 175, 55, 0.25);
+
+    transform: translateY(-2px);
+  }
 }
 
 /* натискання */
 .button:active {
   transform: scale(0.97);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+
+  box-shadow:
+    0 0 8px rgba(212, 175, 55, 0.5),
+    inset 0 0 16px rgba(212, 175, 55, 0.35);
 }
 
-/* hover тільки для desktop */
-@media (hover: hover) {
-  .button:hover {
-    transform: translateY(-2px);
-  }
+/* ===== КНОПКА НАЗАД ===== */
+.backButton {
+  width: 100%;
+  height: 54px;
+
+  margin-top: 14px;
+
+  border-radius: 14px;
+
+  background: rgba(20, 20, 20, 0.3);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 2px solid rgba(212, 175, 55, 0.75);
+
+  color: #f5e6c8;
+
+  font-size: 17px;
+  font-weight: 600;
+
+  font-family: 'Segoe UI', 'SF Pro Display', Arial, sans-serif;
+
+  cursor: pointer;
+
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+
+  transition: all 0.15s ease;
+}
+
+.backButton:hover {
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
+}
+
+.backButton:active {
+  transform: scale(0.98);
 }
 
 /* ===== PHONES ===== */
 @media (max-width: 480px) {
   .buttonContainer {
-    gap: 10px;
-    padding: 12px;
+    gap: 12px;
+    padding: 14px;
 
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 
   .button {
     height: 120px;
-
-    font-size: 18px;
-
-    border-radius: 14px;
+    font-size: 19px;
   }
 }
 
@@ -96,34 +159,14 @@
 @media (max-width: 360px) {
   .button {
     height: 100px;
-    font-size: 16px;
+    font-size: 17px;
   }
 }
 
-/* ===== LANDSCAPE (горизонтальний телефон) ===== */
+/* ===== LANDSCAPE ===== */
 @media (max-height: 500px) {
   .button {
     height: 80px;
     font-size: 16px;
   }
-}
-.backButton {
-  width: 100%;
-  height: 50px;
-
-  margin-top: 10px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #e0e0e0;
-
-  font-size: 16px;
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.backButton:active {
-  transform: scale(0.98);
 }
