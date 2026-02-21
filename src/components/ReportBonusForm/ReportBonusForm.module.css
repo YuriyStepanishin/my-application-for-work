@@ -1,0 +1,284 @@
+/* ===== WRAPPER ===== */
+
+.wrapper {
+  width: 100%;
+  max-width: 640px;
+
+  margin: 0 auto;
+
+  padding: 32px 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+
+  background: linear-gradient(180deg, #f4f4f4 0%, #e9e9e9 100%);
+
+  border-radius: 28px;
+
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  /* safe area */
+  padding-top: max(32px, env(safe-area-inset-top));
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+}
+
+/* ===== SUCCESS BUTTON ===== */
+
+.successButton {
+  width: 100%;
+  min-height: 56px;
+
+  border-radius: 16px;
+
+  border: none;
+
+  background: linear-gradient(180deg, #34c759, #28a745);
+
+  color: white;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  box-shadow: 0 6px 16px rgba(52, 199, 89, 0.4);
+}
+
+/* ===== TEXT ===== */
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+
+  color: #2f4f3a;
+}
+
+.subtitle {
+  font-size: 16px;
+
+  color: #2f4f3a;
+
+  opacity: 0.85;
+}
+
+/* ===== INPUT ===== */
+
+.input {
+  width: 100%;
+  min-height: 56px;
+
+  padding: 14px 16px;
+
+  border-radius: 14px;
+
+  border: 2px solid #b7cbbd;
+
+  background: #e6f0e8;
+
+  font-size: 16px;
+
+  color: #2f4f3a;
+
+  outline: none;
+
+  transition: all 0.15s ease;
+
+  appearance: none;
+}
+
+.input:focus {
+  border-color: #4caf50;
+
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+.readonly {
+  background: #f0f4f1;
+
+  color: #6b7d71;
+
+  border: 2px solid #d3ddd6;
+}
+
+/* ===== PHOTO BUTTONS ===== */
+
+.photoRow {
+  display: flex;
+  gap: 12px;
+}
+
+.photoButton {
+  flex: 1;
+
+  min-height: 56px;
+
+  border-radius: 14px;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  background: transparent;
+
+  transition: all 0.15s ease;
+
+  padding: 12px;
+}
+
+.photoCamera {
+  border: 2px solid #e57373;
+
+  color: #c62828;
+
+  background: #fff5f5;
+}
+
+.photoGallery {
+  border: 2px solid #4caf50;
+
+  color: #2e7d32;
+
+  background: #f1f8f4;
+}
+
+.photoButton:active {
+  transform: scale(0.98);
+}
+
+/* ===== TEXTAREA ===== */
+
+.textarea {
+  width: 100%;
+  min-height: 140px;
+
+  padding: 14px 16px;
+
+  border-radius: 14px;
+
+  border: 2px solid #b7cbbd;
+
+  background: #e6f0e8;
+
+  font-size: 16px;
+
+  resize: vertical;
+
+  outline: none;
+}
+
+.textarea:focus {
+  border-color: #4caf50;
+
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+/* ===== BOTTOM BUTTONS ===== */
+
+.bottomRow {
+  display: flex;
+
+  gap: 12px;
+
+  margin-top: 8px;
+}
+
+.saveButton {
+  flex: 1;
+
+  min-height: 56px;
+
+  border-radius: 16px;
+
+  border: none;
+
+  background: linear-gradient(180deg, #2f80ed, #1c5ed6);
+
+  color: white;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 16px rgba(47, 128, 237, 0.4);
+}
+
+.saveButton:active {
+  transform: scale(0.97);
+}
+
+.cancelButton {
+  flex: 1;
+
+  min-height: 56px;
+
+  border-radius: 16px;
+
+  border: 2px solid #cbd5d1;
+
+  background: transparent;
+
+  color: #2f4f3a;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.cancelButton:active {
+  transform: scale(0.97);
+}
+
+/* ===== MOBILE ===== */
+
+@media (max-width: 600px) {
+  .wrapper {
+    max-width: 100%;
+
+    padding: 24px 18px;
+
+    border-radius: 22px;
+
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
+}
+
+/* ===== SMALL PHONES ===== */
+
+@media (max-width: 360px) {
+  .wrapper {
+    padding: 18px 14px;
+  }
+
+  .photoRow {
+    flex-direction: column;
+  }
+
+  .bottomRow {
+    flex-direction: column;
+  }
+}
+
+/* ===== LANDSCAPE ===== */
+
+@media (max-height: 500px) {
+  .wrapper {
+    min-height: auto;
+  }
+}

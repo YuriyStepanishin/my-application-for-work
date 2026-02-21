@@ -4,7 +4,7 @@ import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
 
-import styles from './ReportDetailsForm.module.css';
+import styles from '../ReportDetailsForm/ReportDetailsForm.module.css';
 
 interface Props {
   storeData: {
@@ -22,10 +22,10 @@ interface Photo {
   name: string;
 }
 
-export default function ReportDetailsForm({ storeData, onBack }: Props) {
-  const [startDate, setStartDate] = useState('');
-
-  const [endDate, setEndDate] = useState('');
+export default function ReportBonusForm({ storeData, onBack }: Props) {
+  const [createdDate, setCreatedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
 
   const [category, setCategory] = useState('');
 
@@ -34,21 +34,12 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
   const [photos, setPhotos] = useState<Photo[]>([]);
 
   const [saving, setSaving] = useState(false);
+
   const [success, setSuccess] = useState(false);
 
-  function handleStartDate(value: string) {
-    setStartDate(value);
-
-    const d = new Date(value);
-
-    d.setDate(d.getDate() + 42);
-
-    setEndDate(d.toISOString().split('T')[0]);
-  }
-
   async function handleSave() {
-    if (!startDate) {
-      alert('Оберіть дату початку');
+    if (!createdDate) {
+      alert('Оберіть дату створення');
       return;
     }
 
@@ -60,19 +51,21 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
     try {
       setSaving(true);
 
-      const result = await saveReport({
-        department: storeData.department,
-        representative: storeData.representative,
-        store: storeData.store,
+      const result = await saveReport(
+        {
+          department: storeData.department,
+          representative: storeData.representative,
+          store: storeData.store,
 
-        startDate,
-        endDate,
+          createdDate, // ← ключова різниця
 
-        category,
-        comment,
+          category,
+          comment,
 
-        photos,
-      }, 'display'); // ← важливо вказати тип
+          photos,
+        },
+        'bonus'
+      ); // ← важливо вказати тип
 
       if (result.success) {
         setSuccess(true);
@@ -80,9 +73,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         setComment('');
         setPhotos([]);
 
-        setTimeout(() => {
-          onBack();
-        }, 1500);
+        setTimeout(onBack, 1500);
       } else {
         alert(result.error || 'Помилка');
       }
@@ -95,34 +86,21 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
 
   return (
     <div className={styles.wrapper}>
-      {/* STORE TITLE */}
       <div className={styles.title}>{storeData.store}</div>
 
       <div className={styles.subtitle}>
         {storeData.department} • {storeData.representative}
       </div>
 
-      {/* START DATE */}
-      <label className={styles.label}>Дата початку</label>
+      <label className={styles.label}>Дата створення</label>
 
       <input
         type="date"
-        value={startDate}
-        onChange={e => handleStartDate(e.target.value)}
+        value={createdDate}
+        onChange={e => setCreatedDate(e.target.value)}
         className={styles.input}
       />
 
-      {/* END DATE (READ ONLY) */}
-      <label className={styles.label}>Дата закінчення</label>
-
-      <input
-        type="text"
-        value={endDate}
-        readOnly
-        className={`${styles.input} ${styles.readonly}`}
-      />
-
-      {/* CATEGORY */}
       <label className={styles.label}>Категорія</label>
 
       <select
@@ -139,10 +117,8 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         <option value="5">5 (30+ м.)</option>
       </select>
 
-      {/* PHOTO UPLOAD */}
       <PhotoUpload photos={photos} setPhotos={setPhotos} />
 
-      {/* COMMENT */}
       <label className={styles.label}>Коментар</label>
 
       <textarea
@@ -150,11 +126,11 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
         onChange={e => setComment(e.target.value)}
         className={styles.textarea}
       />
+
       {success && (
         <div className={styles.successMessage}>✅ Звіт успішно збережено</div>
       )}
 
-      {/* BOTTOM BUTTONS */}
       <div className={styles.bottomRow}>
         <button
           onClick={handleSave}

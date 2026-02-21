@@ -4,10 +4,11 @@ import styles from './HomePage.module.css';
 import Popup from '../../components/Popup/Popup';
 
 interface Props {
-  onOpenReport: () => void;
+  onOpenDisplay: () => void;
+  onOpenBonus: () => void;
 }
 
-export default function HomePage({ onOpenReport }: Props) {
+export default function HomePage({ onOpenDisplay, onOpenBonus }: Props) {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
@@ -30,8 +31,12 @@ export default function HomePage({ onOpenReport }: Props) {
         </button>
 
         {/* кнопка 2 */}
-        <button onClick={onOpenReport} className={styles.button}>
+        <button onClick={onOpenDisplay} className={styles.button}>
           Акція вітрини
+        </button>
+
+        <button onClick={onOpenBonus} className={styles.button}>
+          Фотозвіти ТП (бонус)
         </button>
       </div>
 

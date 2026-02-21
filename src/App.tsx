@@ -1,13 +1,14 @@
 import { useState } from 'react';
 
-import LoginPage from './pages/LoginPage/LoginPage';
-import ReportPage from './pages/ReportPage/ReportPage';
-import HomePage from './pages/HomePage/HomePage';
+import LoginPage from './components/LoginPage/LoginPage';
+import ReportPage from './components/ReportPage/ReportPage';
+import HomePage from './components/HomePage/HomePage';
 
 import StoreSelector from './components/StoreSelector/StoreSelector';
 import ReportDetailsForm from './components/ReportDetailsForm/ReportDetailsForm';
+import ReportBonusForm from './components/ReportBonusForm/ReportBonusForm';
 
-import { fetchSheetData } from './api/sheetApi';
+import { fetchSheetData, fetchBonusSheetData } from './api/sheetApi';
 
 import type { SheetRow } from './types/sheet';
 import InstallButton from './components/InstallButton/InstallButton';
@@ -20,8 +21,9 @@ export default function App() {
   const [showHome, setShowHome] = useState(false);
   const [showStoreSelector, setShowStoreSelector] = useState(false);
 
-  const [sheetData, setSheetData] = useState<SheetRow[]>(
-    JSON.parse(localStorage.getItem('sheetData') || '[]')
+  const [sheetData, setSheetData] = useState<SheetRow[]>([]);
+  const [reportType, setReportType] = useState<'display' | 'bonus' | null>(
+    null
   );
 
   const [selectedStore, setSelectedStore] = useState<{
@@ -67,12 +69,18 @@ export default function App() {
     return (
       <>
         <HomePage
-          onOpenReport={() => {
-            setShowStoreSelector(true); // миттєвий перехід
-
+          onOpenDisplay={() => {
             fetchSheetData().then(data => {
               setSheetData(data);
-              localStorage.setItem('sheetData', JSON.stringify(data));
+              setReportType('display'); // ← важливо
+              setShowStoreSelector(true);
+            });
+          }}
+          onOpenBonus={() => {
+            fetchBonusSheetData().then(data => {
+              setSheetData(data);
+              setReportType('bonus'); // ← важливо
+              setShowStoreSelector(true);
             });
           }}
         />
@@ -98,10 +106,17 @@ export default function App() {
   // REPORT DETAILS
   return (
     <>
-      <ReportDetailsForm
-        storeData={selectedStore}
-        onBack={() => setSelectedStore(null)}
-      />
+      {reportType === 'display' ? (
+        <ReportDetailsForm
+          storeData={selectedStore}
+          onBack={() => setSelectedStore(null)}
+        />
+      ) : (
+        <ReportBonusForm
+          storeData={selectedStore}
+          onBack={() => setSelectedStore(null)}
+        />
+      )}
       <InstallButton />
     </>
   );

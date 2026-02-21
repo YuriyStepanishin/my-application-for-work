@@ -16,6 +16,7 @@ interface Props {
 }
 
 export default function StoreSelector({ data, onSelect, onBack }: Props) {
+  const safeData: SheetRow[] = Array.isArray(data) ? data : [];
   const [department, setDepartment] = useState('');
   const [representative, setRepresentative] = useState('');
   const [store, setStore] = useState('');
@@ -24,32 +25,31 @@ export default function StoreSelector({ data, onSelect, onBack }: Props) {
 
   const [localStores, setLocalStores] = useState<string[]>([]);
 
-  const departments = useMemo(
-    () => [...new Set(data.map(d => d['Відділ']))],
-    [data]
-  );
+const departments = useMemo(
+  () => [...new Set(safeData.map(d => d.department))],
+  [safeData]
+);
 
   const representatives = useMemo(
     () => [
       ...new Set(
-        data
-          .filter(d => d['Відділ'] === department)
-          .map(d => d['Торговий агент'])
+        safeData
+          .filter(d => d.department === department)
+          .map(d => d.representative)
       ),
     ],
-    [data, department]
+    [safeData, department]
   );
 
   const stores = useMemo(() => {
-    const fromSheet = data
+    const fromSheet = safeData
       .filter(
-        d =>
-          d['Відділ'] === department && d['Торговий агент'] === representative
+        d => d.department === department && d.representative === representative
       )
-      .map(d => d['ТТ']);
+      .map(d => d.store);
 
     return [...new Set([...fromSheet, ...localStores])];
-  }, [data, department, representative, localStores]);
+  }, [safeData, department, representative, localStores]);
 
   function handleConfirm() {
     if (!department || !representative || !store) {
