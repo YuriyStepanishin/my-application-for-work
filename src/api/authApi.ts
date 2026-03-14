@@ -1,8 +1,7 @@
-const API =
-  'https://script.google.com/macros/s/AKfycbzQNG_Ykf0zfBbT09kr-4iDBbcwCWm-G5oC2s3EaIOFWHcxaZZCavYlAKaP8pwiygmz/exec';
+import { API_URL } from './config';
 
 export async function sendCode(email: string) {
-  const res = await fetch(API, {
+  const res = await fetch(API_URL, {
     method: 'POST',
 
     body: JSON.stringify({
@@ -15,7 +14,7 @@ export async function sendCode(email: string) {
 }
 
 export async function verifyCode(email: string, code: string) {
-  const res = await fetch(API, {
+  const res = await fetch(API_URL, {
     method: 'POST',
 
     headers: {

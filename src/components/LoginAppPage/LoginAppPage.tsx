@@ -1,4 +1,4 @@
-import styles from './ReportPage.module.css';
+import styles from './LoginAppPage.module.css';
 
 interface Props {
   email: string;
@@ -8,7 +8,7 @@ interface Props {
   onOk: () => void;
 }
 
-export default function ReportPage({
+export default function LoginAppPage({
   email,
 
   onLogout,

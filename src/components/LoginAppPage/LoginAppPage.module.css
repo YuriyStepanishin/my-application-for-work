@@ -2,7 +2,7 @@
   min-height: 100vh;
   min-height: 100dvh;
 
-  background: #f4f6f8;
+  background: linear-gradient(135deg, #667eea, #764ba2);
 
   display: flex;
   justify-content: center;

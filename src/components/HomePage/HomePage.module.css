@@ -20,7 +20,8 @@
 
   width: 100%;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 кнопки в ряд */
   gap: 16px;
 
   padding: 20px;
@@ -40,6 +41,8 @@
   min-height: 120px;
 
   border-radius: 18px;
+  position: relative;
+  overflow: hidden;
 
   /* напівпрозорий фон */
   background: rgba(20, 20, 20, 0.35);
@@ -77,7 +80,9 @@
   /* читабельність */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 
-  transition: all 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* hover */
@@ -89,7 +94,9 @@
       0 0 18px rgba(212, 175, 55, 0.6),
       inset 0 0 12px rgba(212, 175, 55, 0.25);
 
-    transform: translateY(-2px);
+    .button:hover {
+      transform: scale(1.05);
+    }
   }
 }
 
@@ -138,6 +145,12 @@
 
 .backButton:active {
   transform: scale(0.98);
+}
+.icon {
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
 }
 
 /* ===== PHONES ===== */

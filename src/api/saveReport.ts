@@ -21,6 +21,10 @@ export interface SaveReportPayload {
   comment: string;
 
   photos: PhotoPayload[];
+  lat?: number;
+  lng?: number;
+
+  date?: string;
 }
 
 export interface ApiResponse {

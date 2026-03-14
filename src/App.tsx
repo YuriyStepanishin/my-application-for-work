@@ -1,30 +1,36 @@
 import { useState } from 'react';
 
 import LoginPage from './components/LoginPage/LoginPage';
-import ReportPage from './components/ReportPage/ReportPage';
+import LoginAppPage from './components/LoginAppPage/LoginAppPage';
 import HomePage from './components/HomePage/HomePage';
 
 import StoreSelector from './components/StoreSelector/StoreSelector';
 import ReportDetailsForm from './components/ReportDetailsForm/ReportDetailsForm';
 import ReportBonusForm from './components/ReportBonusForm/ReportBonusForm';
-
-import { fetchSheetData, fetchBonusSheetData } from './api/sheetApi';
+import PhotoGallery from './components/PhotoGallery/PhotoGallery';
 
 import type { SheetRow } from './types/sheet';
+
 import InstallButton from './components/InstallButton/InstallButton';
+import Loader from './components/Loader/Loader';
+
+import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
-  const [email, setEmail] = useState<string | null>(
+  const displayQuery = useDisplaySheet();
+  const bonusQuery = useBonusSheet();
+
+  const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
   );
 
   const [showHome, setShowHome] = useState(false);
   const [showStoreSelector, setShowStoreSelector] = useState(false);
 
-  const [sheetData, setSheetData] = useState<SheetRow[]>([]);
   const [reportType, setReportType] = useState<'display' | 'bonus' | null>(
     null
   );
+  const [showGallery, setShowGallery] = useState(false);
 
   const [selectedStore, setSelectedStore] = useState<{
     department: string;
@@ -32,7 +38,7 @@ export default function App() {
     store: string;
   } | null>(null);
 
-  // LOGIN
+  // LOGIN PAGE
   if (!email) {
     return (
       <>
@@ -51,7 +57,7 @@ export default function App() {
   if (!showHome) {
     return (
       <>
-        <ReportPage
+        <LoginAppPage
           email={email}
           onOk={() => setShowHome(true)}
           onLogout={() => {
@@ -63,6 +69,9 @@ export default function App() {
       </>
     );
   }
+  if (showGallery) {
+    return <PhotoGallery onBack={() => setShowGallery(false)} />;
+  }
 
   // HOME PAGE
   if (!showStoreSelector) {
@@ -70,24 +79,32 @@ export default function App() {
       <>
         <HomePage
           onOpenDisplay={() => {
-            fetchSheetData().then(data => {
-              setSheetData(data);
-              setReportType('display'); // ← важливо
-              setShowStoreSelector(true);
-            });
+            setReportType('display');
+            setShowStoreSelector(true);
           }}
           onOpenBonus={() => {
-            fetchBonusSheetData().then(data => {
-              setSheetData(data);
-              setReportType('bonus'); // ← важливо
-              setShowStoreSelector(true);
-            });
+            setReportType('bonus');
+            setShowStoreSelector(true);
           }}
+          onOpenGallery={() => setShowGallery(true)}
         />
         <InstallButton />
       </>
     );
   }
+
+  // LOADING DATA
+  if (
+    (reportType === 'display' && displayQuery.isLoading) ||
+    (reportType === 'bonus' && bonusQuery.isLoading)
+  ) {
+    return <Loader />;
+  }
+
+  const sheetData: SheetRow[] =
+    reportType === 'display'
+      ? (displayQuery.data ?? [])
+      : (bonusQuery.data ?? []);
 
   // STORE SELECTOR
   if (!selectedStore) {
@@ -103,7 +120,7 @@ export default function App() {
     );
   }
 
-  // REPORT DETAILS
+  // REPORT FORMS
   return (
     <>
       {reportType === 'display' ? (

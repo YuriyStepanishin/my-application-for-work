@@ -6,7 +6,6 @@ import styles from './StoreSelector.module.css';
 
 interface Props {
   data: SheetRow[];
-
   onSelect: (store: {
     department: string;
     representative: string;
@@ -16,45 +15,74 @@ interface Props {
 }
 
 export default function StoreSelector({ data, onSelect, onBack }: Props) {
-  const safeData: SheetRow[] = Array.isArray(data) ? data : [];
+  const normalizedData = useMemo<SheetRow[]>(() => {
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.filter(
+      item =>
+        item &&
+        typeof item.department === 'string' &&
+        typeof item.representative === 'string' &&
+        typeof item.store === 'string'
+    );
+  }, [data]);
+
   const [department, setDepartment] = useState('');
   const [representative, setRepresentative] = useState('');
   const [store, setStore] = useState('');
-
   const [showModal, setShowModal] = useState(false);
-
   const [localStores, setLocalStores] = useState<string[]>([]);
 
-const departments = useMemo(
-  () => [...new Set(safeData.map(d => d.department))],
-  [safeData]
-);
+  const departments = useMemo(() => {
+    return [...new Set(normalizedData.map(item => item.department))].sort(
+      (a, b) => a.localeCompare(b, 'uk')
+    );
+  }, [normalizedData]);
 
-  const representatives = useMemo(
-    () => [
-      ...new Set(
-        safeData
-          .filter(d => d.department === department)
-          .map(d => d.representative)
-      ),
-    ],
-    [safeData, department]
-  );
+  const departmentRows = useMemo(() => {
+    if (!department) {
+      return [];
+    }
+
+    return normalizedData.filter(item => item.department === department);
+  }, [normalizedData, department]);
+
+  const representatives = useMemo(() => {
+    return [...new Set(departmentRows.map(item => item.representative))].sort(
+      (a, b) => a.localeCompare(b, 'uk')
+    );
+  }, [departmentRows]);
 
   const stores = useMemo(() => {
-    const fromSheet = safeData
-      .filter(
-        d => d.department === department && d.representative === representative
-      )
-      .map(d => d.store);
+    if (!department || !representative) {
+      return [];
+    }
 
-    return [...new Set([...fromSheet, ...localStores])];
-  }, [safeData, department, representative, localStores]);
+    const fromSheet = departmentRows
+      .filter(item => item.representative === representative)
+      .map(item => item.store);
+
+    return [...new Set([...fromSheet, ...localStores])].sort((a, b) =>
+      a.localeCompare(b, 'uk')
+    );
+  }, [department, representative, departmentRows, localStores]);
+
+  function handleDepartmentChange(value: string) {
+    setDepartment(value);
+    setRepresentative('');
+    setStore('');
+  }
+
+  function handleRepresentativeChange(value: string) {
+    setRepresentative(value);
+    setStore('');
+  }
 
   function handleConfirm() {
     if (!department || !representative || !store) {
       alert('Оберіть всі поля');
-
       return;
     }
 
@@ -70,19 +98,15 @@ const departments = useMemo(
       <select
         className={styles.select}
         value={department}
-        onChange={e => {
-          setDepartment(e.target.value);
-          setRepresentative('');
-          setStore('');
-        }}
+        onChange={e => handleDepartmentChange(e.target.value)}
       >
         <option value="" disabled hidden>
           Відділ
         </option>
 
-        {departments.map(d => (
-          <option key={d} value={d}>
-            {d}
+        {departments.map(item => (
+          <option key={item} value={item}>
+            {item}
           </option>
         ))}
       </select>
@@ -91,18 +115,15 @@ const departments = useMemo(
         className={styles.select}
         value={representative}
         disabled={!department}
-        onChange={e => {
-          setRepresentative(e.target.value);
-          setStore('');
-        }}
+        onChange={e => handleRepresentativeChange(e.target.value)}
       >
         <option value="" disabled hidden>
           Торговий представник
         </option>
 
-        {representatives.map(r => (
-          <option key={r} value={r}>
-            {r}
+        {representatives.map(item => (
+          <option key={item} value={item}>
+            {item}
           </option>
         ))}
       </select>
@@ -117,9 +138,9 @@ const departments = useMemo(
           Торгова точка
         </option>
 
-        {stores.map(s => (
-          <option key={s} value={s}>
-            {s}
+        {stores.map(item => (
+          <option key={item} value={item}>
+            {item}
           </option>
         ))}
       </select>
@@ -136,9 +157,11 @@ const departments = useMemo(
         Далі
       </button>
 
-      <button className={styles.backButton} onClick={onBack}>
-        ← Головна сторінка
-      </button>
+      {onBack && (
+        <button className={styles.backButton} onClick={onBack}>
+          ← Головна сторінка
+        </button>
+      )}
 
       {showModal && (
         <NewStoreModal
@@ -146,10 +169,10 @@ const departments = useMemo(
           representative={representative}
           onClose={() => setShowModal(false)}
           onCreated={newStore => {
-            setLocalStores(prev => [...prev, newStore]);
-
+            setLocalStores(prev =>
+              prev.includes(newStore) ? prev : [...prev, newStore]
+            );
             setStore(newStore);
-
             setShowModal(false);
           }}
         />

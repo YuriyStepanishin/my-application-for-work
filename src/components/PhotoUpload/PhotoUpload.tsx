@@ -1,4 +1,5 @@
 import { useRef, type ChangeEvent } from 'react';
+import imageCompression from 'browser-image-compression';
 import styles from './PhotoUpload.module.css';
 
 export interface Photo {
@@ -17,10 +18,23 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
   const galleryRef = useRef<HTMLInputElement>(null);
 
   // ============================
-  // File → base64
+  // compression options
   // ============================
 
-  function fileToBase64(file: File): Promise<Photo> {
+  const compressionOptions = {
+    maxSizeMB: 1.5,
+    maxWidthOrHeight: 2600,
+    initialQuality: 0.9,
+    useWebWorker: true,
+  };
+
+  // ============================
+  // File → base64 (з compression)
+  // ============================
+
+  async function fileToBase64(file: File): Promise<Photo> {
+    const compressed = await imageCompression(file, compressionOptions);
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
@@ -29,14 +43,14 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
 
         resolve({
           base64,
-          type: file.type,
-          name: file.name,
+          type: compressed.type,
+          name: compressed.name,
         });
       };
 
       reader.onerror = reject;
 
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(compressed);
     });
   }
 
@@ -54,11 +68,16 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
       return;
     }
 
-    const newPhotos = await Promise.all(files.map(fileToBase64));
+    try {
+      const newPhotos = await Promise.all(files.map(fileToBase64));
 
-    setPhotos(prev => [...prev, ...newPhotos]);
+      setPhotos(prev => [...prev, ...newPhotos]);
+    } catch (err) {
+      console.error(err);
+      alert('Помилка обробки фото');
+    }
 
-    // очистити input щоб можна було вибрати те саме фото ще раз
+    // очистити input
     e.target.value = '';
   }
 
@@ -77,8 +96,6 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
   return (
     <div className={styles.container}>
       <label className={styles.label}>Фото (макс 3)</label>
-
-      {/* hidden inputs */}
 
       {/* камера */}
       <input
@@ -126,6 +143,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
             <img
               src={`data:${photo.type};base64,${photo.base64}`}
               className={styles.previewImage}
+              loading="lazy"
             />
 
             <button

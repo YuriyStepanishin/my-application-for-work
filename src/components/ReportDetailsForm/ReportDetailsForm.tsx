@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 
 import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
 
 import styles from './ReportDetailsForm.module.css';
+import useGeolocation from '../../hooks/useGeolocation';
 
 interface Props {
   storeData: {
@@ -23,6 +25,12 @@ interface Photo {
 }
 
 export default function ReportDetailsForm({ storeData, onBack }: Props) {
+  const { getLocation } = useGeolocation();
+
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
+
   const [startDate, setStartDate] = useState('');
 
   const [endDate, setEndDate] = useState('');
@@ -60,19 +68,29 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
     try {
       setSaving(true);
 
-      const result = await saveReport({
-        department: storeData.department,
-        representative: storeData.representative,
-        store: storeData.store,
+      const geo = await getLocation(); // ← отримуємо координати
 
-        startDate,
-        endDate,
+      const result = await saveReport(
+        {
+          department: storeData.department,
+          representative: storeData.representative,
+          store: storeData.store,
 
-        category,
-        comment,
+          startDate,
+          endDate,
 
-        photos,
-      }, 'display'); // ← важливо вказати тип
+          category,
+          comment,
+
+          photos,
+
+          lat: geo.lat,
+          lng: geo.lng,
+
+          date: new Date().toISOString(),
+        },
+        'display'
+      );
 
       if (result.success) {
         setSuccess(true);
@@ -92,7 +110,6 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
       setSaving(false);
     }
   }
-
   return (
     <div className={styles.wrapper}>
       {/* STORE TITLE */}
