@@ -144,7 +144,7 @@ export default function PhotoGallery({ onBack }: Props) {
             <div
               key={photo.id}
               className={styles.card}
-              onClick={() => setActivePhoto(photo.url)}
+              onClick={() => setActivePhoto(convertDriveUrl(photo.url))}
             >
               <img
                 src={convertDriveUrl(photo.url)}
