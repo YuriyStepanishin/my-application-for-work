@@ -5,6 +5,8 @@ import { saveReport } from '../../api/saveReport';
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
 
 import styles from '../ReportDetailsForm/ReportDetailsForm.module.css';
+import type { Photo } from '../../types/photo';
+import { db } from '../PhotoUpload/db';
 
 interface Props {
   storeData: {
@@ -14,12 +16,6 @@ interface Props {
   };
 
   onBack: () => void;
-}
-
-interface Photo {
-  base64: string;
-  type: string;
-  name: string;
 }
 
 export default function ReportBonusForm({ storeData, onBack }: Props) {
@@ -50,6 +46,7 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
 
     try {
       setSaving(true);
+      const dbPhotos = await db.photos.toArray();
 
       const result = await saveReport(
         {
@@ -62,7 +59,7 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
           category,
           comment,
 
-          photos,
+          photos: dbPhotos,
         },
         'bonus'
       ); // ← важливо вказати тип
@@ -72,6 +69,7 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
 
         setComment('');
         setPhotos([]);
+        await db.photos.clear();
 
         setTimeout(onBack, 1500);
       } else {

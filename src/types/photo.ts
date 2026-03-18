@@ -1,14 +1,9 @@
-export interface PhotoRecord {
+export type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
+
+export interface Photo {
+  id: string;
   base64: string;
   type: string;
   name: string;
-
-  store: string;
-  department: string;
-  representative: string;
-
-  date: string;
-
-  lat?: number;
-  lng?: number;
+  status: UploadStatus;
 }

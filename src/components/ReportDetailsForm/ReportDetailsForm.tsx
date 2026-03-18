@@ -7,6 +7,8 @@ import PhotoUpload from '../PhotoUpload/PhotoUpload';
 
 import styles from './ReportDetailsForm.module.css';
 import useGeolocation from '../../hooks/useGeolocation';
+import type { Photo } from '../../types/photo';
+import { db } from '../PhotoUpload/db';
 
 interface Props {
   storeData: {
@@ -16,12 +18,6 @@ interface Props {
   };
 
   onBack: () => void;
-}
-
-interface Photo {
-  base64: string;
-  type: string;
-  name: string;
 }
 
 export default function ReportDetailsForm({ storeData, onBack }: Props) {
@@ -69,6 +65,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
       setSaving(true);
 
       const geo = await getLocation(); // ← отримуємо координати
+      const dbPhotos = await db.photos.toArray();
 
       const result = await saveReport(
         {
@@ -82,7 +79,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
           category,
           comment,
 
-          photos,
+          photos: dbPhotos,
 
           lat: geo.lat,
           lng: geo.lng,
@@ -97,6 +94,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
 
         setComment('');
         setPhotos([]);
+        await db.photos.clear();
 
         setTimeout(() => {
           onBack();

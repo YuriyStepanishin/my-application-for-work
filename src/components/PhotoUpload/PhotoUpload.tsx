@@ -1,12 +1,8 @@
 import { useRef, type ChangeEvent } from 'react';
 import imageCompression from 'browser-image-compression';
 import styles from './PhotoUpload.module.css';
-
-export interface Photo {
-  base64: string;
-  type: string;
-  name: string;
-}
+import { db } from './db';
+import type { Photo } from '../../types/photo';
 
 interface Props {
   photos: Photo[];
@@ -17,20 +13,12 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
-  // ============================
-  // compression options
-  // ============================
-
   const compressionOptions = {
     maxSizeMB: 1.5,
     maxWidthOrHeight: 2600,
     initialQuality: 0.9,
     useWebWorker: true,
   };
-
-  // ============================
-  // File → base64 (з compression)
-  // ============================
 
   async function fileToBase64(file: File): Promise<Photo> {
     const compressed = await imageCompression(file, compressionOptions);
@@ -42,21 +30,18 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         const base64 = (reader.result as string).split(',')[1];
 
         resolve({
+          id: crypto.randomUUID(),
           base64,
           type: compressed.type,
           name: compressed.name,
+          status: 'pending',
         });
       };
 
       reader.onerror = reject;
-
       reader.readAsDataURL(compressed);
     });
   }
-
-  // ============================
-  // обробка вибору
-  // ============================
 
   async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
@@ -71,33 +56,31 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
     try {
       const newPhotos = await Promise.all(files.map(fileToBase64));
 
-      setPhotos(prev => [...prev, ...newPhotos]);
+      for (const p of newPhotos) {
+        await db.photos.put(p);
+      }
+
+      const fresh = await db.photos.toArray();
+      setPhotos(fresh);
     } catch (err) {
       console.error(err);
       alert('Помилка обробки фото');
     }
 
-    // очистити input
     e.target.value = '';
   }
 
-  // ============================
-  // видалення
-  // ============================
+  async function removePhoto(id: string) {
+    await db.photos.delete(id);
 
-  function removePhoto(index: number) {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    const fresh = await db.photos.toArray();
+    setPhotos(fresh);
   }
-
-  // ============================
-  // UI
-  // ============================
 
   return (
     <div className={styles.container}>
       <label className={styles.label}>Фото (макс 3)</label>
 
-      {/* камера */}
       <input
         ref={cameraRef}
         type="file"
@@ -107,7 +90,6 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         className={styles.hiddenInput}
       />
 
-      {/* галерея */}
       <input
         ref={galleryRef}
         type="file"
@@ -117,10 +99,8 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         className={styles.hiddenInput}
       />
 
-      {/* кнопки */}
       <div className={styles.buttons}>
         <button
-          type="button"
           onClick={() => cameraRef.current?.click()}
           className={styles.button}
         >
@@ -128,7 +108,6 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         </button>
 
         <button
-          type="button"
           onClick={() => galleryRef.current?.click()}
           className={styles.button}
         >
@@ -136,19 +115,16 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         </button>
       </div>
 
-      {/* preview */}
       <div className={styles.previewContainer}>
-        {photos.map((photo, index) => (
-          <div key={index} className={styles.previewItem}>
+        {photos.map(photo => (
+          <div key={photo.id} className={styles.previewItem}>
             <img
               src={`data:${photo.type};base64,${photo.base64}`}
               className={styles.previewImage}
-              loading="lazy"
             />
 
             <button
-              type="button"
-              onClick={() => removePhoto(index)}
+              onClick={() => removePhoto(photo.id)}
               className={styles.removeButton}
             >
               ✕
