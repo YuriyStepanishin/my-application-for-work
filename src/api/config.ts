@@ -3,3 +3,6 @@ export const API_URL =
 
 export const BONUS_API_URL =
   'https://script.google.com/macros/s/AKfycbz2Mkqzbn9yg3FGxgwWc2JIiQM6-z838pTW-9koA_CO_IQjXjj7cNlID3OP2xdwTCo/exec';
+
+export const SALES_URL =
+  'https://script.google.com/macros/s/AKfycbzeo7nXlNySiPYBq6SUm6J77PlkDzyVnqNQD40egz2zB8-9WiEczy_Yv8zO06n4Zhn8/exec';

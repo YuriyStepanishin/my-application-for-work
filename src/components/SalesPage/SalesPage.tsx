@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadCsv } from '../../api/loadCsv';
+import { SALES_URL } from '../../api/config';
 import { transformSales } from '../../utils/transformSales';
 import styles from './SalesPage.module.css';
+import type { RawSale } from '../../types/sales';
 
 type Sale = {
   date: string;
@@ -22,8 +23,6 @@ type BrandData = {
   tt500: number;
 };
 
-type RawSale = Record<string, string>;
-
 export default function SalesPage({ onBack }: { onBack: () => void }) {
   const [data, setData] = useState<Sale[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -34,9 +33,9 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
   // 🔹 Завантаження CSV
   useEffect(() => {
     async function init() {
-      const raw = await loadCsv<RawSale>(
-        'https://drive.google.com/uc?export=download&id=1ppiQYDN_ThDxCDOV_j4IFJV3PqjsnOEZ'
-      );
+      const res = await fetch(SALES_URL);
+
+      const raw: RawSale[] = await res.json();
 
       const clean = transformSales(raw);
       setData(clean);
