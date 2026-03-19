@@ -8,6 +8,7 @@ import StoreSelector from './components/StoreSelector/StoreSelector';
 import ReportDetailsForm from './components/ReportDetailsForm/ReportDetailsForm';
 import ReportBonusForm from './components/ReportBonusForm/ReportBonusForm';
 import PhotoGallery from './components/PhotoGallery/PhotoGallery';
+import SalesPage from './components/SalesPage/SalesPage';
 
 import type { SheetRow } from './types/sheet';
 
@@ -17,6 +18,7 @@ import Loader from './components/Loader/Loader';
 import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
+  const [page, setPage] = useState<'home' | 'sales'>('home');
   const displayQuery = useDisplaySheet();
   const bonusQuery = useBonusSheet();
 
@@ -72,7 +74,9 @@ export default function App() {
   if (showGallery) {
     return <PhotoGallery onBack={() => setShowGallery(false)} />;
   }
-
+  if (page === 'sales') {
+    return <SalesPage onBack={() => setPage('home')} />;
+  }
   // HOME PAGE
   if (!showStoreSelector) {
     return (
@@ -87,13 +91,13 @@ export default function App() {
             setShowStoreSelector(true);
           }}
           onOpenGallery={() => setShowGallery(true)}
+          onOpenSales={() => setPage('sales')}
         />
         <InstallButton />
       </>
     );
   }
 
-  // LOADING DATA
   if (
     (reportType === 'display' && displayQuery.isLoading) ||
     (reportType === 'bonus' && bonusQuery.isLoading)

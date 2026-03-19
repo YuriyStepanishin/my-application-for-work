@@ -7,12 +7,14 @@ interface Props {
   onOpenDisplay: () => void;
   onOpenBonus: () => void;
   onOpenGallery: () => void;
+  onOpenSales: () => void;
 }
 
 export default function HomePage({
   onOpenDisplay,
   onOpenBonus,
   onOpenGallery,
+  onOpenSales,
 }: Props) {
   const [showPopup, setShowPopup] = useState(false);
 
@@ -31,7 +33,7 @@ export default function HomePage({
       {/* контейнер кнопок */}
       <div className={styles.buttonContainer}>
         {/* кнопка 1 */}
-        <button onClick={() => setShowPopup(true)} className={styles.button}>
+        <button onClick={onOpenSales} className={styles.button}>
           <img src="/icons/chart-icon-64.svg" className={styles.icon} />
         </button>
 

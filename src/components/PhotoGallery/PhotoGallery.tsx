@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from './PhotoGallery.module.css';
 import { useQuery } from '@tanstack/react-query';
 import { BONUS_API_URL } from '../../api/config';
+import Loader from '../Loader/Loader';
 
 interface Props {
   onBack: () => void;
@@ -36,7 +37,6 @@ async function fetchPhotos(): Promise<Photo[]> {
   }
 
   const json = await res.json();
-
   const reports: Report[] = json.data;
 
   return reports.flatMap((report, index) =>
@@ -56,11 +56,8 @@ async function fetchPhotos(): Promise<Photo[]> {
 
 function convertDriveUrl(url: string) {
   const idMatch = url.match(/id=([^&]+)/);
-
   if (!idMatch) return url;
-
   const id = idMatch[1];
-
   return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
 }
 
@@ -69,6 +66,75 @@ export default function PhotoGallery({ onBack }: Props) {
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
 
+  // 👉 zoom + drag
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const lastTouch = useRef<number | null>(null);
+  const lastDistance = useRef<number | null>(null);
+  const lastPoint = useRef<{ x: number; y: number } | null>(null);
+
+  function getDistance(touches: React.TouchList) {
+    const a = touches[0];
+    const b = touches[1];
+
+    if (!a || !b) return 0;
+
+    return Math.sqrt(
+      Math.pow(a.clientX - b.clientX, 2) + Math.pow(a.clientY - b.clientY, 2)
+    );
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      lastDistance.current = getDistance(e.touches);
+    }
+
+    // double tap
+    const now = Date.now();
+    if (lastTouch.current && now - lastTouch.current < 300) {
+      setZoom(prev => (prev > 1 ? 1 : 2));
+    }
+    lastTouch.current = now;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = getDistance(e.touches);
+
+      if (lastDistance.current) {
+        const scale = distance / lastDistance.current;
+        setZoom(prev => Math.min(Math.max(prev * scale, 1), 5));
+      }
+
+      lastDistance.current = distance;
+    }
+
+    if (e.touches.length === 1 && zoom > 1) {
+      const touch = e.touches[0];
+
+      if (lastPoint.current) {
+        const dx = touch.clientX - lastPoint.current.x;
+        const dy = touch.clientY - lastPoint.current.y;
+
+        setPosition(prev => ({
+          x: prev.x + dx,
+          y: prev.y + dy,
+        }));
+      }
+
+      lastPoint.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+      };
+    }
+  };
+
+  const handleTouchEnd = () => {
+    lastDistance.current = null;
+    lastPoint.current = null;
+  };
+
   const { data: photos = [], isLoading } = useQuery<Photo[]>({
     queryKey: ['photos'],
     queryFn: fetchPhotos,
@@ -76,7 +142,7 @@ export default function PhotoGallery({ onBack }: Props) {
   });
 
   if (isLoading) {
-    return <div>Завантаження...</div>;
+    return <Loader />;
   }
 
   const departments = [
@@ -97,9 +163,7 @@ export default function PhotoGallery({ onBack }: Props) {
 
   const filteredPhotos = photos.filter(p => {
     const depOk = department === 'all' || p.department === department;
-
     const repOk = rep === 'all' || p.rep === rep;
-
     return depOk && repOk;
   });
 
@@ -144,7 +208,11 @@ export default function PhotoGallery({ onBack }: Props) {
             <div
               key={photo.id}
               className={styles.card}
-              onClick={() => setActivePhoto(convertDriveUrl(photo.url))}
+              onClick={() => {
+                setActivePhoto(convertDriveUrl(photo.url));
+                setZoom(1);
+                setPosition({ x: 0, y: 0 });
+              }}
             >
               <img
                 src={convertDriveUrl(photo.url)}
@@ -156,13 +224,6 @@ export default function PhotoGallery({ onBack }: Props) {
                 <div>ТТ: {photo.store}</div>
                 <div>Категорія: {photo.category}</div>
                 <div>{photo.date}</div>
-                <div>
-                  {photo.lat !== 0 && (
-                    <div>
-                      📍 {photo.lat}, {photo.lng}
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           ))}
@@ -177,10 +238,23 @@ export default function PhotoGallery({ onBack }: Props) {
 
       {activePhoto && (
         <div className={styles.viewer} onClick={() => setActivePhoto(null)}>
+          <button
+            className={styles.closeBtn}
+            onClick={() => setActivePhoto(null)}
+          >
+            ✕
+          </button>
+
           <img
             src={activePhoto}
-            onClick={e => e.stopPropagation()}
             className={styles.viewerImage}
+            onClick={e => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+            }}
           />
         </div>
       )}
