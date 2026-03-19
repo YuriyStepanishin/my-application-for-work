@@ -22,6 +22,8 @@ type BrandData = {
   tt500: number;
 };
 
+type RawSale = Record<string, string>;
+
 export default function SalesPage({ onBack }: { onBack: () => void }) {
   const [data, setData] = useState<Sale[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -32,8 +34,8 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
   // 🔹 Завантаження CSV
   useEffect(() => {
     async function init() {
-      const raw = await loadCsv(
-        'https://drive.google.com/file/d/1ppiQYDN_ThDxCDOV_j4IFJV3PqjsnOEZ/view?usp=sharing'
+      const raw = await loadCsv<RawSale>(
+        'https://drive.google.com/uc?export=download&id=1ppiQYDN_ThDxCDOV_j4IFJV3PqjsnOEZ'
       );
 
       const clean = transformSales(raw);
