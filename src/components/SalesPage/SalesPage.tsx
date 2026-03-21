@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SALES_URL } from '../../api/config';
 import styles from './SalesPage.module.css';
+import Loader from '../Loader/Loader';
 
 type Sale = {
   місяць: string;
@@ -168,7 +169,7 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
     ];
   }, [data, department]);
 
-  if (isLoading) return <div className={styles.loader}>Завантаження...</div>;
+  if (isLoading) return <Loader />;
   if (error) return <div className={styles.error}>Помилка</div>;
 
   return (
