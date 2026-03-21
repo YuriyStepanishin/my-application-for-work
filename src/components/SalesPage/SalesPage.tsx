@@ -1,164 +1,252 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SALES_URL } from '../../api/config';
-import { transformSales } from '../../utils/transformSales';
 import styles from './SalesPage.module.css';
-import type { RawSale } from '../../types/sales';
 
 type Sale = {
-  date: string;
-  brand: string;
-  product: string;
-  qty: number;
-  amount: number;
-  agent: string;
-  supervisor: string;
-  store: string;
+  місяць: string;
+  дата: string;
+  бренд: string;
+  товар: string;
+  вага: number;
+  кількість: number;
+  сума: number;
+  агент: string;
+  відділ: string;
+  торгова_точка: string;
 };
 
 type BrandData = {
   amount: number;
-  qty: number;
+  weight: number;
   stores: Set<string>;
   storeMap: Record<string, number>;
   tt500: number;
 };
 
 export default function SalesPage({ onBack }: { onBack: () => void }) {
-  const [data, setData] = useState<Sale[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-
   const [agent, setAgent] = useState('');
-  const [supervisor, setSupervisor] = useState('');
+  const [department, setDepartment] = useState('');
 
-  // 🔹 Завантаження CSV
-  useEffect(() => {
-    async function init() {
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery<Sale[]>({
+    queryKey: ['sales'],
+    queryFn: async () => {
       const res = await fetch(SALES_URL);
+      if (!res.ok) throw new Error('Помилка');
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-      const raw: RawSale[] = await res.json();
+  // 🔥 фільтр
+  const filtered = useMemo(() => {
+    return data.filter(i => {
+      if (department && i.відділ !== department) return false;
+      if (agent && i.агент !== agent) return false;
+      return true;
+    });
+  }, [data, agent, department]);
 
-      const clean = transformSales(raw);
-      setData(clean);
-    }
-
-    init();
-  }, []);
-
-  // 🔥 ВСЯ АНАЛІТИКА ТУТ (useMemo)
+  // 🔥 ГОЛОВНА ЛОГІКА (по торгова_точка)
   const grouped = useMemo(() => {
-    let filtered = [...data];
-
-    if (agent) {
-      filtered = filtered.filter(i => i.agent === agent);
-    }
-
-    if (supervisor) {
-      filtered = filtered.filter(i => i.supervisor === supervisor);
-    }
-
     const result: Record<string, BrandData> = {};
 
     filtered.forEach(i => {
-      if (!result[i.brand]) {
-        result[i.brand] = {
+      if (!i.бренд) return;
+
+      if (!result[i.бренд]) {
+        result[i.бренд] = {
           amount: 0,
-          qty: 0,
+          weight: 0,
           stores: new Set(),
           storeMap: {},
           tt500: 0,
         };
       }
 
-      result[i.brand].amount += i.amount;
-      result[i.brand].qty += i.qty;
-      result[i.brand].stores.add(i.store);
+      const b = result[i.бренд];
 
-      if (!result[i.brand].storeMap[i.store]) {
-        result[i.brand].storeMap[i.store] = 0;
-      }
+      b.amount += i.сума || 0;
+      b.weight += (i.кількість || 0) * (i.вага || 0);
 
-      result[i.brand].storeMap[i.store] += i.amount;
+      const key = i.торгова_точка;
+
+      if (!key) return;
+
+      // 🔥 унікальні ТТ
+      b.stores.add(key);
+
+      // 🔥 сума по ТТ
+      b.storeMap[key] = (b.storeMap[key] || 0) + (i.сума || 0);
     });
 
-    Object.values(result).forEach(brand => {
-      brand.tt500 = Object.values(brand.storeMap).filter(
-        sum => sum >= 500
-      ).length;
+    // 🔥 500+
+    Object.values(result).forEach(b => {
+      b.tt500 = Object.values(b.storeMap).filter(sum => sum >= 500).length;
     });
 
     return result;
-  }, [data, agent, supervisor]);
+  }, [filtered]);
 
-  const selectedStores =
-    selectedBrand && grouped[selectedBrand]
-      ? Object.entries(grouped[selectedBrand].storeMap)
-      : [];
+  // 🔥 список брендів
+  const brandsList = useMemo(() => {
+    return Object.entries(grouped)
+      .map(([brand, val]) => ({
+        brand,
+        ...val,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [grouped]);
+
+  // 🔥 TOTAL (правильний 500+)
+  const totalRow = useMemo(() => {
+    let amount = 0;
+    let weight = 0;
+    const stores = new Set<string>();
+    const globalStoreMap: Record<string, number> = {};
+
+    Object.values(grouped).forEach(b => {
+      amount += b.amount;
+      weight += b.weight;
+
+      Object.entries(b.storeMap).forEach(([store, sum]) => {
+        stores.add(store);
+
+        globalStoreMap[store] = (globalStoreMap[store] || 0) + sum;
+      });
+    });
+
+    const tt500 = Object.values(globalStoreMap).filter(
+      sum => sum >= 500
+    ).length;
+
+    return {
+      amount,
+      weight,
+      stores: stores.size,
+      tt500,
+    };
+  }, [grouped]);
+
+  // 🔥 деталізація
+  const selectedStores = useMemo(() => {
+    if (!selectedBrand || !grouped[selectedBrand]) return [];
+
+    return Object.entries(grouped[selectedBrand].storeMap)
+      .map(([store, sum]) => ({
+        name: store,
+        sum,
+      }))
+      .sort((a, b) => b.sum - a.sum);
+  }, [selectedBrand, grouped]);
+
+  const format = (n: number) =>
+    n.toLocaleString('uk-UA', {
+      maximumFractionDigits: 2,
+    });
+
+  // 🔥 відділи
+  const uniqueDepartments = useMemo(
+    () => [...new Set(data.map(d => d.відділ).filter(Boolean))],
+    [data]
+  );
+
+  // 🔥 агенти
+  const uniqueAgents = useMemo(() => {
+    return [
+      ...new Set(
+        data
+          .filter(d => !department || d.відділ === department)
+          .map(d => d.агент)
+          .filter(Boolean)
+      ),
+    ];
+  }, [data, department]);
+
+  if (isLoading) return <div className={styles.loader}>Завантаження...</div>;
+  if (error) return <div className={styles.error}>Помилка</div>;
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Показники</h2>
-
-      {/* 🔥 ФІЛЬТРИ */}
       <div className={styles.filters}>
         <select
-          className={styles.select}
-          value={supervisor}
-          onChange={e => setSupervisor(e.target.value)}
+          value={department}
+          onChange={e => {
+            setDepartment(e.target.value);
+            setAgent('');
+          }}
         >
-          <option value="">Всі супери</option>
-          {[...new Set(data.map(d => d.supervisor))].map(s => (
-            <option key={s}>{s}</option>
+          <option value="">Всі відділи</option>
+          {uniqueDepartments.map(d => (
+            <option key={d}>{d}</option>
           ))}
         </select>
 
-        <select
-          className={styles.select}
-          value={agent}
-          onChange={e => setAgent(e.target.value)}
-        >
+        <select value={agent} onChange={e => setAgent(e.target.value)}>
           <option value="">Всі агенти</option>
-          {[...new Set(data.map(d => d.agent))].map(a => (
+          {uniqueAgents.map(a => (
             <option key={a}>{a}</option>
           ))}
         </select>
       </div>
 
-      {/* 🔹 Таблиця */}
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Бренд</th>
+            <th>Торгова марка</th>
             <th>Сума</th>
-            <th>КГ</th>
+            <th>Вага</th>
             <th>ТТ</th>
-            <th>ТТ від 500 грн</th>
+            <th>500+</th>
           </tr>
         </thead>
 
         <tbody>
-          {Object.entries(grouped).map(([brand, val]) => (
-            <tr key={brand}>
-              <td>{brand}</td>
-              <td>{val.amount.toFixed(2)}</td>
-              <td>{val.qty.toFixed(2)}</td>
-
+          {brandsList.map(b => (
+            <tr key={b.brand}>
+              <td>{b.brand}</td>
+              <td>{format(b.amount)}</td>
+              <td>{format(b.weight)}</td>
               <td
                 className={styles.clickable}
-                onClick={() => setSelectedBrand(brand)}
+                onClick={() =>
+                  setSelectedBrand(prev => (prev === b.brand ? null : b.brand))
+                }
               >
-                {val.stores.size}
+                {b.stores.size}
               </td>
-
-              <td>{val.tt500}</td>
+              <td>{b.tt500}</td>
             </tr>
           ))}
+
+          <tr className={styles.totalRow}>
+            <td>
+              <b>Усі торгові марки</b>
+            </td>
+            <td>
+              <b>{format(totalRow.amount)}</b>
+            </td>
+            <td>
+              <b>{format(totalRow.weight)}</b>
+            </td>
+            <td>
+              <b>{totalRow.stores}</b>
+            </td>
+            <td>
+              <b>{totalRow.tt500}</b>
+            </td>
+          </tr>
         </tbody>
       </table>
 
-      {/* 🔻 Деталізація ТТ */}
       {selectedBrand && (
         <div className={styles.subBlock}>
-          <h3>ТТ по бренду: {selectedBrand}</h3>
+          <h3>{selectedBrand}</h3>
 
           <table className={styles.table}>
             <thead>
@@ -169,10 +257,10 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
             </thead>
 
             <tbody>
-              {selectedStores.map(([store, sum]) => (
-                <tr key={store}>
-                  <td>{store}</td>
-                  <td>{Number(sum).toFixed(2)}</td>
+              {selectedStores.map(({ name, sum }) => (
+                <tr key={name}>
+                  <td>{name}</td>
+                  <td>{format(sum)}</td>
                 </tr>
               ))}
             </tbody>
@@ -180,8 +268,8 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
         </div>
       )}
 
-      <button className={styles.button} onClick={onBack}>
-        Назад
+      <button onClick={onBack} className={styles.button}>
+        ← Головна сторінка
       </button>
     </div>
   );

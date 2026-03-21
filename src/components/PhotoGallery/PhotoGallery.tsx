@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import styles from './PhotoGallery.module.css';
 import { useQuery } from '@tanstack/react-query';
 import { BONUS_API_URL } from '../../api/config';
@@ -29,7 +29,8 @@ type Report = {
   photos: string[];
 };
 
-async function fetchPhotos(): Promise<Photo[]> {
+// 🔥 сирий запит (без трансформації)
+async function fetchReports(): Promise<Report[]> {
   const res = await fetch(`${BONUS_API_URL}?action=getReports`);
 
   if (!res.ok) {
@@ -37,28 +38,14 @@ async function fetchPhotos(): Promise<Photo[]> {
   }
 
   const json = await res.json();
-  const reports: Report[] = json.data;
-
-  return reports.flatMap((report, index) =>
-    report.photos.map((url, i) => ({
-      id: `${index}_${i}`,
-      url,
-      store: report.store,
-      category: report.category,
-      date: report.date,
-      lat: 0,
-      lng: 0,
-      department: report.department,
-      rep: report.representative,
-    }))
-  );
+  return json.data;
 }
 
+// 🔥 швидке перетворення Google Drive
 function convertDriveUrl(url: string) {
   const idMatch = url.match(/id=([^&]+)/);
   if (!idMatch) return url;
-  const id = idMatch[1];
-  return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+  return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
 }
 
 export default function PhotoGallery({ onBack }: Props) {
@@ -66,7 +53,6 @@ export default function PhotoGallery({ onBack }: Props) {
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
 
-  // 👉 zoom + drag
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
@@ -77,20 +63,74 @@ export default function PhotoGallery({ onBack }: Props) {
   function getDistance(touches: React.TouchList) {
     const a = touches[0];
     const b = touches[1];
-
     if (!a || !b) return 0;
 
-    return Math.sqrt(
-      Math.pow(a.clientX - b.clientX, 2) + Math.pow(a.clientY - b.clientY, 2)
-    );
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
   }
 
+  // 🚀 React Query (максимально оптимізовано)
+  const {
+    data: photos = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['photos'],
+    queryFn: fetchReports,
+
+    staleTime: 1000 * 60 * 5, // кеш 5 хв
+    gcTime: 1000 * 60 * 30, // живе в памʼяті 30 хв
+
+    select: (reports: Report[]): Photo[] =>
+      reports.flatMap(report =>
+        report.photos.map(url => ({
+          id: url, // 🔥 стабільний id
+          url: convertDriveUrl(url),
+          store: report.store,
+          category: report.category,
+          date: report.date,
+          lat: 0,
+          lng: 0,
+          department: report.department,
+          rep: report.representative,
+        }))
+      ),
+  });
+
+  // 🚀 мемоізація фільтрів
+  const departments = useMemo(() => {
+    return [
+      'all',
+      ...Array.from(new Set(photos.map(p => p.department).filter(Boolean))),
+    ];
+  }, [photos]);
+
+  const reps = useMemo(() => {
+    return [
+      'all',
+      ...Array.from(
+        new Set(
+          photos
+            .filter(p => department === 'all' || p.department === department)
+            .map(p => p.rep)
+        )
+      ),
+    ];
+  }, [photos, department]);
+
+  const filteredPhotos = useMemo(() => {
+    return photos.filter(p => {
+      const depOk = department === 'all' || p.department === department;
+      const repOk = rep === 'all' || p.rep === rep;
+      return depOk && repOk;
+    });
+  }, [photos, department, rep]);
+
+  // 👉 touch логіка (без змін)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       lastDistance.current = getDistance(e.touches);
     }
 
-    // double tap
     const now = Date.now();
     if (lastTouch.current && now - lastTouch.current < 300) {
       setZoom(prev => (prev > 1 ? 1 : 2));
@@ -135,37 +175,8 @@ export default function PhotoGallery({ onBack }: Props) {
     lastPoint.current = null;
   };
 
-  const { data: photos = [], isLoading } = useQuery<Photo[]>({
-    queryKey: ['photos'],
-    queryFn: fetchPhotos,
-    refetchOnMount: true,
-  });
-
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  const departments = [
-    'all',
-    ...Array.from(new Set(photos.map(p => p.department).filter(Boolean))),
-  ];
-
-  const reps = [
-    'all',
-    ...Array.from(
-      new Set(
-        photos
-          .filter(p => department === 'all' || p.department === department)
-          .map(p => p.rep)
-      )
-    ),
-  ];
-
-  const filteredPhotos = photos.filter(p => {
-    const depOk = department === 'all' || p.department === department;
-    const repOk = rep === 'all' || p.rep === rep;
-    return depOk && repOk;
-  });
+  if (isLoading) return <Loader />;
+  if (error) return <div>Щось зламалось 😅</div>;
 
   return (
     <>
@@ -201,7 +212,7 @@ export default function PhotoGallery({ onBack }: Props) {
 
         <div className={styles.list}>
           {filteredPhotos.length === 0 && (
-            <div className={styles.empty}>Немає фото для вибраних фільтрів</div>
+            <div className={styles.empty}>Немає фото</div>
           )}
 
           {filteredPhotos.map(photo => (
@@ -209,16 +220,12 @@ export default function PhotoGallery({ onBack }: Props) {
               key={photo.id}
               className={styles.card}
               onClick={() => {
-                setActivePhoto(convertDriveUrl(photo.url));
+                setActivePhoto(photo.url);
                 setZoom(1);
                 setPosition({ x: 0, y: 0 });
               }}
             >
-              <img
-                src={convertDriveUrl(photo.url)}
-                loading="lazy"
-                className={styles.image}
-              />
+              <img src={photo.url} loading="lazy" className={styles.image} />
 
               <div className={styles.info}>
                 <div>ТТ: {photo.store}</div>
