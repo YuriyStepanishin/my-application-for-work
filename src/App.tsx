@@ -82,14 +82,6 @@ export default function App() {
         <Suspense fallback={<Loader />}>
           <PhotoGallery onBack={() => setShowGallery(false)} />
         </Suspense>
-        <UserMenu
-          email={email}
-          isOpen={isUserMenuOpen}
-          onOpen={() => setIsUserMenuOpen(true)}
-          onClose={() => setIsUserMenuOpen(false)}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-        />
       </>
     );
   }
@@ -99,14 +91,6 @@ export default function App() {
         <Suspense fallback={<Loader />}>
           <SalesPage onBack={() => setPage('home')} />
         </Suspense>
-        <UserMenu
-          email={email}
-          isOpen={isUserMenuOpen}
-          onOpen={() => setIsUserMenuOpen(true)}
-          onClose={() => setIsUserMenuOpen(false)}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-        />
       </>
     );
   }
@@ -171,14 +155,6 @@ export default function App() {
             }}
           />
         </Suspense>
-        <UserMenu
-          email={email}
-          isOpen={isUserMenuOpen}
-          onOpen={() => setIsUserMenuOpen(true)}
-          onClose={() => setIsUserMenuOpen(false)}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-        />
         <InstallButton />
       </>
     );
@@ -200,14 +176,6 @@ export default function App() {
           />
         )}
       </Suspense>
-      <UserMenu
-        email={email}
-        isOpen={isUserMenuOpen}
-        onOpen={() => setIsUserMenuOpen(true)}
-        onClose={() => setIsUserMenuOpen(false)}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-      />
       <InstallButton />
     </>
   );

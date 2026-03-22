@@ -1,6 +1,5 @@
 .filters {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   padding: 12px 16px;
   background: transparent;
@@ -9,6 +8,7 @@
 
 .select {
   flex: 1;
+  min-width: 0;
   height: 56px;
 
   padding: 0 16px;
@@ -42,7 +42,6 @@
 
 @media (max-width: 560px) {
   .filters {
-    flex-direction: column;
     padding: 12px;
   }
 }
