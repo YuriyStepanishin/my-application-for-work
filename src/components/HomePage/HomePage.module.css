@@ -19,6 +19,9 @@
   left: 0;
 
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  right: 0;
 
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 кнопки в ряд */
@@ -88,15 +91,18 @@
 /* hover */
 @media (hover: hover) {
   .button:hover {
+    transform: scale(1.05);
     background: rgba(20, 20, 20, 0.45);
 
     box-shadow:
       0 0 18px rgba(212, 175, 55, 0.6),
       inset 0 0 12px rgba(212, 175, 55, 0.25);
+  }
 
-    .button:hover {
-      transform: scale(1.05);
-    }
+  .backButton:hover {
+    transform: translateY(-1px);
+    background: rgba(20, 20, 20, 0.38);
+    box-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
   }
 }
 
@@ -139,10 +145,6 @@
   transition: all 0.15s ease;
 }
 
-.backButton:hover {
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.5);
-}
-
 .backButton:active {
   transform: scale(0.98);
 }
@@ -156,6 +158,7 @@
 /* ===== PHONES ===== */
 @media (max-width: 480px) {
   .buttonContainer {
+    grid-template-columns: 1fr;
     gap: 12px;
     padding: 14px;
 
@@ -178,8 +181,36 @@
 
 /* ===== LANDSCAPE ===== */
 @media (max-height: 500px) {
+  .buttonContainer {
+    position: static;
+    max-width: 720px;
+    margin-top: auto;
+  }
+
   .button {
     height: 80px;
     font-size: 16px;
+  }
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 1024px) {
+  .buttonContainer {
+    max-width: 980px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    padding: 28px;
+    padding-bottom: 30px;
+  }
+
+  .button {
+    height: 160px;
+    min-height: 160px;
+    border-radius: 22px;
+  }
+
+  .icon {
+    width: 72px;
+    height: 72px;
   }
 }

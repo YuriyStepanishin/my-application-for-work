@@ -36,6 +36,13 @@
   gap: 12px;
 }
 
+.embeddedCard {
+  max-width: none;
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+}
+
 .email {
   font-weight: 600;
   margin-top: 4px;
@@ -43,6 +50,7 @@
   font-size: 16px;
 
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .info {
@@ -90,12 +98,19 @@
 /* hover тільки desktop */
 @media (hover: hover) {
   .logout:hover {
+    transform: translateY(-1px);
     background: #c53030;
   }
 
   .ok:hover {
+    transform: translateY(-1px);
     background: #2b6cb0;
   }
+}
+
+.logout:active,
+.ok:active {
+  transform: scale(0.98);
 }
 
 /* ===== MOBILE ===== */

@@ -1,38 +1,44 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
-import LoginPage from './components/LoginPage/LoginPage';
-import LoginAppPage from './components/LoginAppPage/LoginAppPage';
-import HomePage from './components/HomePage/HomePage';
-
-import StoreSelector from './components/StoreSelector/StoreSelector';
-import ReportDetailsForm from './components/ReportDetailsForm/ReportDetailsForm';
-import ReportBonusForm from './components/ReportBonusForm/ReportBonusForm';
-import PhotoGallery from './components/PhotoGallery/PhotoGallery';
-import SalesPage from './components/SalesPage/SalesPage';
+const HomePage = lazy(() => import('./components/HomePage/HomePage'));
+const StoreSelector = lazy(
+  () => import('./components/StoreSelector/StoreSelector')
+);
+const ReportDetailsForm = lazy(
+  () => import('./components/ReportDetailsForm/ReportDetailsForm')
+);
+const ReportBonusForm = lazy(
+  () => import('./components/ReportBonusForm/ReportBonusForm')
+);
+const PhotoGallery = lazy(
+  () => import('./components/PhotoGallery/PhotoGallery')
+);
+const SalesPage = lazy(() => import('./components/SalesPage/SalesPage'));
 
 import type { SheetRow } from './types/sheet';
 
 import InstallButton from './components/InstallButton/InstallButton';
 import Loader from './components/Loader/Loader';
+import UserMenu from './components/UserMenu/UserMenu';
 
 import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
   const [page, setPage] = useState<'home' | 'sales'>('home');
-  const displayQuery = useDisplaySheet();
-  const bonusQuery = useBonusSheet();
-
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
   );
-
-  const [showHome, setShowHome] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(() => !email);
   const [showStoreSelector, setShowStoreSelector] = useState(false);
 
   const [reportType, setReportType] = useState<'display' | 'bonus' | null>(
     null
   );
   const [showGallery, setShowGallery] = useState(false);
+  const shouldLoadDisplaySheet = showStoreSelector && reportType === 'display';
+  const shouldLoadBonusSheet = showStoreSelector && reportType === 'bonus';
+  const displayQuery = useDisplaySheet(shouldLoadDisplaySheet);
+  const bonusQuery = useBonusSheet(shouldLoadBonusSheet);
 
   const [selectedStore, setSelectedStore] = useState<{
     department: string;
@@ -40,58 +46,99 @@ export default function App() {
     store: string;
   } | null>(null);
 
-  // LOGIN PAGE
-  if (!email) {
-    return (
-      <>
-        <LoginPage
-          onSuccess={email => {
-            localStorage.setItem('auth', email);
-            setEmail(email);
-          }}
-        />
-        <InstallButton />
-      </>
-    );
+  function resetToHome() {
+    setPage('home');
+    setShowStoreSelector(false);
+    setReportType(null);
+    setShowGallery(false);
+    setSelectedStore(null);
   }
 
-  // REPORT PAGE
-  if (!showHome) {
+  function handleLogin(nextEmail: string) {
+    localStorage.setItem('auth', nextEmail);
+    setEmail(nextEmail);
+    setIsUserMenuOpen(false);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('auth');
+    setEmail(null);
+    resetToHome();
+    setIsUserMenuOpen(true);
+  }
+
+  function runProtectedAction(action: () => void) {
+    if (!email) {
+      setIsUserMenuOpen(true);
+      return;
+    }
+
+    action();
+  }
+
+  if (showGallery) {
     return (
       <>
-        <LoginAppPage
+        <Suspense fallback={<Loader />}>
+          <PhotoGallery onBack={() => setShowGallery(false)} />
+        </Suspense>
+        <UserMenu
           email={email}
-          onOk={() => setShowHome(true)}
-          onLogout={() => {
-            localStorage.removeItem('auth');
-            setEmail(null);
-          }}
+          isOpen={isUserMenuOpen}
+          onOpen={() => setIsUserMenuOpen(true)}
+          onClose={() => setIsUserMenuOpen(false)}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
         />
-        <InstallButton />
       </>
     );
   }
-  if (showGallery) {
-    return <PhotoGallery onBack={() => setShowGallery(false)} />;
-  }
   if (page === 'sales') {
-    return <SalesPage onBack={() => setPage('home')} />;
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <SalesPage onBack={() => setPage('home')} />
+        </Suspense>
+        <UserMenu
+          email={email}
+          isOpen={isUserMenuOpen}
+          onOpen={() => setIsUserMenuOpen(true)}
+          onClose={() => setIsUserMenuOpen(false)}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
+        />
+      </>
+    );
   }
   // HOME PAGE
   if (!showStoreSelector) {
     return (
       <>
-        <HomePage
-          onOpenDisplay={() => {
-            setReportType('display');
-            setShowStoreSelector(true);
-          }}
-          onOpenBonus={() => {
-            setReportType('bonus');
-            setShowStoreSelector(true);
-          }}
-          onOpenGallery={() => setShowGallery(true)}
-          onOpenSales={() => setPage('sales')}
+        <Suspense fallback={<Loader />}>
+          <HomePage
+            onOpenDisplay={() =>
+              runProtectedAction(() => {
+                setReportType('display');
+                setShowStoreSelector(true);
+              })
+            }
+            onOpenBonus={() =>
+              runProtectedAction(() => {
+                setReportType('bonus');
+                setShowStoreSelector(true);
+              })
+            }
+            onOpenGallery={() => runProtectedAction(() => setShowGallery(true))}
+            onOpenSales={() => runProtectedAction(() => setPage('sales'))}
+          />
+        </Suspense>
+        <UserMenu
+          email={email}
+          isOpen={isUserMenuOpen}
+          onOpen={() => setIsUserMenuOpen(true)}
+          onClose={() => setIsUserMenuOpen(false)}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
         />
         <InstallButton />
       </>
@@ -114,10 +161,23 @@ export default function App() {
   if (!selectedStore) {
     return (
       <>
-        <StoreSelector
-          data={sheetData}
-          onSelect={store => setSelectedStore(store)}
-          onBack={() => setShowStoreSelector(false)}
+        <Suspense fallback={<Loader />}>
+          <StoreSelector
+            data={sheetData}
+            onSelect={store => setSelectedStore(store)}
+            onBack={() => {
+              setShowStoreSelector(false);
+              setReportType(null);
+            }}
+          />
+        </Suspense>
+        <UserMenu
+          email={email}
+          isOpen={isUserMenuOpen}
+          onOpen={() => setIsUserMenuOpen(true)}
+          onClose={() => setIsUserMenuOpen(false)}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
         />
         <InstallButton />
       </>
@@ -127,17 +187,27 @@ export default function App() {
   // REPORT FORMS
   return (
     <>
-      {reportType === 'display' ? (
-        <ReportDetailsForm
-          storeData={selectedStore}
-          onBack={() => setSelectedStore(null)}
-        />
-      ) : (
-        <ReportBonusForm
-          storeData={selectedStore}
-          onBack={() => setSelectedStore(null)}
-        />
-      )}
+      <Suspense fallback={<Loader />}>
+        {reportType === 'display' ? (
+          <ReportDetailsForm
+            storeData={selectedStore}
+            onBack={() => setSelectedStore(null)}
+          />
+        ) : (
+          <ReportBonusForm
+            storeData={selectedStore}
+            onBack={() => setSelectedStore(null)}
+          />
+        )}
+      </Suspense>
+      <UserMenu
+        email={email}
+        isOpen={isUserMenuOpen}
+        onOpen={() => setIsUserMenuOpen(true)}
+        onClose={() => setIsUserMenuOpen(false)}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+      />
       <InstallButton />
     </>
   );

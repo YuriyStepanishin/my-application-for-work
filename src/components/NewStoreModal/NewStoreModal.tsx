@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { addStore } from '../../api/addStore';
+import Loader from '../Loader/Loader';
 import styles from './NewStoreModal.module.css';
 
 interface Props {
@@ -50,6 +51,8 @@ export default function NewStoreModal({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
+        {saving && <Loader />}
+
         <div className={styles.title}>Заведення нової торгової точки</div>
 
         <input

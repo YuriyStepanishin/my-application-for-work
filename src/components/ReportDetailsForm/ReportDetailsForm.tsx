@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
+import Loader from '../Loader/Loader';
 
 import styles from './ReportDetailsForm.module.css';
 import useGeolocation from '../../hooks/useGeolocation';
@@ -110,6 +111,8 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
   }
   return (
     <div className={styles.wrapper}>
+      {saving && <Loader />}
+
       {/* STORE TITLE */}
       <div className={styles.title}>{storeData.store}</div>
 

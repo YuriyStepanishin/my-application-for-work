@@ -4,9 +4,10 @@ import { allowedEmails } from '../../config/allowedEmails';
 
 interface Props {
   onSuccess: (email: string) => void;
+  embedded?: boolean;
 }
 
-export default function LoginPage({ onSuccess }: Props) {
+export default function LoginPage({ onSuccess, embedded = false }: Props) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -20,22 +21,28 @@ export default function LoginPage({ onSuccess }: Props) {
     }
   };
 
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.card}>
-        <input
-          className={styles.input}
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="Email"
-        />
+  const content = (
+    <div className={`${styles.card} ${embedded ? styles.embeddedCard : ''}`}>
+      {embedded && <h3 className={styles.panelTitle}>Вхід в акаунт</h3>}
 
-        <button className={styles.button} onClick={handleLogin}>
-          Увійти
-        </button>
+      <input
+        className={styles.input}
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Email"
+      />
 
-        {error && <div className={styles.error}>{error}</div>}
-      </div>
+      <button className={styles.button} onClick={handleLogin}>
+        Увійти
+      </button>
+
+      {error && <div className={styles.error}>{error}</div>}
     </div>
   );
+
+  if (embedded) {
+    return content;
+  }
+
+  return <div className={styles.wrapper}>{content}</div>;
 }

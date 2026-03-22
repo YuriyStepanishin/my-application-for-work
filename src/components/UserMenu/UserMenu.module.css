@@ -1,0 +1,84 @@
+.anchor {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(22px, env(safe-area-inset-right));
+  z-index: 1600;
+}
+
+.trigger {
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #1f4b36;
+  box-shadow: 0 10px 24px rgba(24, 56, 40, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.avatarText {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.avatarIcon {
+  width: 26px;
+  height: 26px;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  background: rgba(12, 28, 21, 0.28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 1500;
+}
+
+.panel {
+  position: fixed;
+  top: max(76px, calc(env(safe-area-inset-top) + 62px));
+  right: max(14px, env(safe-area-inset-right));
+  width: min(380px, calc(100vw - 28px));
+  z-index: 1601;
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 14px 30px rgba(24, 56, 40, 0.2);
+  }
+}
+
+.trigger:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 560px) {
+  .anchor {
+    top: max(10px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+  }
+
+  .trigger {
+    width: 54px;
+    height: 54px;
+  }
+
+  .panel {
+    top: max(66px, calc(env(safe-area-inset-top) + 56px));
+    right: max(10px, env(safe-area-inset-right));
+    width: min(360px, calc(100vw - 20px));
+  }
+}

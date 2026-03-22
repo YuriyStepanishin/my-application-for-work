@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
+import Loader from '../Loader/Loader';
 
 import styles from '../ReportDetailsForm/ReportDetailsForm.module.css';
 import type { Photo } from '../../types/photo';
@@ -84,6 +85,8 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
 
   return (
     <div className={styles.wrapper}>
+      {saving && <Loader />}
+
       <div className={styles.title}>{storeData.store}</div>
 
       <div className={styles.subtitle}>

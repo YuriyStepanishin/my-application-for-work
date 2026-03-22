@@ -35,6 +35,21 @@
   gap: 16px;
 }
 
+.embeddedCard {
+  width: 100%;
+  max-width: none;
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+}
+
+.panelTitle {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  color: #30485e;
+}
+
 /* title */
 .title {
   margin: 0;
@@ -56,6 +71,10 @@
 
   /* прибирає zoom на iPhone */
   appearance: none;
+}
+
+.input::placeholder {
+  color: #8792b0;
 }
 
 /* input focus */
@@ -88,8 +107,14 @@
 /* button hover тільки для desktop */
 @media (hover: hover) {
   .button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(102, 126, 234, 0.28);
     background: #5a67d8;
   }
+}
+
+.button:active {
+  transform: scale(0.98);
 }
 
 /* error */

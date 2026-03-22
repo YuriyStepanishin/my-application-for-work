@@ -6,6 +6,8 @@ interface Props {
   onLogout: () => void;
 
   onOk: () => void;
+  okLabel?: string;
+  embedded?: boolean;
 }
 
 export default function LoginAppPage({
@@ -14,27 +16,33 @@ export default function LoginAppPage({
   onLogout,
 
   onOk,
+  okLabel = 'Далі',
+  embedded = false,
 }: Props) {
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.card}>
-        <h2>Вітаю 👋</h2>
+  const content = (
+    <div className={`${styles.card} ${embedded ? styles.embeddedCard : ''}`}>
+      <h2>Вітаю 👋</h2>
 
-        <div>
-          Ви увійшли як:
-          <div className={styles.email}>{email}</div>
-        </div>
+      <div>
+        Ви увійшли як:
+        <div className={styles.email}>{email}</div>
+      </div>
 
-        <div className={styles.info}>
-          <button className={styles.ok} onClick={onOk}>
-            Далі
-          </button>
+      <div className={styles.info}>
+        <button className={styles.ok} onClick={onOk}>
+          {okLabel}
+        </button>
 
-          <button className={styles.logout} onClick={onLogout}>
-            Вийти
-          </button>
-        </div>
+        <button className={styles.logout} onClick={onLogout}>
+          Вийти
+        </button>
       </div>
     </div>
   );
+
+  if (embedded) {
+    return content;
+  }
+
+  return <div className={styles.wrapper}>{content}</div>;
 }

@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
@@ -14,6 +19,7 @@ body,
 
 body {
   background: linear-gradient(135deg, #edf7ed 0%, #d4edda 50%, #b7e4c7 100%);
+  overflow-x: hidden;
 
   font-family:
     system-ui,
@@ -24,6 +30,34 @@ body {
     sans-serif;
 
   color: #1b4332;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select,
+input,
+textarea {
+  min-width: 0;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(47, 128, 237, 0.28);
+  outline-offset: 2px;
 }
 
 .wrapper {

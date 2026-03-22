@@ -7,12 +7,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*'],
+      includeAssets: ['icons/*', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: 'SODA',
         short_name: 'SODA',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
         background_color: '#ffffff',
         theme_color: '#ffffff',
         orientation: 'portrait',

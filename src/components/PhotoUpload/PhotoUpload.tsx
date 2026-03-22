@@ -1,8 +1,9 @@
-import { useRef, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import imageCompression from 'browser-image-compression';
 import styles from './PhotoUpload.module.css';
 import { db } from './db';
 import type { Photo } from '../../types/photo';
+import Loader from '../Loader/Loader';
 
 interface Props {
   photos: Photo[];
@@ -12,6 +13,7 @@ interface Props {
 export default function PhotoUpload({ photos, setPhotos }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const [processing, setProcessing] = useState(false);
 
   const compressionOptions = {
     maxSizeMB: 1.5,
@@ -54,6 +56,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
     }
 
     try {
+      setProcessing(true);
       const newPhotos = await Promise.all(files.map(fileToBase64));
 
       for (const p of newPhotos) {
@@ -65,20 +68,29 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
     } catch (err) {
       console.error(err);
       alert('Помилка обробки фото');
+    } finally {
+      setProcessing(false);
     }
 
     e.target.value = '';
   }
 
   async function removePhoto(id: string) {
-    await db.photos.delete(id);
+    try {
+      setProcessing(true);
+      await db.photos.delete(id);
 
-    const fresh = await db.photos.toArray();
-    setPhotos(fresh);
+      const fresh = await db.photos.toArray();
+      setPhotos(fresh);
+    } finally {
+      setProcessing(false);
+    }
   }
 
   return (
     <div className={styles.container}>
+      {processing && <Loader />}
+
       <label className={styles.label}>Фото (макс 3)</label>
 
       <input
@@ -103,6 +115,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         <button
           onClick={() => cameraRef.current?.click()}
           className={styles.button}
+          disabled={processing}
         >
           📷 Зробити фото
         </button>
@@ -110,6 +123,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
         <button
           onClick={() => galleryRef.current?.click()}
           className={styles.button}
+          disabled={processing}
         >
           🖼 З галереї
         </button>
@@ -126,6 +140,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
             <button
               onClick={() => removePhoto(photo.id)}
               className={styles.removeButton}
+              disabled={processing}
             >
               ✕
             </button>

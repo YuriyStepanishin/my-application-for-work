@@ -6,6 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
 
   z-index: 999;
 }
@@ -20,6 +21,8 @@
   text-align: center;
 
   min-width: 250px;
+  max-width: min(100%, 420px);
+  box-sizing: border-box;
 }
 
 .button {
@@ -40,4 +43,8 @@
 
 .button:hover {
   background: #45a049;
+}
+
+.button:active {
+  transform: scale(0.98);
 }
