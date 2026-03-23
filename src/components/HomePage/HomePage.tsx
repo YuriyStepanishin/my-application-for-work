@@ -38,15 +38,16 @@ export default function HomePage({
         </button>
 
         {/* кнопка 2 */}
-        <button onClick={onOpenDisplay} className={styles.button}>
-          <img src="/icons/promo-icon-64.svg" className={styles.icon} />
+        <button onClick={onOpenGallery} className={styles.button}>
+          <img src="./icons/gallery-icon-64.svg" className={styles.icon} />
         </button>
 
         <button onClick={onOpenBonus} className={styles.button}>
           <img src="./icons/camera-icon-64.svg" className={styles.icon} />
         </button>
-        <button onClick={onOpenGallery} className={styles.button}>
-          <img src="./icons/gallery-icon-64.svg" className={styles.icon} />
+
+        <button onClick={onOpenDisplay} className={styles.button}>
+          <img src="/icons/promo-icon-64.svg" className={styles.icon} />
         </button>
       </div>
 
