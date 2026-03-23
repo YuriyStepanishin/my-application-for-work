@@ -59,6 +59,7 @@ export default function PhotoGallery({ onBack }: Props) {
   const lastTouch = useRef<number | null>(null);
   const lastDistance = useRef<number | null>(null);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
+  const isDragging = useRef(false);
 
   function getDistance(touches: React.TouchList) {
     const a = touches[0];
@@ -175,13 +176,62 @@ export default function PhotoGallery({ onBack }: Props) {
     lastPoint.current = null;
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLImageElement>) => {
+    e.preventDefault();
+
+    setZoom(prev => {
+      const next = Math.min(Math.max(prev - e.deltaY * 0.01, 1), 5);
+      if (next === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return next;
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (zoom <= 1 || e.button !== 0) return;
+    isDragging.current = true;
+    lastPoint.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging.current || zoom <= 1 || !lastPoint.current) return;
+
+    const dx = e.clientX - lastPoint.current.x;
+    const dy = e.clientY - lastPoint.current.y;
+
+    setPosition(prev => ({
+      x: prev.x + dx,
+      y: prev.y + dy,
+    }));
+
+    lastPoint.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    lastPoint.current = null;
+  };
+
+  const handleDoubleClick = () => {
+    setZoom(prev => {
+      const next = prev > 1 ? 1 : 2;
+      if (next === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return next;
+    });
+  };
+
   if (isLoading) return <Loader />;
   if (error) return <div>Щось зламалось 😅</div>;
 
   return (
     <>
       <div className={styles.container}>
-        <div className={styles.filters}>
+        <div
+          className={`${styles.filters} ${activePhoto ? styles.filtersHidden : ''}`}
+        >
           <select
             className={styles.select}
             value={department}
@@ -204,7 +254,7 @@ export default function PhotoGallery({ onBack }: Props) {
           >
             {reps.map(r => (
               <option key={r} value={r}>
-                {r === 'all' ? 'Усі ТП' : r}
+                {r === 'all' ? 'Усі торгові представники' : r}
               </option>
             ))}
           </select>
@@ -236,11 +286,12 @@ export default function PhotoGallery({ onBack }: Props) {
           ))}
         </div>
 
-        <div className={styles.footer}>
-          <button className={styles.backButton} onClick={onBack}>
-            ← Головна сторінка
-          </button>
-        </div>
+        <button
+          className={`${styles.backButton} ${activePhoto ? styles.backButtonHidden : ''}`}
+          onClick={onBack}
+        >
+          ← Назад
+        </button>
       </div>
 
       {activePhoto && (
@@ -256,6 +307,12 @@ export default function PhotoGallery({ onBack }: Props) {
             src={activePhoto}
             className={styles.viewerImage}
             onClick={e => e.stopPropagation()}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onDoubleClick={handleDoubleClick}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

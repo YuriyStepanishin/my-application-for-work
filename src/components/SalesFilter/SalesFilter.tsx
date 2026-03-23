@@ -40,7 +40,7 @@ export default function SalesFilter({
         value={agent}
         onChange={e => onChangeAgent(e.target.value)}
       >
-        <option value="">Всі ТП</option>
+        <option value="">Всі торгові представники</option>
         {agents.map(a => (
           <option key={a} value={a}>
             {a}
