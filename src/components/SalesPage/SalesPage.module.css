@@ -78,6 +78,10 @@
 }
 
 .tableBrandButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   border: 1px solid #b7cbbd;
   border-radius: 999px;
   background: #eef6f0;
@@ -230,6 +234,13 @@
   overflow-wrap: anywhere;
 }
 
+.storeAmountBlock {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .storeSum {
   display: inline-flex;
   align-items: center;
@@ -245,6 +256,19 @@
   color: #d4a017;
   font-size: 13px;
   line-height: 1;
+}
+
+.storePhotoIndicator {
+  color: #1f6b45;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .storePhotoIndicator:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .storeSku {

@@ -1,7 +1,12 @@
 import { useState, useRef, useMemo } from 'react';
 import styles from './PhotoGallery.module.css';
 import { useQuery } from '@tanstack/react-query';
-import { BONUS_API_URL } from '../../api/config';
+import {
+  buildImageSources,
+  fetchReports,
+  normalizePhotoUrls,
+  type Report,
+} from '../../api/fetchReports';
 import Loader from '../Loader/Loader';
 
 interface Props {
@@ -19,80 +24,6 @@ type Photo = {
   department: string;
   rep: string;
 };
-
-type Report = {
-  department: string;
-  representative: string;
-  store: string;
-  date: string;
-  category: string;
-  photos: unknown;
-};
-
-async function fetchReports(): Promise<Report[]> {
-  const res = await fetch(`${BONUS_API_URL}?action=getReports`);
-
-  if (!res.ok) {
-    throw new Error('Помилка завантаження фото');
-  }
-
-  const json = await res.json();
-  return json.data;
-}
-
-function extractDriveId(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) return '';
-
-  const fromQuery = trimmed.match(/[?&]id=([^&]+)/)?.[1] ?? '';
-  const fromPath = trimmed.match(/\/d\/([^/]+)/)?.[1] ?? '';
-  const rawId = fromQuery || fromPath;
-
-  return rawId.match(/[A-Za-z0-9_-]+/)?.[0] ?? '';
-}
-
-function buildImageSources(url: string): string[] {
-  const trimmed = url.trim();
-  if (!trimmed) return [];
-
-  const driveId = extractDriveId(trimmed);
-  if (!driveId) return [trimmed];
-
-  return [
-    `https://lh3.googleusercontent.com/d/${driveId}=w1600`,
-    `https://drive.google.com/uc?export=view&id=${driveId}`,
-    `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`,
-  ];
-}
-
-function normalizePhotoUrls(input: unknown): string[] {
-  if (Array.isArray(input)) {
-    return input.map(item => String(item ?? '').trim()).filter(Boolean);
-  }
-
-  if (typeof input !== 'string') {
-    return [];
-  }
-
-  const raw = input.trim();
-  if (!raw) return [];
-
-  if (raw.startsWith('[') && raw.endsWith(']')) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed.map(item => String(item ?? '').trim()).filter(Boolean);
-      }
-    } catch {
-      // Fallback below.
-    }
-  }
-
-  return raw
-    .split(/[\n,;]+/)
-    .map(item => item.trim())
-    .filter(Boolean);
-}
 
 export default function PhotoGallery({ onBack }: Props) {
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
@@ -123,7 +54,7 @@ export default function PhotoGallery({ onBack }: Props) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['photos'],
+    queryKey: ['photo-reports'],
     queryFn: fetchReports,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,

@@ -41,6 +41,14 @@ type Totals = {
 
 type ChartMetric = 'amount' | 'stores';
 
+type WeekChartStats = {
+  weekKey: string;
+  weekLabel: string;
+  weekSortValue: number;
+  amount: number;
+  storesCount: number;
+};
+
 function parseDateObject(input: string): Date | null {
   const trimmed = input.trim();
 
@@ -220,7 +228,7 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
             ? `${weekInfo.year}-W${String(weekInfo.week).padStart(2, '0')}`
             : 'unknown-week',
           weekLabel: weekInfo
-            ? `Тиждень ${String(weekInfo.week).padStart(2, '0')} (${weekInfo.year})`
+            ? `Тиждень ${String(weekInfo.week).padStart(2, '0')}`
             : 'Без дати',
           weekSortValue: weekInfo ? weekInfo.year * 100 + weekInfo.week : 0,
           weekdayOrder: adjustedDate ? getWeekdayOrder(adjustedDate) : 99,
@@ -312,6 +320,46 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
     );
   }, [chartRows]);
 
+  const weekChartRows = useMemo<WeekChartStats[]>(() => {
+    const map = new Map<string, WeekChartStats>();
+
+    rows.forEach(row => {
+      if (!map.has(row.weekKey)) {
+        map.set(row.weekKey, {
+          weekKey: row.weekKey,
+          weekLabel: row.weekLabel,
+          weekSortValue: row.weekSortValue,
+          amount: 0,
+          storesCount: 0,
+        });
+      }
+
+      const week = map.get(row.weekKey);
+      if (!week) return;
+
+      week.amount += row.amount;
+      week.storesCount += row.storesCount;
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => a.weekSortValue - b.weekSortValue
+    );
+  }, [rows]);
+
+  const weekChartLimits = useMemo(() => {
+    return weekChartRows.reduce(
+      (acc, row) => {
+        acc.maxAmountAbs = Math.max(acc.maxAmountAbs, Math.abs(row.amount));
+        acc.maxStores = Math.max(acc.maxStores, row.storesCount);
+        return acc;
+      },
+      {
+        maxAmountAbs: 0,
+        maxStores: 0,
+      }
+    );
+  }, [weekChartRows]);
+
   const getChartPercent = (row: DayStats, metric: ChartMetric) => {
     if (metric === 'amount') {
       if (chartLimits.maxAmountAbs === 0) return 0;
@@ -320,6 +368,16 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
 
     if (chartLimits.maxStores === 0) return 0;
     return (row.storesCount / chartLimits.maxStores) * 100;
+  };
+
+  const getWeekChartPercent = (row: WeekChartStats, metric: ChartMetric) => {
+    if (metric === 'amount') {
+      if (weekChartLimits.maxAmountAbs === 0) return 0;
+      return (Math.abs(row.amount) / weekChartLimits.maxAmountAbs) * 100;
+    }
+
+    if (weekChartLimits.maxStores === 0) return 0;
+    return (row.storesCount / weekChartLimits.maxStores) * 100;
   };
 
   const chartMetrics: Array<{ key: ChartMetric; title: string }> = [
@@ -369,7 +427,7 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
               <tr>
                 <th>Дата</th>
                 <th>ТТ</th>
-                <th>500+</th>
+                <th>ТТ 500+</th>
                 <th>Вага</th>
                 <th>Сума</th>
               </tr>
@@ -456,6 +514,44 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
                       className={styles.chartRow}
                     >
                       <span className={styles.chartDate}>{dayLabel}</span>
+
+                      <div className={styles.chartTrack}>
+                        <div
+                          className={`${styles.chartBar} ${metric.key === 'amount' && row.amount < 0 ? styles.chartBarNegative : ''}`}
+                          style={{ width: `${safePct}%` }}
+                        />
+                      </div>
+
+                      <span className={styles.chartValue}>
+                        {metric.key === 'amount' && format(row.amount)}
+                        {metric.key === 'stores' && row.storesCount}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className={styles.chartsGrid}>
+          {chartMetrics.map(metric => (
+            <article key={`week-${metric.key}`} className={styles.chartCard}>
+              <h4 className={styles.chartTitle}>
+                {metric.key === 'amount' ? 'Сума по тижнях' : 'ТТ по тижнях'}
+              </h4>
+
+              <div className={styles.chartBody}>
+                {weekChartRows.map(row => {
+                  const pct = getWeekChartPercent(row, metric.key);
+                  const safePct = pct > 0 ? Math.max(pct, 4) : 0;
+
+                  return (
+                    <div
+                      key={`${metric.key}-${row.weekKey}`}
+                      className={styles.chartRow}
+                    >
+                      <span className={styles.chartDate}>{row.weekLabel}</span>
 
                       <div className={styles.chartTrack}>
                         <div

@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SALES_URL } from '../../api/config';
+import {
+  buildImageSources,
+  fetchReports,
+  normalizePhotoUrls,
+} from '../../api/fetchReports';
 import styles from './SalesPage.module.css';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
@@ -29,6 +34,7 @@ type BrandData = {
 type StoreDetailsRow = {
   name: string;
   sum: number;
+  photoPreviewUrl: string | null;
   sku: number;
   products: Array<{
     name: string;
@@ -58,6 +64,13 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
       return res.json();
     },
     staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: reports = [] } = useQuery({
+    queryKey: ['photo-reports'],
+    queryFn: fetchReports,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   const filtered = useMemo(() => {
@@ -141,6 +154,26 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
     };
   }, [grouped]);
 
+  const storePhotoPreviewMap = useMemo(() => {
+    const previewMap: Record<string, string> = {};
+
+    reports.forEach(report => {
+      if (department && report.department !== department) return;
+      if (agent && report.representative !== agent) return;
+      if (!report.store) return;
+
+      const firstPreviewSource = normalizePhotoUrls(report.photos)
+        .flatMap(rawUrl => buildImageSources(rawUrl))
+        .find(Boolean);
+
+      if (!firstPreviewSource || previewMap[report.store]) return;
+
+      previewMap[report.store] = firstPreviewSource;
+    });
+
+    return previewMap;
+  }, [reports, department, agent]);
+
   const selectedStores = useMemo<StoreDetailsRow[]>(() => {
     if (!selectedBrand) return [];
 
@@ -185,6 +218,7 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
       .map(([name, value]) => ({
         name,
         sum: value.sum,
+        photoPreviewUrl: storePhotoPreviewMap[name] ?? null,
         sku: Object.keys(value.products).length,
         products: Object.entries(value.products)
           .map(([productName, productValue]) => ({
@@ -195,7 +229,7 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
           .sort((a, b) => a.name.localeCompare(b.name, 'uk')),
       }))
       .sort((a, b) => b.sum - a.sum);
-  }, [filtered, selectedBrand]);
+  }, [filtered, selectedBrand, storePhotoPreviewMap]);
 
   const format = (n: number) =>
     n.toLocaleString('uk-UA', {
@@ -316,35 +350,53 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className={styles.storeList}>
-            {selectedStores.map(({ name, sum, sku, products }) => (
-              <div key={name} className={styles.storeCard}>
-                <div className={styles.storeRow}>
-                  <span className={styles.storeName}>{name}</span>
-                  <span className={styles.storeSum}>
-                    {sum >= 500 && <span className={styles.storeStar}>★</span>}
-                    {format(sum)}
-                  </span>
-                  <span className={styles.storeSku}>SKU: {sku}</span>
+            {selectedStores.map(
+              ({ name, sum, photoPreviewUrl, sku, products }) => (
+                <div key={name} className={styles.storeCard}>
+                  <div className={styles.storeRow}>
+                    <span className={styles.storeName}>{name}</span>
+                    <span className={styles.storeAmountBlock}>
+                      <span className={styles.storeSum}>
+                        {sum >= 500 && (
+                          <span className={styles.storeStar}>★</span>
+                        )}
+                        {format(sum)}
+                      </span>
+                      {photoPreviewUrl && (
+                        <a
+                          href={photoPreviewUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.storePhotoIndicator}
+                          aria-label={`Відкрити прев'ю фото для ${name}`}
+                          title="Відкрити прев'ю фото"
+                        >
+                          📷
+                        </a>
+                      )}
+                    </span>
+                    <span className={styles.storeSku}>SKU: {sku}</span>
+                  </div>
+                  {showProducts && products.length > 0 && (
+                    <ul className={styles.productList}>
+                      {products.map(p => (
+                        <li key={p.name} className={styles.productItem}>
+                          <span className={styles.productName}>{p.name}</span>
+                          <span className={styles.productMeta}>
+                            <span className={styles.productQty}>
+                              {format(p.quantity)}
+                            </span>
+                            <span className={styles.productAmount}>
+                              {format(p.amount)}
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                {showProducts && products.length > 0 && (
-                  <ul className={styles.productList}>
-                    {products.map(p => (
-                      <li key={p.name} className={styles.productItem}>
-                        <span className={styles.productName}>{p.name}</span>
-                        <span className={styles.productMeta}>
-                          <span className={styles.productQty}>
-                            {format(p.quantity)}
-                          </span>
-                          <span className={styles.productAmount}>
-                            {format(p.amount)}
-                          </span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       )}

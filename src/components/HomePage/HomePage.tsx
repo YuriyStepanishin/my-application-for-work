@@ -38,6 +38,12 @@ export default function HomePage({
       icon: '/icons/calendar-icon-64.svg',
       onClick: onOpenSalesByDays,
     },
+    {
+      key: 'messages',
+      label: 'Повідомлення',
+      icon: '/icons/message-icon-64.svg',
+      onClick: () => setShowPopup(true),
+    },
   ];
 
   const bottomMenuItems = [
@@ -52,12 +58,6 @@ export default function HomePage({
       label: 'Додавання фотозвіту для Акція на представленність',
       icon: '/icons/promo-icon-64.svg',
       onClick: onOpenDisplay,
-    },
-    {
-      key: 'messages',
-      label: 'Повідомлення',
-      icon: '/icons/message-icon-64.svg',
-      onClick: () => setShowPopup(true),
     },
   ];
 
@@ -107,6 +107,12 @@ export default function HomePage({
       {showPopup && (
         <Popup message="В розробці" onClose={() => setShowPopup(false)} />
       )}
+
+      {/* footer */}
+      <footer className={styles.footer}>
+        <span>© 2026</span>
+        <span>v2.1.3</span>
+      </footer>
     </div>
   );
 }

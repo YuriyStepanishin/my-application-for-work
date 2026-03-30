@@ -64,6 +64,7 @@
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
 }
 
 .chartCard {
@@ -108,11 +109,11 @@
 .chartBar {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #2f4f3a 0%, #4f7a61 100%);
+  background: linear-gradient(90deg, #1f5eb8 0%, #3c84e6 100%);
 }
 
 .chartBarNegative {
-  background: linear-gradient(90deg, #8a3f3f 0%, #b55c5c 100%);
+  background: linear-gradient(90deg, #174a93 0%, #2d6fc8 100%);
 }
 
 .chartValue {

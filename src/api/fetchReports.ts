@@ -1,7 +1,75 @@
-export async function fetchReports() {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}?action=getReports`);
+import { BONUS_API_URL } from './config';
+
+export type Report = {
+  department: string;
+  representative: string;
+  store: string;
+  date: string;
+  category: string;
+  photos: unknown;
+};
+
+export async function fetchReports(): Promise<Report[]> {
+  const res = await fetch(`${BONUS_API_URL}?action=getReports`);
+
+  if (!res.ok) {
+    throw new Error('Помилка завантаження фото');
+  }
 
   const json = await res.json();
+  return Array.isArray(json.data) ? json.data : [];
+}
 
-  return json.data;
+function extractDriveId(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  const fromQuery = trimmed.match(/[?&]id=([^&]+)/)?.[1] ?? '';
+  const fromPath = trimmed.match(/\/d\/([^/]+)/)?.[1] ?? '';
+  const rawId = fromQuery || fromPath;
+
+  return rawId.match(/[A-Za-z0-9_-]+/)?.[0] ?? '';
+}
+
+export function buildImageSources(url: string): string[] {
+  const trimmed = url.trim();
+  if (!trimmed) return [];
+
+  const driveId = extractDriveId(trimmed);
+  if (!driveId) return [trimmed];
+
+  return [
+    `https://lh3.googleusercontent.com/d/${driveId}=w1600`,
+    `https://drive.google.com/uc?export=view&id=${driveId}`,
+    `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`,
+  ];
+}
+
+export function normalizePhotoUrls(input: unknown): string[] {
+  if (Array.isArray(input)) {
+    return input.map(item => String(item ?? '').trim()).filter(Boolean);
+  }
+
+  if (typeof input !== 'string') {
+    return [];
+  }
+
+  const raw = input.trim();
+  if (!raw) return [];
+
+  if (raw.startsWith('[') && raw.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => String(item ?? '').trim()).filter(Boolean);
+      }
+    } catch {
+      // Fallback below.
+    }
+  }
+
+  return raw
+    .split(/[\n,;]+/)
+    .map(item => item.trim())
+    .filter(Boolean);
 }
