@@ -1,0 +1,246 @@
+.container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.error {
+  padding: 40px;
+  text-align: center;
+  color: red;
+}
+
+.section {
+  margin-top: 18px;
+}
+
+.brandFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.brandButton {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #a8bcb0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #224434;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.brandButtonActive {
+  background: #2f4f3a;
+  color: #fff;
+  border-color: #2f4f3a;
+}
+
+.title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #224434;
+}
+
+.chartsSection {
+  margin-top: 18px;
+  padding-bottom: 80px;
+}
+
+.chartsGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chartCard {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #c7d8cc;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.chartTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #224434;
+}
+
+.chartBody {
+  display: grid;
+  gap: 6px;
+}
+
+.chartRow {
+  display: grid;
+  grid-template-columns: 84px 1fr 78px;
+  align-items: center;
+  gap: 8px;
+}
+
+.chartDate {
+  font-size: 12px;
+  color: #355a47;
+  white-space: nowrap;
+}
+
+.chartTrack {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #dde9e0;
+  overflow: hidden;
+}
+
+.chartBar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2f4f3a 0%, #4f7a61 100%);
+}
+
+.chartBarNegative {
+  background: linear-gradient(90deg, #8a3f3f 0%, #b55c5c 100%);
+}
+
+.chartValue {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f3f2f;
+  white-space: nowrap;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #fff;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: clamp(12px, 1.6vw, 14px);
+  line-height: 1.25;
+}
+
+.table th {
+  background: rgba(240, 245, 241, 0.92);
+  color: #224434;
+}
+
+.weekTotalRow {
+  background: rgba(227, 238, 230, 0.9);
+}
+
+.grandTotalRow {
+  background: rgba(208, 226, 213, 0.95);
+}
+
+.table td:nth-child(2),
+.table td:nth-child(3),
+.table td:nth-child(4),
+.table td:nth-child(5),
+.table th:nth-child(2),
+.table th:nth-child(3),
+.table th:nth-child(4),
+.table th:nth-child(5) {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.backButton {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  height: 48px;
+  padding: 0 18px;
+  border: 1px solid rgba(47, 79, 58, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #2f4f3a;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) {
+  .backButton:hover {
+    background: #d7d7d7;
+    transform: translateY(-1px);
+  }
+
+  .brandButton:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .brandButtonActive:hover {
+    background: #2f4f3a;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 12px;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartRow {
+    grid-template-columns: 72px 1fr 64px;
+    gap: 6px;
+  }
+
+  .chartDate,
+  .chartValue {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 24px;
+  }
+
+  .section {
+    margin-top: 24px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .chartsSection {
+    margin-top: 24px;
+  }
+}

@@ -10,7 +10,7 @@ interface Props {
 
 type Photo = {
   id: string;
-  url: string;
+  sources: string[];
   store: string;
   category: string;
   date: string;
@@ -26,10 +26,9 @@ type Report = {
   store: string;
   date: string;
   category: string;
-  photos: string[];
+  photos: unknown;
 };
 
-// 🔥 сирий запит (без трансформації)
 async function fetchReports(): Promise<Report[]> {
   const res = await fetch(`${BONUS_API_URL}?action=getReports`);
 
@@ -41,17 +40,67 @@ async function fetchReports(): Promise<Report[]> {
   return json.data;
 }
 
-// 🔥 швидке перетворення Google Drive
-function convertDriveUrl(url: string) {
-  const idMatch = url.match(/id=([^&]+)/);
-  if (!idMatch) return url;
-  return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+function extractDriveId(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  const fromQuery = trimmed.match(/[?&]id=([^&]+)/)?.[1] ?? '';
+  const fromPath = trimmed.match(/\/d\/([^/]+)/)?.[1] ?? '';
+  const rawId = fromQuery || fromPath;
+
+  return rawId.match(/[A-Za-z0-9_-]+/)?.[0] ?? '';
+}
+
+function buildImageSources(url: string): string[] {
+  const trimmed = url.trim();
+  if (!trimmed) return [];
+
+  const driveId = extractDriveId(trimmed);
+  if (!driveId) return [trimmed];
+
+  return [
+    `https://lh3.googleusercontent.com/d/${driveId}=w1600`,
+    `https://drive.google.com/uc?export=view&id=${driveId}`,
+    `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`,
+  ];
+}
+
+function normalizePhotoUrls(input: unknown): string[] {
+  if (Array.isArray(input)) {
+    return input.map(item => String(item ?? '').trim()).filter(Boolean);
+  }
+
+  if (typeof input !== 'string') {
+    return [];
+  }
+
+  const raw = input.trim();
+  if (!raw) return [];
+
+  if (raw.startsWith('[') && raw.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => String(item ?? '').trim()).filter(Boolean);
+      }
+    } catch {
+      // Fallback below.
+    }
+  }
+
+  return raw
+    .split(/[\n,;]+/)
+    .map(item => item.trim())
+    .filter(Boolean);
 }
 
 export default function PhotoGallery({ onBack }: Props) {
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
+  const [sourceIndexByPhotoId, setSourceIndexByPhotoId] = useState<
+    Record<string, number>
+  >({});
 
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -69,7 +118,6 @@ export default function PhotoGallery({ onBack }: Props) {
     return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
   }
 
-  // 🚀 React Query (максимально оптимізовано)
   const {
     data: photos = [],
     isLoading,
@@ -77,27 +125,32 @@ export default function PhotoGallery({ onBack }: Props) {
   } = useQuery({
     queryKey: ['photos'],
     queryFn: fetchReports,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    select: (reports: Report[]): Photo[] => {
+      const transformed = reports.flatMap((report, reportIndex) =>
+        normalizePhotoUrls(report.photos).map((rawUrl, photoIndex) => {
+          const sources = buildImageSources(rawUrl);
+          if (sources.length === 0) return null;
 
-    staleTime: 1000 * 60 * 5, // кеш 5 хв
-    gcTime: 1000 * 60 * 30, // живе в памʼяті 30 хв
+          return {
+            id: `${report.date}-${report.store}-${reportIndex}-${photoIndex}`,
+            sources,
+            store: report.store,
+            category: report.category,
+            date: report.date,
+            lat: 0,
+            lng: 0,
+            department: report.department,
+            rep: report.representative,
+          };
+        })
+      );
 
-    select: (reports: Report[]): Photo[] =>
-      reports.flatMap(report =>
-        report.photos.map(url => ({
-          id: url, // 🔥 стабільний id
-          url: convertDriveUrl(url),
-          store: report.store,
-          category: report.category,
-          date: report.date,
-          lat: 0,
-          lng: 0,
-          department: report.department,
-          rep: report.representative,
-        }))
-      ),
+      return transformed.filter((photo): photo is Photo => photo !== null);
+    },
   });
 
-  // 🚀 мемоізація фільтрів
   const departments = useMemo(() => {
     return [
       'all',
@@ -113,6 +166,7 @@ export default function PhotoGallery({ onBack }: Props) {
           photos
             .filter(p => department === 'all' || p.department === department)
             .map(p => p.rep)
+            .filter(Boolean)
         )
       ),
     ];
@@ -126,7 +180,13 @@ export default function PhotoGallery({ onBack }: Props) {
     });
   }, [photos, department, rep]);
 
-  // 👉 touch логіка (без змін)
+  const filteredStoreCount = useMemo(() => {
+    return new Set(filteredPhotos.map(photo => photo.store).filter(Boolean))
+      .size;
+  }, [filteredPhotos]);
+
+  const filteredPhotoCount = filteredPhotos.length;
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       lastDistance.current = getDistance(e.touches);
@@ -230,6 +290,20 @@ export default function PhotoGallery({ onBack }: Props) {
     <>
       <div className={styles.container}>
         <div
+          className={`${styles.stats} ${activePhoto ? styles.filtersHidden : ''}`}
+        >
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Кількість ТТ</span>
+            <strong className={styles.statValue}>{filteredStoreCount}</strong>
+          </div>
+
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Кількість фото</span>
+            <strong className={styles.statValue}>{filteredPhotoCount}</strong>
+          </div>
+        </div>
+
+        <div
           className={`${styles.filters} ${activePhoto ? styles.filtersHidden : ''}`}
         >
           <select
@@ -270,12 +344,30 @@ export default function PhotoGallery({ onBack }: Props) {
               key={photo.id}
               className={styles.card}
               onClick={() => {
-                setActivePhoto(photo.url);
+                const sourceIndex = sourceIndexByPhotoId[photo.id] ?? 0;
+                setActivePhoto(photo.sources[sourceIndex] || photo.sources[0]);
                 setZoom(1);
                 setPosition({ x: 0, y: 0 });
               }}
             >
-              <img src={photo.url} loading="lazy" className={styles.image} />
+              <img
+                src={photo.sources[sourceIndexByPhotoId[photo.id] ?? 0]}
+                loading="lazy"
+                className={styles.image}
+                onError={() => {
+                  setSourceIndexByPhotoId(prev => {
+                    const current = prev[photo.id] ?? 0;
+                    const next = current + 1;
+
+                    if (next >= photo.sources.length) return prev;
+
+                    return {
+                      ...prev,
+                      [photo.id]: next,
+                    };
+                  });
+                }}
+              />
 
               <div className={styles.info}>
                 <div>ТТ: {photo.store}</div>

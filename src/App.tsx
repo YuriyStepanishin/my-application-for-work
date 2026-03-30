@@ -14,6 +14,9 @@ const PhotoGallery = lazy(
   () => import('./components/PhotoGallery/PhotoGallery')
 );
 const SalesPage = lazy(() => import('./components/SalesPage/SalesPage'));
+const SalesByDaysPage = lazy(
+  () => import('./components/SalesByDaysPage/SalesByDaysPage')
+);
 
 import type { SheetRow } from './types/sheet';
 
@@ -24,7 +27,7 @@ import UserMenu from './components/UserMenu/UserMenu';
 import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
-  const [page, setPage] = useState<'home' | 'sales'>('home');
+  const [page, setPage] = useState<'home' | 'sales' | 'sales-by-days'>('home');
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
   );
@@ -94,6 +97,17 @@ export default function App() {
       </>
     );
   }
+
+  if (page === 'sales-by-days') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <SalesByDaysPage onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
   // HOME PAGE
   if (!showStoreSelector) {
     return (
@@ -114,6 +128,9 @@ export default function App() {
             }
             onOpenGallery={() => runProtectedAction(() => setShowGallery(true))}
             onOpenSales={() => runProtectedAction(() => setPage('sales'))}
+            onOpenSalesByDays={() =>
+              runProtectedAction(() => setPage('sales-by-days'))
+            }
           />
         </Suspense>
         <UserMenu

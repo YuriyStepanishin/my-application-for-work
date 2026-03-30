@@ -251,15 +251,19 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
         <tbody>
           {brandsList.map(b => (
             <tr key={b.brand}>
-              <td
-                className={styles.clickable}
-                onClick={() =>
-                  setSelectedBrand(prev => (prev === b.brand ? null : b.brand))
-                }
-              >
-                {b.brand}
+              <td>
+                <button
+                  className={`${styles.tableBrandButton} ${selectedBrand === b.brand ? styles.tableBrandButtonActive : ''}`}
+                  onClick={() =>
+                    setSelectedBrand(prev =>
+                      prev === b.brand ? null : b.brand
+                    )
+                  }
+                >
+                  {b.brand}
+                </button>
               </td>
-              <td>{b.stores.size}</td>
+              <td className={styles.clickable}>{b.stores.size}</td>
               <td>{b.tt500}</td>
               <td>{format(b.weight)}</td>
               <td>{format(b.amount)}</td>
@@ -267,15 +271,17 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
           ))}
 
           <tr className={styles.totalRow}>
-            <td
-              className={styles.clickable}
-              onClick={() =>
-                setSelectedBrand(prev =>
-                  prev === ALL_BRANDS_KEY ? null : ALL_BRANDS_KEY
-                )
-              }
-            >
-              <b>Усі торгові марки</b>
+            <td>
+              <button
+                className={`${styles.tableBrandButton} ${selectedBrand === ALL_BRANDS_KEY ? styles.tableBrandButtonActive : ''}`}
+                onClick={() =>
+                  setSelectedBrand(prev =>
+                    prev === ALL_BRANDS_KEY ? null : ALL_BRANDS_KEY
+                  )
+                }
+              >
+                <b>Усі торгові марки</b>
+              </button>
             </td>
             <td>
               <b>{totalRow.stores}</b>
@@ -292,16 +298,6 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
           </tr>
         </tbody>
       </table>
-
-      <button
-        className={`${styles.backSubButton} ${!selectedBrand ? styles.hidden : ''}`}
-        onClick={() => {
-          setSelectedBrand(null);
-          setShowProducts(false);
-        }}
-      >
-        ← Назад
-      </button>
 
       {selectedBrand && (
         <div className={styles.subBlock}>
@@ -354,7 +350,7 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
       )}
 
       <button onClick={onBack} className={styles.button}>
-        ← Головна сторінка
+        ← Назад
       </button>
     </div>
   );

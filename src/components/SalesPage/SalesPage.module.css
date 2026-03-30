@@ -77,6 +77,28 @@
   appearance: none;
 }
 
+.tableBrandButton {
+  border: 1px solid #b7cbbd;
+  border-radius: 999px;
+  background: #eef6f0;
+  color: #1f6b45;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.tableBrandButtonActive {
+  background: #2f4f3a;
+  color: #fff;
+  border-color: #2f4f3a;
+}
+
 /* table */
 .table {
   width: 100%;
@@ -125,6 +147,15 @@
   .clickable:hover {
     background: #eef6f0;
     color: #1f6b45;
+  }
+
+  .tableBrandButton:hover {
+    background: #dfeee4;
+    transform: translateY(-1px);
+  }
+
+  .tableBrandButtonActive:hover {
+    background: #2f4f3a;
   }
 }
 
@@ -282,39 +313,16 @@
   width: 64px;
 }
 
-.backSubButton {
-  display: block;
-  margin: 14px auto 0;
-  width: min(200px, 100%);
-  height: 42px;
-  border: none;
-  border-radius: 10px;
-  background: #d0d8e0;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.backSubButton:active {
-  background: #b8c4d0;
-}
-
 @media (hover: hover) {
   .toggleBtn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(47, 79, 58, 0.12);
   }
 
-  .backSubButton:hover,
   .button:hover {
     background: #d7d7d7;
     transform: translateY(-1px);
   }
-}
-
-.hidden {
-  display: none;
 }
 
 /* states */
@@ -331,23 +339,24 @@
 
 /* button */
 .button {
-  margin-top: auto;
-  margin-left: auto;
-  margin-right: auto;
-  width: min(320px, 100%);
-  height: 52px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #e0e0e0;
-
-  font-size: 16px;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  height: 48px;
+  padding: 0 18px;
+  border: 1px solid rgba(47, 79, 58, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #2f4f3a;
+  font-size: 15px;
   font-weight: 600;
-
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition:
     background 0.15s ease,
+    border-color 0.15s ease,
     transform 0.15s ease;
 }
 
@@ -361,8 +370,7 @@
     font-size: 13px;
   }
 
-  .toggleBtn,
-  .backSubButton {
+  .toggleBtn {
     width: auto;
   }
 
@@ -374,10 +382,6 @@
   .productMeta {
     flex-wrap: wrap;
     justify-content: flex-start;
-  }
-
-  .button {
-    width: 100%;
   }
 }
 
@@ -408,9 +412,5 @@
 
   .storeCard {
     padding: 12px 14px;
-  }
-
-  .button {
-    width: min(360px, 100%);
   }
 }

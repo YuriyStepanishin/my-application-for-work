@@ -8,6 +8,7 @@ interface Props {
   onOpenBonus: () => void;
   onOpenGallery: () => void;
   onOpenSales: () => void;
+  onOpenSalesByDays: () => void;
 }
 
 export default function HomePage({
@@ -15,8 +16,50 @@ export default function HomePage({
   onOpenBonus,
   onOpenGallery,
   onOpenSales,
+  onOpenSalesByDays,
 }: Props) {
   const [showPopup, setShowPopup] = useState(false);
+  const topMenuItems = [
+    {
+      key: 'sales',
+      label: 'Продажі',
+      icon: '/icons/chart-icon-64.svg',
+      onClick: onOpenSales,
+    },
+    {
+      key: 'gallery',
+      label: 'Фотогалерея',
+      icon: './icons/gallery-icon-64.svg',
+      onClick: onOpenGallery,
+    },
+    {
+      key: 'sales-by-days',
+      label: 'Продажі по днях',
+      icon: '/icons/calendar-icon-64.svg',
+      onClick: onOpenSalesByDays,
+    },
+  ];
+
+  const bottomMenuItems = [
+    {
+      key: 'bonus',
+      label: 'Додавання фотозвіту',
+      icon: './icons/camera-icon-64.svg',
+      onClick: onOpenBonus,
+    },
+    {
+      key: 'display',
+      label: 'Додавання фотозвіту для Акція на представленність',
+      icon: '/icons/promo-icon-64.svg',
+      onClick: onOpenDisplay,
+    },
+    {
+      key: 'messages',
+      label: 'Повідомлення',
+      icon: '/icons/message-icon-64.svg',
+      onClick: () => setShowPopup(true),
+    },
+  ];
 
   return (
     <div
@@ -30,33 +73,39 @@ export default function HomePage({
       {/* фон */}
       <img src={bg} className={styles.background} />
 
-      {/* контейнер кнопок */}
+      {/* навігація */}
       <div className={styles.buttonContainer}>
-        {/* кнопка 1 */}
-        <button onClick={onOpenSales} className={styles.button}>
-          <img src="/icons/chart-icon-64.svg" className={styles.icon} />
-        </button>
+        <p className={styles.sidebarTitle}>Розділи</p>
+        <div className={styles.topGroup}>
+          {topMenuItems.map(item => (
+            <button
+              key={item.key}
+              onClick={item.onClick}
+              className={styles.button}
+            >
+              <img src={item.icon} className={styles.icon} />
+              <span className={styles.menuLabel}>{item.label}</span>
+            </button>
+          ))}
+        </div>
 
-        {/* кнопка 2 */}
-        <button onClick={onOpenGallery} className={styles.button}>
-          <img src="./icons/gallery-icon-64.svg" className={styles.icon} />
-        </button>
-
-        <button onClick={onOpenBonus} className={styles.button}>
-          <img src="./icons/camera-icon-64.svg" className={styles.icon} />
-        </button>
-
-        <button onClick={onOpenDisplay} className={styles.button}>
-          <img src="/icons/promo-icon-64.svg" className={styles.icon} />
-        </button>
+        <div className={styles.bottomGroup}>
+          {bottomMenuItems.map(item => (
+            <button
+              key={item.key}
+              onClick={item.onClick}
+              className={styles.button}
+            >
+              <img src={item.icon} className={styles.icon} />
+              <span className={styles.menuLabel}>{item.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* popup (виносимо за контейнер кнопок) */}
       {showPopup && (
-        <Popup
-          message="Розділ 'Показники роботи' ще в розробці"
-          onClose={() => setShowPopup(false)}
-        />
+        <Popup message="В розробці" onClose={() => setShowPopup(false)} />
       )}
     </div>
   );

@@ -27,6 +27,34 @@
   background: transparent;
 }
 
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 16px 0;
+}
+
+.statCard {
+  border: 1px solid rgba(183, 203, 189, 0.75);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 10px 12px;
+}
+
+.statLabel {
+  display: block;
+  font-size: 12px;
+  color: #5f7868;
+}
+
+.statValue {
+  display: block;
+  margin-top: 2px;
+  font-size: 24px;
+  line-height: 1;
+  color: #2f4f3a;
+}
+
 .filtersHidden {
   opacity: 0;
   visibility: hidden;
@@ -68,6 +96,16 @@
   font-size: 14px;
   line-height: 1.4;
 }
+
+.empty {
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(183, 203, 189, 0.75);
+  background: rgba(255, 255, 255, 0.72);
+  color: #2f4f3a;
+  font-weight: 600;
+  text-align: center;
+}
 .viewer {
   position: fixed;
   inset: 0;
@@ -89,6 +127,19 @@
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+@media (min-width: 768px) {
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .card {
+    flex: 0 0 calc((100% - 32px) / 3);
+    margin-bottom: 0;
+  }
 }
 
 @media (hover: hover) {
@@ -179,8 +230,23 @@
 }
 
 @media (max-width: 560px) {
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 12px 0;
+  }
+
+  .statCard {
+    padding: 9px 11px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
   .filters {
     flex-direction: column;
+    padding: 10px 12px;
   }
 
   .list {
@@ -196,15 +262,17 @@
   .filters {
     padding: 16px 22px;
   }
-
   .list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    align-content: start;
+    padding: 22px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
   }
 
-  .card {
-    margin-bottom: 0;
+  .image {
+    aspect-ratio: auto;
+    height: clamp(180px, 18vw, 260px);
   }
 }
