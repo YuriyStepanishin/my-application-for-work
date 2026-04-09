@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchSheetData, fetchBonusSheetData } from './sheetApi';
-import { fetchReports } from './fetchReports';
 
 export const useDisplaySheet = (enabled = true) => {
   return useQuery({
@@ -15,11 +14,5 @@ export const useBonusSheet = (enabled = true) => {
     queryKey: ['bonusSheet'],
     queryFn: fetchBonusSheetData,
     enabled,
-  });
-};
-export const useReports = () => {
-  return useQuery({
-    queryKey: ['reports'],
-    queryFn: fetchReports,
   });
 };

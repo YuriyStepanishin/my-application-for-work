@@ -1,14 +1,14 @@
 import { API_URL, BONUS_API_URL } from './config';
 
 // тип фото
-export interface PhotoPayload {
+interface PhotoPayload {
   base64: string;
   type: string;
   name: string;
 }
 
 // універсальний тип
-export interface SaveReportPayload {
+interface SaveReportPayload {
   department: string;
   representative: string;
   store: string;
@@ -27,7 +27,7 @@ export interface SaveReportPayload {
   date?: string;
 }
 
-export interface ApiResponse {
+interface ApiResponse {
   success: boolean;
   error?: string;
 }

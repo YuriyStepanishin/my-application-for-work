@@ -6,7 +6,7 @@
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
   box-sizing: border-box;
 }
 
@@ -77,30 +77,179 @@
   appearance: none;
 }
 
-.tableBrandButton {
+.brandFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.sidebarSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebarSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  font-weight: 800;
+  color: #557868;
+}
+
+.sidebarSectionIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+}
+
+.sidebarCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(183, 203, 189, 0.9);
+  background: rgba(251, 253, 251, 0.86);
+  box-shadow: 0 8px 24px rgba(72, 103, 84, 0.08);
+}
+
+.desktopLayout {
+  display: block;
+}
+
+.sidebar {
+  min-width: 0;
+}
+
+.mainContent {
+  min-width: 0;
+}
+
+.filtersSticky {
+  position: relative;
+  z-index: 1;
+}
+
+.sidebarControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.brandChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
   border: 1px solid #b7cbbd;
   border-radius: 999px;
-  background: #eef6f0;
+  background: #f8fbf8;
   color: #1f6b45;
-  font-size: inherit;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.2;
-  padding: 6px 10px;
   cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
   transition:
     background 0.15s ease,
     color 0.15s ease,
-    transform 0.15s ease;
+    border-color 0.15s ease;
 }
 
-.tableBrandButtonActive {
+.brandChipWide {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.brandChipAll {
+  background: #eff4f1;
+  border-color: #b6c7bd;
+}
+
+.brandChipCheckbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #2f4f3a;
+  cursor: pointer;
+}
+
+.brandChipActive {
   background: #2f4f3a;
   color: #fff;
   border-color: #2f4f3a;
+}
+
+.brandChipAllActive {
+  background: #e1e9e4;
+  color: #224836;
+  border-color: #6f8c7d;
+  border-width: 2px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(111, 140, 125, 0.3);
+}
+
+.brandChipAllActive .brandChipCheckbox {
+  accent-color: #3f6653;
+}
+
+.brandChipDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sidebarActionButton {
+  width: 100%;
+  min-height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #3f6f58 0%, #2f5a45 100%);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(47, 90, 69, 0.18);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.sidebarSaveButton {
+  width: 100%;
+  min-height: 40px;
+  border: 2px solid #b7cbbd;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #2f4f3a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.sidebarButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brandName {
+  font-weight: 600;
 }
 
 /* table */
@@ -113,7 +262,7 @@
 .table th,
 .table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 7px;
   font-size: clamp(12px, 1.65vw, 15px);
   line-height: 1.3;
 }
@@ -140,37 +289,45 @@
   font-weight: 600;
 }
 
-.clickable {
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-}
-
 @media (hover: hover) {
-  .clickable:hover {
-    background: #eef6f0;
-    color: #1f6b45;
-  }
-
-  .tableBrandButton:hover {
+  .brandChip:hover {
     background: #dfeee4;
-    transform: translateY(-1px);
   }
 
-  .tableBrandButtonActive:hover {
+  .brandChipActive:hover {
     background: #2f4f3a;
+  }
+
+  .brandChipAll:hover {
+    background: #e9f1ec;
+  }
+
+  .brandChipAllActive:hover {
+    background: #d5e2db;
+    border-color: #5f7b6d;
+  }
+
+  .sidebarActionButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(47, 90, 69, 0.22);
+    filter: brightness(1.03);
+  }
+
+  .sidebarSaveButton:hover {
+    background: #e6f0e8;
+    border-color: #8fa89a;
+    transform: translateY(-1px);
   }
 }
 
 .subBlock {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .subHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: nowrap;
   gap: 12px;
   margin-bottom: 12px;
@@ -207,14 +364,14 @@
 .storeList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .storeCard {
   background: #fff;
   border-radius: 10px;
   border: 1px solid #e0e0e0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -278,6 +435,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+.dateGroupList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dateGroup {
+  padding: 6px 8px;
+  border: 1px solid #d8e4dc;
+  border-radius: 8px;
+  background: #f6faf7;
+}
+
+.dateGroupRow {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) repeat(3, max-content);
+  align-items: center;
+  gap: 10px;
+  min-width: 350px;
+}
+
+.dateGroupLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2f4f3a;
+  white-space: nowrap;
+}
+
+.dateGroupMetaItem {
+  font-size: 12px;
+  font-weight: 600;
+  color: #61766a;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .productList {
   margin: 8px 0 0 0;
   padding: 8px 12px;
@@ -324,7 +518,8 @@
 }
 
 .productQty,
-.productAmount {
+.productAmount,
+.productPrice {
   display: inline-block;
   text-align: right;
 }
@@ -335,6 +530,10 @@
 
 .productAmount {
   width: 64px;
+}
+
+.productPrice {
+  width: 56px;
 }
 
 @media (hover: hover) {
@@ -386,7 +585,27 @@
 
 @media (max-width: 560px) {
   .container {
-    padding: 12px;
+    padding: 10px;
+  }
+
+  .desktopLayout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sidebar {
+    order: 0;
+  }
+
+  .mainContent {
+    order: 1;
+  }
+
+  .filtersSticky {
+    gap: 10px;
+    padding: 10px;
+    border-radius: 16px;
   }
 
   .table {
@@ -398,7 +617,6 @@
     width: auto;
   }
 
-  .storeRow,
   .productItem {
     align-items: flex-start;
   }
@@ -410,9 +628,80 @@
 }
 
 @media (min-width: 1024px) {
+  .desktopLayout {
+    display: grid;
+    grid-template-columns: minmax(270px, 320px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .filtersSticky {
+    position: relative;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 12;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(255, 255, 255, 0.55),
+        transparent 34%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(233, 242, 235, 0.98) 0%,
+        rgba(223, 235, 227, 0.98) 100%
+      );
+    border: 1px solid rgba(183, 203, 189, 0.75);
+    border-radius: 20px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(65, 94, 76, 0.14);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
   .container {
-    max-width: 980px;
-    padding: 24px;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 0 16px 16px 0;
+  }
+
+  .brandFilters {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .sidebarControls {
+    gap: 8px;
+  }
+
+  .brandChip:not(.brandChipWide) {
+    justify-content: flex-start;
+  }
+
+  .sidebarActionButton {
+    margin-top: auto;
+  }
+
+  .sidebarButtons {
+    margin-top: auto;
   }
 
   .table {
@@ -421,7 +710,7 @@
 
   .table th,
   .table td {
-    padding: 12px 10px;
+    padding: 10px 8px;
   }
 
   .subBlock {
@@ -430,7 +719,7 @@
 
   .storeList {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
 

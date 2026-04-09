@@ -1,8 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Photo } from '../../types/photo';
 
-export type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
-
 class AppDB extends Dexie {
   photos!: Table<Photo, string>;
 

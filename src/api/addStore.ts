@@ -1,14 +1,14 @@
 import { API_URL } from './config';
 
 // тип для нової ТТ
-export interface AddStorePayload {
+interface AddStorePayload {
   department: string;
   representative: string;
   store: string;
 }
 
 // тип відповіді сервера
-export interface ApiResponse {
+interface ApiResponse {
   success: boolean;
   error?: string;
 }

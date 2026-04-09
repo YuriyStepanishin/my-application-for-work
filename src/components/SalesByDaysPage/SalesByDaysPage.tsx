@@ -1,22 +1,9 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { SALES_URL } from '../../api/config';
+import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
 import styles from './SalesByDaysPage.module.css';
-
-type Sale = {
-  місяць: string;
-  дата: string;
-  бренд: string;
-  товар: string;
-  вага: number;
-  кількість: number;
-  сума: number;
-  агент: string;
-  відділ: string;
-  торгова_точка: string;
-};
 
 type DayStats = {
   dateLabel: string;
@@ -127,11 +114,7 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
     error,
   } = useQuery<Sale[]>({
     queryKey: ['sales'],
-    queryFn: async () => {
-      const res = await fetch(SALES_URL);
-      if (!res.ok) throw new Error('Помилка');
-      return res.json();
-    },
+    queryFn: fetchSales,
     staleTime: 1000 * 60 * 5,
   });
 
