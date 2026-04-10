@@ -289,6 +289,23 @@
   font-weight: 600;
 }
 
+.salesByDaysButton {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #1f5cbf;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2f7de7 0%, #1f67cf 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(33, 102, 204, 0.24);
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
 @media (hover: hover) {
   .brandChip:hover {
     background: #dfeee4;
@@ -317,6 +334,12 @@
     background: #e6f0e8;
     border-color: #8fa89a;
     transform: translateY(-1px);
+  }
+
+  .salesByDaysButton:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow: 0 10px 22px rgba(33, 102, 204, 0.28);
   }
 }
 
@@ -586,6 +609,7 @@
 @media (max-width: 560px) {
   .container {
     padding: 10px;
+    background: linear-gradient(180deg, #e4eee7 0%, #dce9e1 100%);
   }
 
   .desktopLayout {
@@ -606,11 +630,37 @@
     gap: 10px;
     padding: 10px;
     border-radius: 16px;
+    background: transparent;
+    border: 1px solid rgba(183, 203, 189, 0.9);
+  }
+
+  .sidebarCard {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .sidebarSection {
+    gap: 0;
   }
 
   .table {
     table-layout: fixed;
     font-size: 13px;
+    background: rgba(230, 240, 233, 0.82);
+  }
+
+  .salesByDaysButton {
+    min-height: 42px;
+    font-size: 14px;
+  }
+
+  .brandName {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 80px;
+    line-height: 1.2;
   }
 
   .toggleBtn {

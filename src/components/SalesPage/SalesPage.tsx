@@ -97,7 +97,15 @@ function formatDateLabel(dateKey: string): string {
   return dateKey;
 }
 
-export default function SalesPage({ onBack }: { onBack: () => void }) {
+type SalesPageProps = {
+  onBack: () => void;
+  onOpenSalesByDays: () => void;
+};
+
+export default function SalesPage({
+  onBack,
+  onOpenSalesByDays,
+}: SalesPageProps) {
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [agent, setAgent] = useState('');
@@ -632,19 +640,19 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
 
             <section className={styles.sidebarSection}>
               <div className={styles.sidebarCard}>
-                <label
-                  className={`${styles.brandChip} ${styles.brandChipWide} ${styles.brandChipAll} ${effectiveSelectedBrands.length === 0 ? styles.brandChipAllActive : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    className={styles.brandChipCheckbox}
-                    checked={effectiveSelectedBrands.length === 0}
-                    onChange={() => setSelectedBrands([])}
-                  />
-                  <span>Усі ТМ</span>
-                </label>
-
                 <div className={styles.brandFilters}>
+                  <label
+                    className={`${styles.brandChip} ${styles.brandChipAll} ${effectiveSelectedBrands.length === 0 ? styles.brandChipAllActive : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={styles.brandChipCheckbox}
+                      checked={effectiveSelectedBrands.length === 0}
+                      onChange={() => setSelectedBrands([])}
+                    />
+                    <span>Усі ТМ</span>
+                  </label>
+
                   {brandOptions.map(option => {
                     const isChecked = activeBrandSet.has(option.brand);
 
@@ -674,6 +682,13 @@ export default function SalesPage({ onBack }: { onBack: () => void }) {
                 onClick={handleSaveExcel}
               >
                 {isMobile ? 'Поділитись' : 'Зберегти'}
+              </button>
+              <button
+                type="button"
+                className={styles.salesByDaysButton}
+                onClick={onOpenSalesByDays}
+              >
+                Продажі по днях
               </button>
             </div>
           </div>

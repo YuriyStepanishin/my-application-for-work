@@ -17,6 +17,12 @@ const SalesPage = lazy(() => import('./components/SalesPage/SalesPage'));
 const SalesByDaysPage = lazy(
   () => import('./components/SalesByDaysPage/SalesByDaysPage')
 );
+const RouteHistoryPage = lazy(
+  () => import('./components/RouteHistoryPage/RouteHistoryPage')
+);
+const ImplementationPage = lazy(
+  () => import('./components/ImplementationPage/ImplementationPage')
+);
 
 import type { SheetRow } from './types/sheet';
 
@@ -27,7 +33,9 @@ import UserMenu from './components/UserMenu/UserMenu';
 import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
-  const [page, setPage] = useState<'home' | 'sales' | 'sales-by-days'>('home');
+  const [page, setPage] = useState<
+    'home' | 'sales' | 'sales-by-days' | 'route-history' | 'implementation'
+  >('home');
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
   );
@@ -92,7 +100,10 @@ export default function App() {
     return (
       <>
         <Suspense fallback={<Loader />}>
-          <SalesPage onBack={() => setPage('home')} />
+          <SalesPage
+            onBack={() => setPage('home')}
+            onOpenSalesByDays={() => setPage('sales-by-days')}
+          />
         </Suspense>
       </>
     );
@@ -102,7 +113,27 @@ export default function App() {
     return (
       <>
         <Suspense fallback={<Loader />}>
-          <SalesByDaysPage onBack={() => setPage('home')} />
+          <SalesByDaysPage onBack={() => setPage('sales')} />
+        </Suspense>
+      </>
+    );
+  }
+
+  if (page === 'route-history') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <RouteHistoryPage onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
+  if (page === 'implementation') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <ImplementationPage onBack={() => setPage('home')} />
         </Suspense>
       </>
     );
@@ -128,8 +159,11 @@ export default function App() {
             }
             onOpenGallery={() => runProtectedAction(() => setShowGallery(true))}
             onOpenSales={() => runProtectedAction(() => setPage('sales'))}
-            onOpenSalesByDays={() =>
-              runProtectedAction(() => setPage('sales-by-days'))
+            onOpenRouteHistory={() =>
+              runProtectedAction(() => setPage('route-history'))
+            }
+            onOpenImplementation={() =>
+              runProtectedAction(() => setPage('implementation'))
             }
           />
         </Suspense>

@@ -8,7 +8,8 @@ interface Props {
   onOpenBonus: () => void;
   onOpenGallery: () => void;
   onOpenSales: () => void;
-  onOpenSalesByDays: () => void;
+  onOpenRouteHistory: () => void;
+  onOpenImplementation: () => void;
 }
 
 export default function HomePage({
@@ -16,7 +17,8 @@ export default function HomePage({
   onOpenBonus,
   onOpenGallery,
   onOpenSales,
-  onOpenSalesByDays,
+  onOpenRouteHistory,
+  onOpenImplementation,
 }: Props) {
   const [showPopup, setShowPopup] = useState(false);
   const topMenuItems = [
@@ -34,15 +36,21 @@ export default function HomePage({
     },
     {
       key: 'sales-by-days',
-      label: 'Продажі по днях',
+      label: 'Маршрут/історія продажів',
       icon: '/icons/calendar-icon-64.svg',
-      onClick: onOpenSalesByDays,
+      onClick: onOpenRouteHistory,
     },
     {
       key: 'messages',
       label: 'Повідомлення',
       icon: '/icons/message-icon-64.svg',
       onClick: () => setShowPopup(true),
+    },
+    {
+      key: 'implementation',
+      label: 'Виконання показників',
+      icon: '/icons/implementation.svg',
+      onClick: onOpenImplementation,
     },
   ];
 
@@ -111,7 +119,7 @@ export default function HomePage({
       {/* footer */}
       <footer className={styles.footer}>
         <span>© 2026</span>
-        <span>v2.1.3</span>
+        <span>v{__APP_VERSION__}</span>
       </footer>
     </div>
   );
