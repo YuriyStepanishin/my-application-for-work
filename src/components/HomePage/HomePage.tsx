@@ -21,6 +21,16 @@ export default function HomePage({
   onOpenImplementation,
 }: Props) {
   const [showPopup, setShowPopup] = useState(false);
+
+  const handleRefreshApp = async () => {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration();
+      await registration?.update();
+    }
+
+    window.location.reload();
+  };
+
   const topMenuItems = [
     {
       key: 'sales',
@@ -80,6 +90,21 @@ export default function HomePage({
     >
       {/* фон */}
       <img src={bg} className={styles.background} />
+
+      <button
+        type="button"
+        className={styles.refreshButton}
+        onClick={() => {
+          void handleRefreshApp();
+        }}
+        aria-label="Оновити додаток"
+        title="Оновити"
+      >
+        <span className={styles.refreshIcon} aria-hidden="true">
+          ↻
+        </span>
+        <span>Оновити</span>
+      </button>
 
       {/* навігація */}
       <div className={styles.buttonContainer}>

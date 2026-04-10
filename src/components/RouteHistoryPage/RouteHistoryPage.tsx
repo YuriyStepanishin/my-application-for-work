@@ -503,32 +503,24 @@ export default function RouteHistoryPage({ onBack }: Props) {
                     {store.brands.map(brand => (
                       <section
                         key={`${store.store}-${brand.brand}-mobile`}
-                        className={styles.mobileBrandBlock}
+                        className={`${styles.mobileBrandBlock} ${brand.isEmpty ? styles.mobileBrandBlockAlert : ''}`}
                       >
-                        <h4
-                          className={`${styles.mobileBrandTitle} ${brand.isEmpty ? styles.mobileBrandTitleAlert : ''}`}
-                        >
-                          {brand.brand}
-                        </h4>
+                        <div className={styles.mobileBrandHeader}>
+                          <h4
+                            className={`${styles.mobileBrandTitle} ${brand.isEmpty ? styles.mobileBrandTitleAlert : ''}`}
+                          >
+                            {brand.brand}
+                          </h4>
+
+                          {!brand.isEmpty && (
+                            <span className={styles.mobileWeekHeader}>
+                              {weekNumbers.join(' | ')}
+                            </span>
+                          )}
+                        </div>
 
                         {!brand.isEmpty && (
                           <>
-                            <div className={styles.mobileHeaderRow}>
-                              <span>Товар</span>
-                              <span>{weekNumbers.join('/')}</span>
-                            </div>
-
-                            <div className={styles.mobileProductRow}>
-                              <p className={styles.mobileProductName}>
-                                Разом по ТМ
-                              </p>
-                              <p className={styles.mobileWeeksLine}>
-                                {brand.totals
-                                  .map(value => formatHistoryCell(value))
-                                  .join('/')}
-                              </p>
-                            </div>
-
                             {brand.products.map(product => (
                               <div
                                 key={`${store.store}-${brand.brand}-${product.name}-mobile`}
@@ -540,7 +532,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
                                 <p className={styles.mobileWeeksLine}>
                                   {product.weeks
                                     .map(value => formatHistoryCell(value ?? 0))
-                                    .join('/')}
+                                    .join(' | ')}
                                 </p>
                               </div>
                             ))}

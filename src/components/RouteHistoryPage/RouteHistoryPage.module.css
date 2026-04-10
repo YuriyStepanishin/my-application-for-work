@@ -233,16 +233,22 @@
   color: #a03030;
 }
 
-.mobileHeaderRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.mobileBrandHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 8px;
-  padding: 4px 0 6px;
+  padding: 0 0 6px;
   border-bottom: 1px solid #d8e3db;
   margin-bottom: 4px;
+}
+
+.mobileWeekHeader {
   font-size: 12px;
   font-weight: 700;
   color: #2a4b3a;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .mobileProductRow {
