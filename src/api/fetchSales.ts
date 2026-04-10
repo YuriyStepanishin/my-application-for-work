@@ -18,6 +18,23 @@ export type Sale = {
 
 type MaybeObject = Record<string, unknown>;
 
+const AGENT_DEPARTMENT: Record<string, string> = {
+  'Сотрудник ОРІМІ': 'Офіс',
+  'Дюг Тетяна': "Кам'янець-Подільський відділ",
+  'Івасишин Денис': "Кам'янець-Подільський відділ",
+  'Олійник Влад': "Кам'янець-Подільський відділ",
+  'Гриник Ольга': 'Область (центр)',
+  'Довга Діана': 'Місто',
+  'Лаптєва Руслана': 'Місто',
+  'Могильна Оксана': 'Область (центр)',
+  'Сторожук Аліна': 'Область (центр)',
+  'Ящишина Наталія': 'Місто',
+  'Кучер Аня': 'Шепетівський відділ',
+  'Мартинчик Альона': 'Шепетівський відділ',
+  'Нагорняк Світлана': 'Шепетівський відділ',
+  'Швець Ірина': 'Шепетівський відділ',
+};
+
 function toNumber(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (value == null) return 0;
@@ -60,11 +77,20 @@ function resolveStore(raw: MaybeObject): string {
   return address ? `${point} (${address})` : point;
 }
 
+function resolveDepartment(raw: MaybeObject, agent: string): string {
+  const explicitDepartment = cleanText(
+    getFirstPresent(raw, ['відділ', 'Отдел'])
+  );
+  if (explicitDepartment) return explicitDepartment;
+  return AGENT_DEPARTMENT[agent] || 'Інше';
+}
+
 function normalizeSale(raw: MaybeObject): Sale {
   const point = cleanText(getFirstPresent(raw, ['точка', 'Точка']));
   const address = cleanText(
     getFirstPresent(raw, ['адреса', 'Факт. адрес', 'факт. адрес'])
   );
+  const agent = cleanText(getFirstPresent(raw, ['агент', 'Агент']));
 
   return {
     місяць: cleanText(getFirstPresent(raw, ['місяць', 'Месяц'])),
@@ -76,8 +102,8 @@ function normalizeSale(raw: MaybeObject): Sale {
     сума: toNumber(getFirstPresent(raw, ['сума', 'Сумма'])),
     точка: point,
     адреса: address,
-    агент: cleanText(getFirstPresent(raw, ['агент', 'Агент'])),
-    відділ: cleanText(getFirstPresent(raw, ['відділ', 'Отдел'])),
+    агент: agent,
+    відділ: resolveDepartment(raw, agent),
     торгова_точка: resolveStore(raw),
     джерело: cleanText(getFirstPresent(raw, ['джерело', 'source'])) || 'main',
   };
@@ -100,7 +126,16 @@ function extractRows(payload: unknown): unknown[] {
 export async function fetchSales(): Promise<Sale[]> {
   const response = await fetch(SALES_URL);
   if (!response.ok) {
-    throw new Error(`Не вдалося завантажити продажі (${response.status})`);
+    const errorBody = await response.text().catch(() => '');
+    if (response.status === 403) {
+      throw new Error(
+        'Доступ до sales API заборонено (403). Перевірте деплой Google Apps Script: доступ має бути "Anyone" і використовуйте актуальний URL /exec.'
+      );
+    }
+
+    throw new Error(
+      `Не вдалося завантажити продажі (${response.status})${errorBody ? `: ${errorBody.slice(0, 120)}` : ''}`
+    );
   }
 
   const payload: unknown = await response.json();

@@ -103,10 +103,26 @@ function getWeekdayOrder(date: Date): number {
   return day === 0 ? 7 : day;
 }
 
+function parseSaleDate(raw: string): string | null {
+  if (!raw) return null;
+
+  const dmyMatch = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+  if (dmyMatch) return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return null;
+}
+
 export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
   const [agent, setAgent] = useState('');
   const [department, setDepartment] = useState('');
   const [brand, setBrand] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const {
     data = [],
@@ -122,9 +138,17 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
     return data.filter(i => {
       if (department && i.відділ !== department) return false;
       if (agent && i.агент !== agent) return false;
+
+      if (dateFrom || dateTo) {
+        const saleDate = parseSaleDate(i.дата);
+        if (saleDate === null) return false;
+        if (dateFrom && saleDate < dateFrom) return false;
+        if (dateTo && saleDate > dateTo) return false;
+      }
+
       return true;
     });
-  }, [data, agent, department]);
+  }, [data, agent, department, dateFrom, dateTo]);
 
   const filtered = useMemo(() => {
     if (!brand) return filteredByDepartmentAgent;
@@ -378,8 +402,12 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
         agents={uniqueAgents}
         department={department}
         agent={agent}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
         onChangeDepartment={setDepartment}
         onChangeAgent={setAgent}
+        onChangeDateFrom={setDateFrom}
+        onChangeDateTo={setDateTo}
       />
 
       <div className={styles.brandFilters}>

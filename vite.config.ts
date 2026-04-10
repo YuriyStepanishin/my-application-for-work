@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api/sales': {
+        target:
+          'https://script.google.com/macros/s/AKfycbwVr7l4-MYv8lZyuSC2WF9_DMS6p79LVKq9f1rhcgmn1TiuTf72RG-6IQG_ZDvhgsq3',
+        changeOrigin: true,
+        secure: true,
+        rewrite: () => '/exec',
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
