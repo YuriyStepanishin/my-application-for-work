@@ -84,6 +84,11 @@ function getDateLabel(date: Date): string {
 }
 
 export default function ActiveCustomerBase({ onBack }: Props) {
+  const storeNameCollator = useMemo(
+    () => new Intl.Collator('uk', { sensitivity: 'base' }),
+    []
+  );
+
   const [department, setDepartment] = useState('');
   const [agent, setAgent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -176,11 +181,15 @@ export default function ActiveCustomerBase({ onBack }: Props) {
         store,
         sum: monthSumsByStore.get(store) || 0,
       }))
-      .sort((a, b) => {
-        if (b.sum !== a.sum) return b.sum - a.sum;
-        return a.store.localeCompare(b.store, 'uk');
-      });
-  }, [filteredSales, searchTerm, currentWeekday, currentYear, currentMonth]);
+      .sort((a, b) => storeNameCollator.compare(a.store, b.store));
+  }, [
+    filteredSales,
+    searchTerm,
+    currentWeekday,
+    currentYear,
+    currentMonth,
+    storeNameCollator,
+  ]);
 
   const summary = useMemo(() => {
     let totalSum = 0;

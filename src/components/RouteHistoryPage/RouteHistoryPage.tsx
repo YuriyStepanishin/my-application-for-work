@@ -121,6 +121,11 @@ function getDateLabel(date: Date): string {
 }
 
 export default function RouteHistoryPage({ onBack }: Props) {
+  const storeNameCollator = useMemo(
+    () => new Intl.Collator('uk', { sensitivity: 'base' }),
+    []
+  );
+
   const [department, setDepartment] = useState('');
   const [agent, setAgent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -216,8 +221,8 @@ export default function RouteHistoryPage({ onBack }: Props) {
       }
     });
 
-    return Array.from(stores).sort((a, b) => a.localeCompare(b, 'uk'));
-  }, [filtered, currentWeekday]);
+    return Array.from(stores).sort((a, b) => storeNameCollator.compare(a, b));
+  }, [filtered, currentWeekday, storeNameCollator]);
 
   const visibleBrands = useMemo(() => {
     const princessBrandsFromData = [

@@ -106,17 +106,48 @@ export default function PhotoGallery({ onBack }: Props) {
     ];
   }, [photos, department]);
 
+  const storeNameCollator = useMemo(
+    () => new Intl.Collator('uk', { sensitivity: 'base' }),
+    []
+  );
+
+  const parsePhotoDate = (raw: string): number => {
+    if (!raw) return 0;
+
+    const dmy = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})(?:\D|$)/);
+    if (dmy) {
+      const day = Number(dmy[1]);
+      const month = Number(dmy[2]);
+      const yearToken = dmy[3];
+      const year = Number(
+        yearToken.length === 2 ? `20${yearToken}` : yearToken
+      );
+      const parsed = new Date(year, month - 1, day).getTime();
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    const parsed = new Date(raw).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
   const filteredPhotos = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
-    return photos.filter(p => {
-      const depOk = department === 'all' || p.department === department;
-      const repOk = rep === 'all' || p.rep === rep;
-      const searchOk = !query || p.store.toLowerCase().includes(query);
+    return photos
+      .filter(p => {
+        const depOk = department === 'all' || p.department === department;
+        const repOk = rep === 'all' || p.rep === rep;
+        const searchOk = !query || p.store.toLowerCase().includes(query);
 
-      return depOk && repOk && searchOk;
-    });
-  }, [photos, department, rep, searchTerm]);
+        return depOk && repOk && searchOk;
+      })
+      .sort((a, b) => {
+        const dateDiff = parsePhotoDate(b.date) - parsePhotoDate(a.date);
+        if (dateDiff !== 0) return dateDiff;
+
+        return storeNameCollator.compare(a.store, b.store);
+      });
+  }, [photos, department, rep, searchTerm, storeNameCollator]);
 
   const filteredStoreCount = useMemo(() => {
     return new Set(filteredPhotos.map(photo => photo.store).filter(Boolean))
@@ -267,14 +298,16 @@ export default function PhotoGallery({ onBack }: Props) {
         <div
           className={`${styles.topBar} ${activePhoto ? styles.filtersHidden : ''}`}
         >
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Кількість ТТ</span>
-            <strong className={styles.statValue}>{filteredStoreCount}</strong>
-          </div>
+          <div className={styles.statsCompact}>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Кількість ТТ</span>
+              <strong className={styles.statValue}>{filteredStoreCount}</strong>
+            </div>
 
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Кількість фото</span>
-            <strong className={styles.statValue}>{filteredPhotoCount}</strong>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Кількість фото</span>
+              <strong className={styles.statValue}>{filteredPhotoCount}</strong>
+            </div>
           </div>
 
           <SearchInput

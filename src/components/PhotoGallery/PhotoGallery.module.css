@@ -21,7 +21,7 @@
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: 104px 104px minmax(120px, 1fr) 160px 240px;
+  grid-template-columns: minmax(212px, auto) minmax(120px, 1fr) 160px 240px;
   column-gap: 6px;
   row-gap: 6px;
   padding: 10px;
@@ -42,6 +42,18 @@
   height: 56px;
   min-height: 56px;
   margin: 0;
+}
+
+.statsCompact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  height: 56px;
+  min-height: 56px;
+}
+
+.statsCompact .statCard {
+  min-height: 56px;
 }
 
 .searchInput {
@@ -268,10 +280,23 @@
 
 @media (max-width: 560px) {
   .topBar {
-    grid-template-columns: 92px 92px minmax(120px, 1fr) 145px 215px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     padding: 10px;
-    overflow-x: auto;
+    overflow: visible;
+  }
+
+  .statsCompact {
+    grid-column: 1;
+  }
+
+  .searchInput {
+    grid-column: 2;
+  }
+
+  .topBar .select {
+    height: 50px;
+    min-height: 50px;
   }
 
   .statCard {
