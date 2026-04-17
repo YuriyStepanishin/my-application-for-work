@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
+import SearchInput from '../SearchInput';
 import styles from './RouteHistoryPage.module.css';
 
 type Props = {
@@ -122,6 +123,7 @@ function getDateLabel(date: Date): string {
 export default function RouteHistoryPage({ onBack }: Props) {
   const [department, setDepartment] = useState('');
   const [agent, setAgent] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [expandedStore, setExpandedStore] = useState<string | null>(null);
 
   const {
@@ -151,13 +153,23 @@ export default function RouteHistoryPage({ onBack }: Props) {
   }, [data, department]);
 
   const filtered = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
     return data.filter(item => {
       if (department && item.відділ !== department) return false;
       if (agent && item.агент !== agent) return false;
       if (!item.торгова_точка) return false;
+
+      if (query) {
+        const store = item.торгова_точка.toLowerCase();
+        if (!store.includes(query)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [data, department, agent]);
+  }, [data, department, agent, searchTerm]);
 
   const today = useMemo(() => normalizeWeekendToFriday(new Date()), []);
   const currentWeekday = getIsoWeekday(today);
@@ -165,7 +177,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
   const weekKeys = useMemo(() => {
     const keys: string[] = [];
 
-    for (let offset = 0; offset <= 4; offset += 1) {
+    for (let offset = 0; offset <= 3; offset += 1) {
       const date = shiftDays(today, -offset * 7);
       const info = getIsoWeekInfo(date);
       keys.push(`${info.year}-W${String(info.week).padStart(2, '0')}`);
@@ -272,7 +284,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
       const byProduct = byBrand.get(brand);
       if (!byProduct) return;
 
-      if (!byProduct.has(product)) byProduct.set(product, [0, 0, 0, 0, 0]);
+      if (!byProduct.has(product)) byProduct.set(product, [0, 0, 0, 0]);
       const bucket = byProduct.get(product);
       if (!bucket) return;
 
@@ -294,7 +306,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
           }))
           .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
 
-        const totals = [0, 0, 0, 0, 0];
+        const totals = [0, 0, 0, 0];
         products.forEach(product => {
           product.weeks.forEach((value: number, idx: number) => {
             totals[idx] += value;
@@ -311,7 +323,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
         };
       });
 
-      const totals = [0, 0, 0, 0, 0];
+      const totals = [0, 0, 0, 0];
       brands.forEach(brand => {
         brand.totals.forEach((value, idx) => {
           totals[idx] += value;
@@ -357,6 +369,17 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
       <section className={styles.filtersCard}>
         <label className={styles.field}>
+          <span>Пошук ТТ</span>
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Введіть назву ТТ"
+            ariaLabel="Пошук торгової точки"
+            className={styles.searchInput}
+          />
+        </label>
+
+        <label className={styles.field}>
           <span>Відділ</span>
           <select
             value={department}
@@ -399,7 +422,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
           ТТ у маршруті (з усіх даних): <b>{summary.allStores}</b>
         </p>
         <p>
-          Без відвантажень за останні 5 тижнів: <b>{summary.withoutHistory}</b>
+          Без відвантажень за останні 4 тижні: <b>{summary.withoutHistory}</b>
         </p>
       </section>
 
@@ -421,7 +444,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
                 <span className={styles.storeName}>{store.store}</span>
                 {!store.hasHistory && (
                   <span className={styles.alertChip}>
-                    Немає відвантажень 5 тижнів
+                    Немає відвантажень 4 тижні
                   </span>
                 )}
                 <span className={styles.expandIcon}>{isOpen ? '−' : '+'}</span>
@@ -444,8 +467,8 @@ export default function RouteHistoryPage({ onBack }: Props) {
                       <tbody>
                         {store.brands.length === 0 && (
                           <tr>
-                            <td colSpan={6} className={styles.emptyCell}>
-                              За останні 5 тижнів немає даних.
+                            <td colSpan={5} className={styles.emptyCell}>
+                              За останні 4 тижні немає даних.
                             </td>
                           </tr>
                         )}
@@ -454,7 +477,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
                           <Fragment key={`${store.store}-${brand.brand}`}>
                             {brand.isEmpty ? (
                               <tr className={styles.brandOnlyRowAlert}>
-                                <td colSpan={6}>
+                                <td colSpan={5}>
                                   <b>{brand.brand}</b>
                                 </td>
                               </tr>
@@ -496,7 +519,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
                   <div className={styles.mobileHistory}>
                     {store.brands.length === 0 && (
                       <p className={styles.emptyCell}>
-                        За останні 5 тижнів немає даних.
+                        За останні 4 тижні немає даних.
                       </p>
                     )}
 

@@ -103,7 +103,7 @@ export default function HomePage({
         <span className={styles.refreshIcon} aria-hidden="true">
           ↻
         </span>
-        <span>Оновити</span>
+        <span>Оновити v2.3.0</span>
       </button>
 
       {/* навігація */}

@@ -7,25 +7,25 @@ import styles from './ImplementationPage.module.css';
 // ─── ПЛАНИ ──────────────────────────────────────────────────────────────────
 
 type AgentPlan = {
-  /** план ВКБ СВ/АКБ ТП — кількість ТТ ≥500 грн */
-  vkb: number;
-  /** план ТМ Жокей — кількість ТТ з Жокеєм (ТП від 0 грн) */
-  jockey: number;
+  /** план АКБ — кількість ТТ ≥500 грн */
+  akb: number;
+  /** план ВКБ Жокей — кількість ТТ з Жокеєм ≥0 грн */
+  vkbJockey: number;
 };
 
 const AGENT_PLANS: Record<string, AgentPlan> = {
-  'Гриник Ольга': { vkb: 65, jockey: 50 },
-  'Довга Діана': { vkb: 85, jockey: 50 },
-  'Лаптєва Руслана': { vkb: 90, jockey: 55 },
-  'Могильна Оксана': { vkb: 75, jockey: 55 },
-  'Сторожук Аліна': { vkb: 85, jockey: 60 },
-  'Ящишина Наталія': { vkb: 80, jockey: 55 },
-  'Кучер Аня': { vkb: 65, jockey: 60 },
-  'Мартинчик Альона': { vkb: 75, jockey: 60 },
-  'Нагорняк Світлана': { vkb: 80, jockey: 65 },
-  'Дюг Тетяна': { vkb: 60, jockey: 60 },
-  'Івасишин Денис': { vkb: 65, jockey: 50 },
-  'Олійник Влад': { vkb: 55, jockey: 50 },
+  'Гриник Ольга': { akb: 65, vkbJockey: 50 },
+  'Довга Діана': { akb: 85, vkbJockey: 50 },
+  'Лаптєва Руслана': { akb: 90, vkbJockey: 55 },
+  'Могильна Оксана': { akb: 75, vkbJockey: 55 },
+  'Сторожук Аліна': { akb: 85, vkbJockey: 60 },
+  'Ящишина Наталія': { akb: 80, vkbJockey: 55 },
+  'Кучер Аня': { akb: 65, vkbJockey: 60 },
+  'Мартинчик Альона': { akb: 75, vkbJockey: 60 },
+  'Нагорняк Світлана': { akb: 80, vkbJockey: 65 },
+  'Дюг Тетяна': { akb: 60, vkbJockey: 60 },
+  'Івасишин Денис': { akb: 65, vkbJockey: 50 },
+  'Олійник Влад': { akb: 55, vkbJockey: 50 },
 };
 
 // Порядок відділів і агентів у таблиці
@@ -57,6 +57,12 @@ const DEPARTMENT_ORDER: {
     agents: ['Дюг Тетяна', 'Івасишин Денис', 'Олійник Влад'],
   },
 ];
+
+const DEPARTMENT_PLANS: Record<string, { vkb: number; akbJockey: number }> = {
+  'Місто+Область (Центр)': { vkb: 680, akbJockey: 250 },
+  'Шепетівський відділ': { vkb: 380, akbJockey: 140 },
+  "Кам'янець-Подільський відділ": { vkb: 380, akbJockey: 120 },
+};
 
 // ─── УТИЛІТИ ────────────────────────────────────────────────────────────────
 
@@ -107,10 +113,14 @@ function fmt(n: number): string {
 
 type AgentStats = {
   factGrn: number;
-  /** ТТ із загальною сумою ≥500 грн (для VKB) */
-  vkbFact: number;
-  /** ТТ де є Жокей (сума > 0) */
-  jockeyFact: number;
+  /** АКБ: ТТ із сумою ≥500 грн */
+  akbFact: number;
+  /** ВКБ Жокей: ТТ Жокей із сумою ≥0 грн */
+  vkbJockeyFact: number;
+  /** ВКБ: всі ТТ із сумою ≥0 грн */
+  allStores: number;
+  /** АКБ Жокей: ТТ Жокей із сумою ≥300 грн */
+  akbJockeyStores: number;
 };
 
 function calcStats(sales: Sale[]): Record<string, AgentStats> {
@@ -119,14 +129,14 @@ function calcStats(sales: Sale[]): Record<string, AgentStats> {
     {
       factGrn: number;
       storeSum: Record<string, number>;
-      jockeyStores: Set<string>;
+      jockeyStoreSum: Record<string, number>;
     }
   > = {};
 
   for (const s of sales) {
     if (!s.агент) continue;
     if (!byAgent[s.агент]) {
-      byAgent[s.агент] = { factGrn: 0, storeSum: {}, jockeyStores: new Set() };
+      byAgent[s.агент] = { factGrn: 0, storeSum: {}, jockeyStoreSum: {} };
     }
     const a = byAgent[s.агент];
     a.factGrn += s.сума || 0;
@@ -135,18 +145,29 @@ function calcStats(sales: Sale[]): Record<string, AgentStats> {
       a.storeSum[s.торгова_точка] =
         (a.storeSum[s.торгова_точка] || 0) + (s.сума || 0);
 
-      if (s.бренд === 'Жокей' && (s.сума || 0) > 0) {
-        a.jockeyStores.add(s.торгова_точка);
+      if (s.бренд === 'Жокей') {
+        a.jockeyStoreSum[s.торгова_точка] =
+          (a.jockeyStoreSum[s.торгова_точка] || 0) + (s.сума || 0);
       }
     }
   }
 
   const result: Record<string, AgentStats> = {};
   for (const [agent, data] of Object.entries(byAgent)) {
+    const akbFact = Object.values(data.storeSum).filter(v => v >= 500).length;
+    const vkbJockeyFact = Object.values(data.jockeyStoreSum).filter(
+      v => v >= 0
+    ).length;
+    const allStores = Object.keys(data.storeSum).length;
+    const akbJockeyStores = Object.values(data.jockeyStoreSum).filter(
+      v => v >= 300
+    ).length;
     result[agent] = {
       factGrn: data.factGrn,
-      vkbFact: Object.values(data.storeSum).filter(v => v >= 500).length,
-      jockeyFact: data.jockeyStores.size,
+      akbFact,
+      vkbJockeyFact,
+      allStores,
+      akbJockeyStores,
     };
   }
   return result;
@@ -195,56 +216,61 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         type: 'dept';
         label: string;
         factGrn: number;
-        vkbPlan: number;
-        vkbFact: number;
-        jockeyPlan: number;
-        jockeyFact: number;
+        primaryPlan: number;
+        primaryFact: number;
+        secondaryPlan: number;
+        secondaryFact: number;
       }
     | {
         type: 'agent';
         label: string;
         factGrn: number;
-        vkbPlan: number;
-        vkbFact: number;
-        jockeyPlan: number;
-        jockeyFact: number;
+        primaryPlan: number;
+        primaryFact: number;
+        secondaryPlan: number;
+        secondaryFact: number;
       };
 
   const rows: Row[] = [];
 
   let totalFactGrn = 0;
-  let totalVkbPlan = 0;
-  let totalVkbFact = 0;
-  let totalJockeyPlan = 0;
-  let totalJockeyFact = 0;
+  let totalPrimaryPlan = 0;
+  let totalPrimaryFact = 0;
+  let totalSecondaryPlan = 0;
+  let totalSecondaryFact = 0;
 
   for (const dept of DEPARTMENT_ORDER) {
+    const deptPlan = DEPARTMENT_PLANS[dept.dept] ?? { vkb: 0, akbJockey: 0 };
     let dFactGrn = 0,
-      dVkbPlan = 0,
-      dVkbFact = 0,
-      dJockeyPlan = 0,
-      dJockeyFact = 0;
+      dPrimaryFact = 0,
+      dSecondaryFact = 0;
+    const dPrimaryPlan = deptPlan.vkb;
+    const dSecondaryPlan = deptPlan.akbJockey;
 
     const agentRows: Row[] = [];
 
     for (const agent of dept.agents) {
-      const s = stats[agent] ?? { factGrn: 0, vkbFact: 0, jockeyFact: 0 };
-      const plan = AGENT_PLANS[agent] ?? { vkb: 0, jockey: 0 };
+      const s = stats[agent] ?? {
+        factGrn: 0,
+        akbFact: 0,
+        vkbJockeyFact: 0,
+        allStores: 0,
+        akbJockeyStores: 0,
+      };
+      const plan = AGENT_PLANS[agent] ?? { akb: 0, vkbJockey: 0 };
 
       dFactGrn += s.factGrn;
-      dVkbPlan += plan.vkb;
-      dVkbFact += s.vkbFact;
-      dJockeyPlan += plan.jockey;
-      dJockeyFact += s.jockeyFact;
+      dPrimaryFact += s.allStores;
+      dSecondaryFact += s.akbJockeyStores;
 
       agentRows.push({
         type: 'agent',
         label: agent,
         factGrn: s.factGrn,
-        vkbPlan: plan.vkb,
-        vkbFact: s.vkbFact,
-        jockeyPlan: plan.jockey,
-        jockeyFact: s.jockeyFact,
+        primaryPlan: plan.akb,
+        primaryFact: s.akbFact,
+        secondaryPlan: plan.vkbJockey,
+        secondaryFact: s.vkbJockeyFact,
       });
     }
 
@@ -252,19 +278,19 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       type: 'dept',
       label: dept.label,
       factGrn: dFactGrn,
-      vkbPlan: dVkbPlan,
-      vkbFact: dVkbFact,
-      jockeyPlan: dJockeyPlan,
-      jockeyFact: dJockeyFact,
+      primaryPlan: dPrimaryPlan,
+      primaryFact: dPrimaryFact,
+      secondaryPlan: dSecondaryPlan,
+      secondaryFact: dSecondaryFact,
     });
 
     rows.push(...agentRows);
 
     totalFactGrn += dFactGrn;
-    totalVkbPlan += dVkbPlan;
-    totalVkbFact += dVkbFact;
-    totalJockeyPlan += dJockeyPlan;
-    totalJockeyFact += dJockeyFact;
+    totalPrimaryPlan += dPrimaryPlan;
+    totalPrimaryFact += dPrimaryFact;
+    totalSecondaryPlan += dSecondaryPlan;
+    totalSecondaryFact += dSecondaryFact;
   }
 
   const monthLabel = new Date().toLocaleString('uk-UA', {
@@ -297,10 +323,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                 Факт ГРН
               </th>
               <th className={styles.colGroup} colSpan={3}>
-                ВКБ СВ / АКБ ТП
+                ТП: АКБ / СВ: ВКБ
               </th>
               <th className={styles.colGroup} colSpan={3}>
-                Задача ТМ Жокей
+                ТП: ВКБ Жокей / СВ: АКБ Жокей
               </th>
             </tr>
             <tr>
@@ -322,19 +348,19 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                 >
                   <td className={styles.nameCell}>{row.label}</td>
                   <td className={styles.numCell}>{fmt(row.factGrn)}</td>
-                  <td className={styles.numCell}>{row.vkbPlan}</td>
-                  <td className={styles.numCell}>{row.vkbFact}</td>
+                  <td className={styles.numCell}>{row.primaryPlan}</td>
+                  <td className={styles.numCell}>{row.primaryFact}</td>
                   <td
-                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.vkbFact, row.vkbPlan, styles)}`}
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.primaryFact, row.primaryPlan, styles)}`}
                   >
-                    {pct(row.vkbFact, row.vkbPlan)}
+                    {pct(row.primaryFact, row.primaryPlan)}
                   </td>
-                  <td className={styles.numCell}>{row.jockeyPlan}</td>
-                  <td className={styles.numCell}>{row.jockeyFact}</td>
+                  <td className={styles.numCell}>{row.secondaryPlan}</td>
+                  <td className={styles.numCell}>{row.secondaryFact}</td>
                   <td
-                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.jockeyFact, row.jockeyPlan, styles)}`}
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.secondaryFact, row.secondaryPlan, styles)}`}
                   >
-                    {pct(row.jockeyFact, row.jockeyPlan)}
+                    {pct(row.secondaryFact, row.secondaryPlan)}
                   </td>
                 </tr>
               );
@@ -342,21 +368,21 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
           </tbody>
           <tfoot>
             <tr className={styles.totalRow}>
-              <td className={styles.nameCell}>Загальний підсумок</td>
+              <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
               <td className={styles.numCell}>{fmt(totalFactGrn)}</td>
-              <td className={styles.numCell}>{totalVkbPlan}</td>
-              <td className={styles.numCell}>{totalVkbFact}</td>
+              <td className={styles.numCell}>{totalPrimaryPlan}</td>
+              <td className={styles.numCell}>{totalPrimaryFact}</td>
               <td
-                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalVkbFact, totalVkbPlan, styles)}`}
+                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalPrimaryFact, totalPrimaryPlan, styles)}`}
               >
-                {pct(totalVkbFact, totalVkbPlan)}
+                {pct(totalPrimaryFact, totalPrimaryPlan)}
               </td>
-              <td className={styles.numCell}>{totalJockeyPlan}</td>
-              <td className={styles.numCell}>{totalJockeyFact}</td>
+              <td className={styles.numCell}>{totalSecondaryPlan}</td>
+              <td className={styles.numCell}>{totalSecondaryFact}</td>
               <td
-                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalJockeyFact, totalJockeyPlan, styles)}`}
+                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalSecondaryFact, totalSecondaryPlan, styles)}`}
               >
-                {pct(totalJockeyFact, totalJockeyPlan)}
+                {pct(totalSecondaryFact, totalSecondaryPlan)}
               </td>
             </tr>
           </tfoot>
@@ -390,15 +416,15 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
             </tbody>
             <tfoot>
               <tr className={styles.totalRow}>
-                <td className={styles.nameCell}>Загальний підсумок</td>
+                <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
                 <td className={styles.numCell}>{fmt(totalFactGrn)}</td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* Таблиця 2: ВКБ СВ / АКБ ТП */}
-        <p className={styles.mobileTableTitle}>ВКБ СВ / АКБ ТП</p>
+        {/* Таблиця 2: ТП: АКБ / СВ: ВКБ */}
+        <p className={styles.mobileTableTitle}>ТП: АКБ / СВ: ВКБ</p>
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
@@ -418,33 +444,33 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   }
                 >
                   <td className={styles.nameCell}>{row.label}</td>
-                  <td className={styles.numCell}>{row.vkbPlan}</td>
-                  <td className={styles.numCell}>{row.vkbFact}</td>
+                  <td className={styles.numCell}>{row.primaryPlan}</td>
+                  <td className={styles.numCell}>{row.primaryFact}</td>
                   <td
-                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.vkbFact, row.vkbPlan, styles)}`}
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.primaryFact, row.primaryPlan, styles)}`}
                   >
-                    {pct(row.vkbFact, row.vkbPlan)}
+                    {pct(row.primaryFact, row.primaryPlan)}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className={styles.totalRow}>
-                <td className={styles.nameCell}>Загальний підсумок</td>
-                <td className={styles.numCell}>{totalVkbPlan}</td>
-                <td className={styles.numCell}>{totalVkbFact}</td>
+                <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
+                <td className={styles.numCell}>{totalPrimaryPlan}</td>
+                <td className={styles.numCell}>{totalPrimaryFact}</td>
                 <td
-                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalVkbFact, totalVkbPlan, styles)}`}
+                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalPrimaryFact, totalPrimaryPlan, styles)}`}
                 >
-                  {pct(totalVkbFact, totalVkbPlan)}
+                  {pct(totalPrimaryFact, totalPrimaryPlan)}
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* Таблиця 3: Задача ТМ Жокей */}
-        <p className={styles.mobileTableTitle}>Задача ТМ Жокей</p>
+        {/* Таблиця 3: ТП: ВКБ Жокей / СВ: АКБ Жокей */}
+        <p className={styles.mobileTableTitle}>ТП: ВКБ Жокей / СВ: АКБ Жокей</p>
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
@@ -464,25 +490,25 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   }
                 >
                   <td className={styles.nameCell}>{row.label}</td>
-                  <td className={styles.numCell}>{row.jockeyPlan}</td>
-                  <td className={styles.numCell}>{row.jockeyFact}</td>
+                  <td className={styles.numCell}>{row.secondaryPlan}</td>
+                  <td className={styles.numCell}>{row.secondaryFact}</td>
                   <td
-                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.jockeyFact, row.jockeyPlan, styles)}`}
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.secondaryFact, row.secondaryPlan, styles)}`}
                   >
-                    {pct(row.jockeyFact, row.jockeyPlan)}
+                    {pct(row.secondaryFact, row.secondaryPlan)}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className={styles.totalRow}>
-                <td className={styles.nameCell}>Загальний підсумок</td>
-                <td className={styles.numCell}>{totalJockeyPlan}</td>
-                <td className={styles.numCell}>{totalJockeyFact}</td>
+                <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
+                <td className={styles.numCell}>{totalSecondaryPlan}</td>
+                <td className={styles.numCell}>{totalSecondaryFact}</td>
                 <td
-                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalJockeyFact, totalJockeyPlan, styles)}`}
+                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalSecondaryFact, totalSecondaryPlan, styles)}`}
                 >
-                  {pct(totalJockeyFact, totalJockeyPlan)}
+                  {pct(totalSecondaryFact, totalSecondaryPlan)}
                 </td>
               </tr>
             </tfoot>

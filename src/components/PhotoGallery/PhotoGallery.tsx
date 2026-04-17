@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import styles from './PhotoGallery.module.css';
 import { useQuery } from '@tanstack/react-query';
+import SearchInput from '../SearchInput';
 import {
   buildImageSources,
   fetchReports,
@@ -29,6 +30,7 @@ export default function PhotoGallery({ onBack }: Props) {
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [sourceIndexByPhotoId, setSourceIndexByPhotoId] = useState<
     Record<string, number>
   >({});
@@ -104,12 +106,16 @@ export default function PhotoGallery({ onBack }: Props) {
   }, [photos, department]);
 
   const filteredPhotos = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
     return photos.filter(p => {
       const depOk = department === 'all' || p.department === department;
       const repOk = rep === 'all' || p.rep === rep;
-      return depOk && repOk;
+      const searchOk = !query || p.store.toLowerCase().includes(query);
+
+      return depOk && repOk && searchOk;
     });
-  }, [photos, department, rep]);
+  }, [photos, department, rep, searchTerm]);
 
   const filteredStoreCount = useMemo(() => {
     return new Set(filteredPhotos.map(photo => photo.store).filter(Boolean))
@@ -237,6 +243,13 @@ export default function PhotoGallery({ onBack }: Props) {
         <div
           className={`${styles.filters} ${activePhoto ? styles.filtersHidden : ''}`}
         >
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Пошук ТТ"
+            ariaLabel="Пошук фото за торговою точкою"
+          />
+
           <select
             className={styles.select}
             value={department}

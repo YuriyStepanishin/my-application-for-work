@@ -5,6 +5,7 @@ import { fetchSales, type Sale } from '../../api/fetchSales';
 import styles from './SalesPage.module.css';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
+import SearchInput from '../SearchInput';
 
 type BrandData = {
   amount: number;
@@ -115,6 +116,7 @@ export default function SalesPage({
   const [showStores, setShowStores] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [showByDates, setShowByDates] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(max-width: 560px)').matches;
@@ -391,6 +393,16 @@ export default function SalesPage({
       .sort((a, b) => b.sum - a.sum);
   }, [selectedSales]);
 
+  const filteredStores = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return selectedStores;
+
+    return selectedStores.filter(store => {
+      const storeName = store.name.toLowerCase();
+      return storeName.includes(query);
+    });
+  }, [selectedStores, searchTerm]);
+
   const format = (n: number) => numberFormatter.format(n);
 
   const uniqueDepartments = useMemo(
@@ -635,6 +647,15 @@ export default function SalesPage({
                     <span>По датам</span>
                   </label>
                 </div>
+
+                {showStores && (
+                  <SearchInput
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    placeholder="Пошук ТТ"
+                    ariaLabel="Пошук торгової точки"
+                  />
+                )}
               </div>
             </section>
 
@@ -741,12 +762,12 @@ export default function SalesPage({
             <div className={styles.subBlock}>
               <div className={styles.subHeader}>
                 <h3 className={styles.subTitle}>
-                  ТТ ({selectedStores.length})
+                  ТТ ({filteredStores.length})
                 </h3>
               </div>
 
               <div className={styles.storeList}>
-                {selectedStores.map(({ name, sum, sku, products, dates }) => (
+                {filteredStores.map(({ name, sum, sku, products, dates }) => (
                   <div key={name} className={styles.storeCard}>
                     <div className={styles.storeRow}>
                       <span className={styles.storeName}>{name}</span>

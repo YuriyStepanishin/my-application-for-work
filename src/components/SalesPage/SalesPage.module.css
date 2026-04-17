@@ -90,6 +90,10 @@
   gap: 10px;
 }
 
+.sidebarSearch {
+  margin: 0 0 12px;
+}
+
 .sidebarSectionTitle {
   display: flex;
   align-items: center;
