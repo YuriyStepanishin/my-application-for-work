@@ -20,6 +20,9 @@ const SalesByDaysPage = lazy(
 const RouteHistoryPage = lazy(
   () => import('./components/RouteHistoryPage/RouteHistoryPage')
 );
+const ActiveCustomerBase = lazy(
+  () => import('./components/ActiveCustomerBase/ActiveCustomerBase')
+);
 const ImplementationPage = lazy(
   () => import('./components/ImplementationPage/ImplementationPage')
 );
@@ -34,7 +37,12 @@ import { useDisplaySheet, useBonusSheet } from './api/queries';
 
 export default function App() {
   const [page, setPage] = useState<
-    'home' | 'sales' | 'sales-by-days' | 'route-history' | 'implementation'
+    | 'home'
+    | 'sales'
+    | 'sales-by-days'
+    | 'route-history'
+    | 'active-customer-base'
+    | 'implementation'
   >('home');
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
@@ -129,6 +137,16 @@ export default function App() {
     );
   }
 
+  if (page === 'active-customer-base') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <ActiveCustomerBase onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
   if (page === 'implementation') {
     return (
       <>
@@ -161,6 +179,9 @@ export default function App() {
             onOpenSales={() => runProtectedAction(() => setPage('sales'))}
             onOpenRouteHistory={() =>
               runProtectedAction(() => setPage('route-history'))
+            }
+            onOpenActiveCustomerBase={() =>
+              runProtectedAction(() => setPage('active-customer-base'))
             }
             onOpenImplementation={() =>
               runProtectedAction(() => setPage('implementation'))

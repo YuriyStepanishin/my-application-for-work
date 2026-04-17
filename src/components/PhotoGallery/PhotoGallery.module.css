@@ -16,15 +16,18 @@
   background: white;
 }
 
-.filters {
+.topBar {
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
-  gap: 12px;
-  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 104px 104px minmax(120px, 1fr) 160px 240px;
+  column-gap: 6px;
+  row-gap: 6px;
+  padding: 10px;
   border-bottom: 1px solid rgba(183, 203, 189, 0.75);
   background: transparent;
+  align-items: stretch;
 }
 
 .stats {
@@ -35,22 +38,44 @@
   align-items: stretch;
 }
 
+.topBar > * {
+  height: 56px;
+  min-height: 56px;
+  margin: 0;
+}
+
+.searchInput {
+  width: 100%;
+  max-width: none;
+  gap: 0;
+}
+
+.searchInput input {
+  height: 56px;
+  border-radius: 14px;
+  border: 2px solid #b7cbbd;
+  background: #e6f0e8;
+  color: #2f4f3a;
+  font-size: 16px;
+}
+
 .statCard {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
-  min-height: 102px;
-  border: 1px solid rgba(183, 203, 189, 0.75);
+  gap: 0;
+  min-height: 56px;
+  border: 2px solid #b7cbbd;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
-  padding: 16px 16px;
+  background: #e6f0e8;
+  padding: 0 10px;
 }
 
 .statLabel {
   display: block;
-  font-size: 12px;
-  color: #5f7868;
+  font-size: 10px;
+  color: #4d6b5a;
+  line-height: 1;
 }
 
 .statValue {
@@ -67,9 +92,8 @@
   pointer-events: none;
 }
 
-.filters select {
-  flex: 1;
-  padding: 8px;
+.topBar select {
+  padding: 0 10px;
 }
 
 .list {
@@ -101,6 +125,13 @@
   padding: 12px;
   font-size: 14px;
   line-height: 1.4;
+}
+
+.sums {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2f4f3a;
 }
 
 .empty {
@@ -236,23 +267,19 @@
 }
 
 @media (max-width: 560px) {
-  .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    padding: 10px 12px 0;
+  .topBar {
+    grid-template-columns: 92px 92px minmax(120px, 1fr) 145px 215px;
+    gap: 6px;
+    padding: 10px;
+    overflow-x: auto;
   }
 
   .statCard {
-    padding: 9px 11px;
+    padding: 0 10px;
   }
 
   .statValue {
-    font-size: 20px;
-  }
-
-  .filters {
-    flex-direction: column;
-    padding: 10px 12px;
+    font-size: 24px;
   }
 
   .list {
@@ -265,8 +292,8 @@
     max-width: 1120px;
   }
 
-  .filters {
-    padding: 16px 22px;
+  .topBar {
+    padding: 10px;
   }
   .list {
     padding: 22px;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import { fetchSales, type Sale } from '../../api/fetchSales';
+import { fetchReports } from '../../api/fetchReports';
 import styles from './SalesPage.module.css';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
@@ -138,6 +139,17 @@ export default function SalesPage({
     queryFn: fetchSales,
     staleTime: 1000 * 60 * 5,
   });
+
+  const { data: photoReports = [] } = useQuery({
+    queryKey: ['photo-reports'],
+    queryFn: fetchReports,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const storesWithPhotos = useMemo(
+    () => new Set(photoReports.map(r => r.store).filter(Boolean)),
+    [photoReports]
+  );
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 560px)');
@@ -773,7 +785,7 @@ export default function SalesPage({
                       <span className={styles.storeName}>{name}</span>
                       <span className={styles.storeAmountBlock}>
                         <span className={styles.storeSum}>
-                          {sum >= 500 && (
+                          {storesWithPhotos.has(name) && (
                             <span className={styles.storeStar}>★</span>
                           )}
                           {format(sum)}

@@ -8,6 +8,7 @@ import {
   normalizePhotoUrls,
   type Report,
 } from '../../api/fetchReports';
+import { fetchSales } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 
 interface Props {
@@ -124,6 +125,43 @@ export default function PhotoGallery({ onBack }: Props) {
 
   const filteredPhotoCount = filteredPhotos.length;
 
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: fetchSales,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const storeSums = useMemo(() => {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const cutoff70 = new Date(now);
+    cutoff70.setDate(cutoff70.getDate() - 70);
+
+    function parseSaleDate(raw: string): Date | null {
+      if (!raw) return null;
+      const dmy = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+      if (dmy) return new Date(`${dmy[3]}-${dmy[2]}-${dmy[1]}`);
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    const result: Record<string, { month: number; days70: number }> = {};
+
+    for (const sale of sales) {
+      const key = sale.торгова_точка;
+      if (!key) continue;
+      if (!result[key]) result[key] = { month: 0, days70: 0 };
+
+      const saleDate = parseSaleDate(sale.дата);
+      if (!saleDate) continue;
+
+      const saleDateMonth = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+      if (saleDateMonth === currentMonth) result[key].month += sale.сума;
+      if (saleDate >= cutoff70) result[key].days70 += sale.сума;
+    }
+    return result;
+  }, [sales]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       lastDistance.current = getDistance(e.touches);
@@ -227,7 +265,7 @@ export default function PhotoGallery({ onBack }: Props) {
     <>
       <div className={styles.container}>
         <div
-          className={`${styles.stats} ${activePhoto ? styles.filtersHidden : ''}`}
+          className={`${styles.topBar} ${activePhoto ? styles.filtersHidden : ''}`}
         >
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Кількість ТТ</span>
@@ -238,16 +276,13 @@ export default function PhotoGallery({ onBack }: Props) {
             <span className={styles.statLabel}>Кількість фото</span>
             <strong className={styles.statValue}>{filteredPhotoCount}</strong>
           </div>
-        </div>
 
-        <div
-          className={`${styles.filters} ${activePhoto ? styles.filtersHidden : ''}`}
-        >
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Пошук ТТ"
             ariaLabel="Пошук фото за торговою точкою"
+            className={styles.searchInput}
           />
 
           <select
@@ -317,6 +352,14 @@ export default function PhotoGallery({ onBack }: Props) {
                 <div>ТТ: {photo.store}</div>
                 <div>Категорія: {photo.category}</div>
                 <div>{photo.date}</div>
+                {storeSums[photo.store]?.days70 > 0 && (
+                  <div className={styles.sums}>
+                    Сума: {storeSums[photo.store].month.toLocaleString('uk-UA')}{' '}
+                    грн ({' '}
+                    {storeSums[photo.store].days70.toLocaleString('uk-UA')} грн
+                    )
+                  </div>
+                )}
               </div>
             </div>
           ))}

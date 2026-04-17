@@ -9,6 +9,7 @@ interface Props {
   onOpenGallery: () => void;
   onOpenSales: () => void;
   onOpenRouteHistory: () => void;
+  onOpenActiveCustomerBase: () => void;
   onOpenImplementation: () => void;
 }
 
@@ -18,6 +19,7 @@ export default function HomePage({
   onOpenGallery,
   onOpenSales,
   onOpenRouteHistory,
+  onOpenActiveCustomerBase,
   onOpenImplementation,
 }: Props) {
   const [showPopup, setShowPopup] = useState(false);
@@ -46,9 +48,15 @@ export default function HomePage({
     },
     {
       key: 'sales-by-days',
-      label: 'Маршрут/історія продажів',
-      icon: '/icons/calendar-icon-64.svg',
+      label: 'Історія продажів',
+      icon: '/icons/ClientProduct.svg',
       onClick: onOpenRouteHistory,
+    },
+    {
+      key: 'active-customer-base',
+      label: 'Поточне АКБ',
+      icon: '/icons/calendar-icon-64.svg',
+      onClick: onOpenActiveCustomerBase,
     },
     {
       key: 'messages',
@@ -103,7 +111,7 @@ export default function HomePage({
         <span className={styles.refreshIcon} aria-hidden="true">
           ↻
         </span>
-        <span>Оновити v2.3.0</span>
+        <span>Оновити v2.4.0</span>
       </button>
 
       {/* навігація */}

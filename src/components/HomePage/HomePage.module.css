@@ -223,6 +223,10 @@
 
 /* ===== MOBILE ===== */
 @media (max-width: 767px) {
+  .refreshButton {
+    display: none;
+  }
+
   .buttonContainer {
     max-width: 560px;
     gap: 10px;
