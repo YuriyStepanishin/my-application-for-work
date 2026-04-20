@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 import SearchInput from '../SearchInput';
+import {
+  getCurrentAuthorizedEmail,
+  getUserRepresentative,
+  getUserRole,
+} from '../../config/userRoles';
 import styles from './ActiveCustomerBase.module.css';
 
 type Props = {
@@ -110,6 +115,11 @@ function getDateLabel(date: Date): string {
 }
 
 export default function ActiveCustomerBase({ onBack }: Props) {
+  const authEmail = getCurrentAuthorizedEmail();
+  const userRole = getUserRole(authEmail);
+  const ownRepresentative = getUserRepresentative(authEmail);
+  const isSupervisor = userRole === 'supervisor';
+  const isAgent = userRole === 'agent';
   const storeNameCollator = useMemo(
     () => new Intl.Collator('uk', { sensitivity: 'base' }),
     []
@@ -327,38 +337,47 @@ export default function ActiveCustomerBase({ onBack }: Props) {
           />
         </label>
 
-        <label className={styles.field}>
-          <span>Відділ</span>
-          <select
-            value={department}
-            onChange={event => {
-              setDepartment(event.target.value);
-              setAgent('');
-            }}
-          >
-            <option value="">Усі відділи</option>
-            {uniqueDepartments.map(item => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!isSupervisor && !isAgent && (
+          <label className={styles.field}>
+            <span>Відділ</span>
+            <select
+              value={department}
+              onChange={event => {
+                setDepartment(event.target.value);
+                setAgent('');
+              }}
+            >
+              <option value="">Усі відділи</option>
+              {uniqueDepartments.map(item => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
-        <label className={styles.field}>
-          <span>Торговий представник</span>
-          <select
-            value={agent}
-            onChange={event => setAgent(event.target.value)}
-          >
-            <option value="">Усі ТП</option>
-            {uniqueAgents.map(item => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+        {isAgent ? (
+          <label className={styles.field}>
+            <span>Торговий представник</span>
+            <div className={styles.lockedValue}>{ownRepresentative || '—'}</div>
+          </label>
+        ) : (
+          <label className={styles.field}>
+            <span>Торговий представник</span>
+            <select
+              value={agent}
+              onChange={event => setAgent(event.target.value)}
+            >
+              <option value="">Усі ТП</option>
+              {uniqueAgents.map(item => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </section>
 
       <section className={styles.summaryCard}>
@@ -433,13 +452,15 @@ export default function ActiveCustomerBase({ onBack }: Props) {
                     <span className={styles.mobileLabel}>Назва ТТ</span>
                     <span className={styles.storeNameCell}>{store.store}</span>
                   </div>
-                  <div className={styles.mobileRow}>
-                    <span className={styles.mobileLabel}>Orimi</span>
-                    {renderOrimiValue(store.sum)}
-                  </div>
-                  <div className={styles.mobileRow}>
-                    <span className={styles.mobileLabel}>Delicia</span>
-                    {renderDeliciaValue(store.deliciaSum)}
+                  <div className={styles.mobileSumsRow}>
+                    <div className={styles.mobileSumItem}>
+                      <span className={styles.mobileLabel}>Сума Orimi</span>
+                      {renderOrimiValue(store.sum)}
+                    </div>
+                    <div className={styles.mobileSumItem}>
+                      <span className={styles.mobileLabel}>Сума Delicia</span>
+                      {renderDeliciaValue(store.deliciaSum)}
+                    </div>
                   </div>
                 </article>
               ))}

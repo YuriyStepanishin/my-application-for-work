@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import { fetchReports } from '../../api/fetchReports';
+import {
+  getCurrentAuthorizedEmail,
+  getUserRepresentative,
+  getUserRole,
+} from '../../config/userRoles';
 import styles from './SalesPage.module.css';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
@@ -108,6 +113,11 @@ export default function SalesPage({
   onBack,
   onOpenSalesByDays,
 }: SalesPageProps) {
+  const authEmail = getCurrentAuthorizedEmail();
+  const userRole = getUserRole(authEmail);
+  const ownRepresentative = getUserRepresentative(authEmail) ?? '';
+  const isSupervisor = userRole === 'supervisor';
+  const isAgent = userRole === 'agent';
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [agent, setAgent] = useState('');
@@ -610,6 +620,9 @@ export default function SalesPage({
               agents={uniqueAgents}
               department={department}
               agent={agent}
+              showDepartment={!isSupervisor && !isAgent}
+              showAgent={!isAgent}
+              representativeLabel={ownRepresentative}
               onChangeDepartment={handleDepartmentChange}
               onChangeAgent={handleAgentChange}
               dateFrom={dateFrom}

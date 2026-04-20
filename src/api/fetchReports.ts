@@ -1,4 +1,8 @@
 import { BONUS_API_URL } from './config';
+import {
+  canViewRecordByEmail,
+  getCurrentAuthorizedEmail,
+} from '../config/userRoles';
 
 export type Report = {
   department: string;
@@ -17,7 +21,14 @@ export async function fetchReports(): Promise<Report[]> {
   }
 
   const json = await res.json();
-  return Array.isArray(json.data) ? json.data : [];
+  const reports = Array.isArray(json.data) ? json.data : [];
+
+  const authEmail = getCurrentAuthorizedEmail();
+  if (!authEmail) return [];
+
+  return reports.filter((report: Report) =>
+    canViewRecordByEmail(authEmail, report.department, report.representative)
+  );
 }
 
 function extractDriveId(url: string): string {

@@ -1,5 +1,18 @@
 import { API_URL, BONUS_API_URL } from './config';
 import type { SheetRow } from '../types/sheet';
+import {
+  canViewRecordByEmail,
+  getCurrentAuthorizedEmail,
+} from '../config/userRoles';
+
+function filterSheetRowsByAccess(rows: SheetRow[]): SheetRow[] {
+  const authEmail = getCurrentAuthorizedEmail();
+  if (!authEmail) return [];
+
+  return rows.filter(row =>
+    canViewRecordByEmail(authEmail, row.department, row.representative)
+  );
+}
 
 export async function fetchSheetData(): Promise<SheetRow[]> {
   const res = await fetch(API_URL + '?action=getSheetData');
@@ -10,7 +23,8 @@ export async function fetchSheetData(): Promise<SheetRow[]> {
 
   const json = await res.json();
 
-  return json.data;
+  const rows = Array.isArray(json.data) ? (json.data as SheetRow[]) : [];
+  return filterSheetRowsByAccess(rows);
 }
 
 export async function fetchBonusSheetData(): Promise<SheetRow[]> {
@@ -22,5 +36,6 @@ export async function fetchBonusSheetData(): Promise<SheetRow[]> {
 
   const json = await res.json();
 
-  return json.data;
+  const rows = Array.isArray(json.data) ? (json.data as SheetRow[]) : [];
+  return filterSheetRowsByAccess(rows);
 }

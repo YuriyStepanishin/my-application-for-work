@@ -4,6 +4,8 @@ import LoginAppPage from '../LoginAppPage/LoginAppPage';
 
 interface Props {
   email: string | null;
+  roleLabel?: string;
+  departmentLabel?: string;
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -13,6 +15,8 @@ interface Props {
 
 export default function UserMenu({
   email,
+  roleLabel,
+  departmentLabel,
   isOpen,
   onOpen,
   onClose,
@@ -63,6 +67,8 @@ export default function UserMenu({
               <LoginAppPage
                 embedded
                 email={email}
+                roleLabel={roleLabel}
+                departmentLabel={departmentLabel}
                 onLogout={onLogout}
                 onOk={onClose}
                 okLabel="Закрити"

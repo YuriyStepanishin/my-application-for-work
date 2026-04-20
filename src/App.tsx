@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const HomePage = lazy(() => import('./components/HomePage/HomePage'));
 const StoreSelector = lazy(
@@ -38,8 +39,16 @@ import UserMenu from './components/UserMenu/UserMenu';
 
 import { useDisplaySheet, useBonusSheet } from './api/queries';
 import { useMessagesCenter } from './hooks/useMessagesCenter';
+import {
+  canAccessSection,
+  getUserDepartment,
+  getUserRole,
+  getRoleLabel,
+  type AppSection,
+} from './config/userRoles';
 
 export default function App() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState<
     | 'home'
     | 'sales'
@@ -60,6 +69,10 @@ export default function App() {
   );
   const [showGallery, setShowGallery] = useState(false);
   const messagesCenter = useMessagesCenter(email);
+  const userRole = getUserRole(email);
+  const userDepartment = getUserDepartment(email);
+  const canAccess = (section: AppSection) =>
+    canAccessSection(userRole, section);
   const shouldLoadDisplaySheet = showStoreSelector && reportType === 'display';
   const shouldLoadBonusSheet = showStoreSelector && reportType === 'bonus';
   const displayQuery = useDisplaySheet(shouldLoadDisplaySheet);
@@ -82,26 +95,32 @@ export default function App() {
   function handleLogin(nextEmail: string) {
     localStorage.setItem('auth', nextEmail);
     setEmail(nextEmail);
+    void queryClient.invalidateQueries();
     setIsUserMenuOpen(false);
   }
 
   function handleLogout() {
     localStorage.removeItem('auth');
     setEmail(null);
+    void queryClient.clear();
     resetToHome();
     setIsUserMenuOpen(true);
   }
 
-  function runProtectedAction(action: () => void) {
+  function runProtectedAction(action: () => void, section?: AppSection) {
     if (!email) {
       setIsUserMenuOpen(true);
+      return;
+    }
+
+    if (section && !canAccess(section)) {
       return;
     }
 
     action();
   }
 
-  if (showGallery) {
+  if (showGallery && canAccess('gallery')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -110,7 +129,7 @@ export default function App() {
       </>
     );
   }
-  if (page === 'sales') {
+  if (page === 'sales' && canAccess('sales')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -123,7 +142,7 @@ export default function App() {
     );
   }
 
-  if (page === 'sales-by-days') {
+  if (page === 'sales-by-days' && canAccess('sales')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -133,7 +152,7 @@ export default function App() {
     );
   }
 
-  if (page === 'route-history') {
+  if (page === 'route-history' && canAccess('route-history')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -143,7 +162,7 @@ export default function App() {
     );
   }
 
-  if (page === 'active-customer-base') {
+  if (page === 'active-customer-base' && canAccess('active-customer-base')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -153,7 +172,7 @@ export default function App() {
     );
   }
 
-  if (page === 'implementation') {
+  if (page === 'implementation' && canAccess('implementation')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -163,7 +182,7 @@ export default function App() {
     );
   }
 
-  if (page === 'messages' && email) {
+  if (page === 'messages' && email && canAccess('messages')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -187,31 +206,56 @@ export default function App() {
               runProtectedAction(() => {
                 setReportType('display');
                 setShowStoreSelector(true);
-              })
+              }, 'display-report')
             }
             onOpenBonus={() =>
               runProtectedAction(() => {
                 setReportType('bonus');
                 setShowStoreSelector(true);
-              })
+              }, 'bonus-report')
             }
-            onOpenGallery={() => runProtectedAction(() => setShowGallery(true))}
-            onOpenSales={() => runProtectedAction(() => setPage('sales'))}
+            onOpenGallery={() =>
+              runProtectedAction(() => setShowGallery(true), 'gallery')
+            }
+            onOpenSales={() =>
+              runProtectedAction(() => setPage('sales'), 'sales')
+            }
             onOpenRouteHistory={() =>
-              runProtectedAction(() => setPage('route-history'))
+              runProtectedAction(
+                () => setPage('route-history'),
+                'route-history'
+              )
             }
             onOpenActiveCustomerBase={() =>
-              runProtectedAction(() => setPage('active-customer-base'))
+              runProtectedAction(
+                () => setPage('active-customer-base'),
+                'active-customer-base'
+              )
             }
             onOpenImplementation={() =>
-              runProtectedAction(() => setPage('implementation'))
+              runProtectedAction(
+                () => setPage('implementation'),
+                'implementation'
+              )
             }
-            onOpenMessages={() => runProtectedAction(() => setPage('messages'))}
+            onOpenMessages={() =>
+              runProtectedAction(() => setPage('messages'), 'messages')
+            }
             unreadMessagesCount={messagesCenter.unreadCount}
+            canOpenGallery={canAccess('gallery')}
+            canOpenSales={canAccess('sales')}
+            canOpenRouteHistory={canAccess('route-history')}
+            canOpenActiveCustomerBase={canAccess('active-customer-base')}
+            canOpenMessages={canAccess('messages')}
+            canOpenImplementation={canAccess('implementation')}
+            canOpenBonusReport={canAccess('bonus-report')}
+            canOpenDisplayReport={canAccess('display-report')}
           />
         </Suspense>
         <UserMenu
           email={email}
+          roleLabel={userRole ? getRoleLabel(userRole) : undefined}
+          departmentLabel={userDepartment ?? undefined}
           isOpen={isUserMenuOpen}
           onOpen={() => setIsUserMenuOpen(true)}
           onClose={() => setIsUserMenuOpen(false)}

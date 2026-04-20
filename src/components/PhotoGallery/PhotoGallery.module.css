@@ -264,6 +264,20 @@
 
   appearance: none;
 }
+
+.lockedValue {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid #b7cbbd;
+  background: #e6f0e8;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2f4f3a;
+  display: flex;
+  align-items: center;
+}
 .closeBtn {
   position: absolute;
   top: 15px;

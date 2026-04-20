@@ -1,4 +1,8 @@
 import { SALES_URL } from './config';
+import {
+  canViewRecordByEmail,
+  getCurrentAuthorizedEmail,
+} from '../config/userRoles';
 
 export type Sale = {
   місяць: string;
@@ -141,10 +145,17 @@ export async function fetchSales(): Promise<Sale[]> {
   const payload: unknown = await response.json();
   const rows = extractRows(payload);
 
-  return rows
+  const normalized = rows
     .filter(
       (row): row is MaybeObject => typeof row === 'object' && row !== null
     )
     .map(normalizeSale)
     .filter(sale => sale.дата);
+
+  const authEmail = getCurrentAuthorizedEmail();
+  if (!authEmail) return [];
+
+  return normalized.filter(sale =>
+    canViewRecordByEmail(authEmail, sale.відділ, sale.агент)
+  );
 }

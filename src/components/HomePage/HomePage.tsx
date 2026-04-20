@@ -11,6 +11,14 @@ interface Props {
   onOpenImplementation: () => void;
   onOpenMessages: () => void;
   unreadMessagesCount: number;
+  canOpenDisplayReport: boolean;
+  canOpenBonusReport: boolean;
+  canOpenGallery: boolean;
+  canOpenSales: boolean;
+  canOpenRouteHistory: boolean;
+  canOpenActiveCustomerBase: boolean;
+  canOpenImplementation: boolean;
+  canOpenMessages: boolean;
 }
 
 export default function HomePage({
@@ -23,6 +31,14 @@ export default function HomePage({
   onOpenImplementation,
   onOpenMessages,
   unreadMessagesCount,
+  canOpenDisplayReport,
+  canOpenBonusReport,
+  canOpenGallery,
+  canOpenSales,
+  canOpenRouteHistory,
+  canOpenActiveCustomerBase,
+  canOpenImplementation,
+  canOpenMessages,
 }: Props) {
   const handleRefreshApp = async () => {
     if ('serviceWorker' in navigator) {
@@ -39,24 +55,28 @@ export default function HomePage({
       label: 'Продажі',
       icon: '/icons/chart-icon-64.svg',
       onClick: onOpenSales,
+      visible: canOpenSales,
     },
     {
       key: 'gallery',
       label: 'Фотогалерея',
       icon: './icons/gallery-icon-64.svg',
       onClick: onOpenGallery,
+      visible: canOpenGallery,
     },
     {
       key: 'sales-by-days',
       label: 'Історія продажів',
       icon: '/icons/ClientProduct.svg',
       onClick: onOpenRouteHistory,
+      visible: canOpenRouteHistory,
     },
     {
       key: 'active-customer-base',
       label: 'Поточне АКБ',
       icon: '/icons/calendar-icon-64.svg',
       onClick: onOpenActiveCustomerBase,
+      visible: canOpenActiveCustomerBase,
     },
     {
       key: 'messages',
@@ -64,12 +84,14 @@ export default function HomePage({
       icon: '/icons/message-icon-64.svg',
       onClick: onOpenMessages,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : null,
+      visible: canOpenMessages,
     },
     {
       key: 'implementation',
       label: 'Виконання показників',
       icon: '/icons/implementation.svg',
       onClick: onOpenImplementation,
+      visible: canOpenImplementation,
     },
   ];
 
@@ -79,12 +101,14 @@ export default function HomePage({
       label: 'Додавання фотозвіту',
       icon: './icons/camera-icon-64.svg',
       onClick: onOpenBonus,
+      visible: canOpenBonusReport,
     },
     {
       key: 'display',
       label: 'Додавання фотозвіту для Акція на представленність',
       icon: '/icons/promo-icon-64.svg',
       onClick: onOpenDisplay,
+      visible: canOpenDisplayReport,
     },
   ];
 
@@ -119,32 +143,36 @@ export default function HomePage({
       <div className={styles.buttonContainer}>
         <p className={styles.sidebarTitle}>Розділи</p>
         <div className={styles.topGroup}>
-          {topMenuItems.map(item => (
-            <button
-              key={item.key}
-              onClick={item.onClick}
-              className={styles.button}
-            >
-              {item.badge ? (
-                <span className={styles.badge}>{item.badge}</span>
-              ) : null}
-              <img src={item.icon} className={styles.icon} />
-              <span className={styles.menuLabel}>{item.label}</span>
-            </button>
-          ))}
+          {topMenuItems
+            .filter(item => item.visible)
+            .map(item => (
+              <button
+                key={item.key}
+                onClick={item.onClick}
+                className={styles.button}
+              >
+                {item.badge ? (
+                  <span className={styles.badge}>{item.badge}</span>
+                ) : null}
+                <img src={item.icon} className={styles.icon} />
+                <span className={styles.menuLabel}>{item.label}</span>
+              </button>
+            ))}
         </div>
 
         <div className={styles.bottomGroup}>
-          {bottomMenuItems.map(item => (
-            <button
-              key={item.key}
-              onClick={item.onClick}
-              className={styles.button}
-            >
-              <img src={item.icon} className={styles.icon} />
-              <span className={styles.menuLabel}>{item.label}</span>
-            </button>
-          ))}
+          {bottomMenuItems
+            .filter(item => item.visible)
+            .map(item => (
+              <button
+                key={item.key}
+                onClick={item.onClick}
+                className={styles.button}
+              >
+                <img src={item.icon} className={styles.icon} />
+                <span className={styles.menuLabel}>{item.label}</span>
+              </button>
+            ))}
         </div>
       </div>
 

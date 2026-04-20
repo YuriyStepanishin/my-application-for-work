@@ -10,6 +10,11 @@ import {
 } from '../../api/fetchReports';
 import { fetchSales } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
+import {
+  getCurrentAuthorizedEmail,
+  getUserRepresentative,
+  getUserRole,
+} from '../../config/userRoles';
 
 interface Props {
   onBack: () => void;
@@ -28,6 +33,11 @@ type Photo = {
 };
 
 export default function PhotoGallery({ onBack }: Props) {
+  const authEmail = getCurrentAuthorizedEmail();
+  const userRole = getUserRole(authEmail);
+  const ownRepresentative = getUserRepresentative(authEmail);
+  const isSupervisor = userRole === 'supervisor';
+  const isAgent = userRole === 'agent';
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
@@ -318,32 +328,38 @@ export default function PhotoGallery({ onBack }: Props) {
             className={styles.searchInput}
           />
 
-          <select
-            className={styles.select}
-            value={department}
-            onChange={e => {
-              setDepartment(e.target.value);
-              setRep('all');
-            }}
-          >
-            {departments.map(dep => (
-              <option key={dep} value={dep}>
-                {dep === 'all' ? 'Усі відділи' : dep}
-              </option>
-            ))}
-          </select>
+          {!isSupervisor && !isAgent && (
+            <select
+              className={styles.select}
+              value={department}
+              onChange={e => {
+                setDepartment(e.target.value);
+                setRep('all');
+              }}
+            >
+              {departments.map(dep => (
+                <option key={dep} value={dep}>
+                  {dep === 'all' ? 'Усі відділи' : dep}
+                </option>
+              ))}
+            </select>
+          )}
 
-          <select
-            className={styles.select}
-            value={rep}
-            onChange={e => setRep(e.target.value)}
-          >
-            {reps.map(r => (
-              <option key={r} value={r}>
-                {r === 'all' ? 'Усі торгові представники' : r}
-              </option>
-            ))}
-          </select>
+          {isAgent ? (
+            <div className={styles.lockedValue}>{ownRepresentative || '—'}</div>
+          ) : (
+            <select
+              className={styles.select}
+              value={rep}
+              onChange={e => setRep(e.target.value)}
+            >
+              {reps.map(r => (
+                <option key={r} value={r}>
+                  {r === 'all' ? 'Усі торгові представники' : r}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className={styles.list}>

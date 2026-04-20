@@ -5,6 +5,9 @@ type Props = {
   agents: string[];
   department: string;
   agent: string;
+  showDepartment?: boolean;
+  showAgent?: boolean;
+  representativeLabel?: string;
   dateFrom: string;
   dateTo: string;
   onChangeDepartment: (v: string) => void;
@@ -18,6 +21,9 @@ export default function SalesFilter({
   agents,
   department,
   agent,
+  showDepartment = true,
+  showAgent = true,
+  representativeLabel,
   dateFrom,
   dateTo,
   onChangeDepartment,
@@ -55,34 +61,42 @@ export default function SalesFilter({
 
       <section className={styles.section}>
         <div className={styles.selectStack}>
-          <select
-            className={styles.select}
-            value={department}
-            onChange={e => {
-              onChangeDepartment(e.target.value);
-              onChangeAgent('');
-            }}
-          >
-            <option value="">Всі відділи</option>
-            {departments.map(d => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
+          {showDepartment && (
+            <select
+              className={styles.select}
+              value={department}
+              onChange={e => {
+                onChangeDepartment(e.target.value);
+                onChangeAgent('');
+              }}
+            >
+              <option value="">Всі відділи</option>
+              {departments.map(d => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          )}
 
-          <select
-            className={styles.select}
-            value={agent}
-            onChange={e => onChangeAgent(e.target.value)}
-          >
-            <option value="">Всі торгові представники</option>
-            {agents.map(a => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
+          {showAgent ? (
+            <select
+              className={styles.select}
+              value={agent}
+              onChange={e => onChangeAgent(e.target.value)}
+            >
+              <option value="">Всі торгові представники</option>
+              {agents.map(a => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className={styles.lockedValue}>
+              {representativeLabel || 'Торговий представник'}
+            </div>
+          )}
         </div>
       </section>
     </div>

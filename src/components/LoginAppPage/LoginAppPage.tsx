@@ -2,6 +2,8 @@ import styles from './LoginAppPage.module.css';
 
 interface Props {
   email: string;
+  roleLabel?: string;
+  departmentLabel?: string;
 
   onLogout: () => void;
 
@@ -12,6 +14,8 @@ interface Props {
 
 export default function LoginAppPage({
   email,
+  roleLabel,
+  departmentLabel,
 
   onLogout,
 
@@ -26,6 +30,12 @@ export default function LoginAppPage({
       <div>
         Ви увійшли як:
         <div className={styles.email}>{email}</div>
+        {roleLabel ? (
+          <div className={styles.email}>Роль: {roleLabel}</div>
+        ) : null}
+        {departmentLabel ? (
+          <div className={styles.email}>Відділ: {departmentLabel}</div>
+        ) : null}
       </div>
 
       <div className={styles.info}>

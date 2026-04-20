@@ -2,6 +2,12 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
+import {
+  getCurrentAuthorizedEmail,
+  getUserDepartment,
+  getUserRepresentative,
+  getUserRole,
+} from '../../config/userRoles';
 import styles from './ImplementationPage.module.css';
 
 // ─── ПЛАНИ ──────────────────────────────────────────────────────────────────
@@ -11,6 +17,13 @@ type AgentPlan = {
   akb: number;
   /** план ВКБ Жокей — кількість ТТ з Жокеєм ≥0 грн */
   vkbJockey: number;
+};
+
+type AgentDeliciaPlan = {
+  /** план Деліція в грн */
+  deliciaVkbGrn: number;
+  /** план ВКБ Деліція в ТТ (від 0 грн) */
+  deliciaVkbStores: number;
 };
 
 const AGENT_PLANS: Record<string, AgentPlan> = {
@@ -26,6 +39,21 @@ const AGENT_PLANS: Record<string, AgentPlan> = {
   'Дюг Тетяна': { akb: 60, vkbJockey: 60 },
   'Івасишин Денис': { akb: 65, vkbJockey: 50 },
   'Олійник Влад': { akb: 55, vkbJockey: 50 },
+};
+
+const AGENT_DELICIA_PLANS: Record<string, AgentDeliciaPlan> = {
+  'Гриник Ольга': { deliciaVkbGrn: 98000, deliciaVkbStores: 98 },
+  'Довга Діана': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
+  'Лаптєва Руслана': { deliciaVkbGrn: 90000, deliciaVkbStores: 90 },
+  'Могильна Оксана': { deliciaVkbGrn: 98000, deliciaVkbStores: 98 },
+  'Сторожук Аліна': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
+  'Ящишина Наталія': { deliciaVkbGrn: 110000, deliciaVkbStores: 110 },
+  'Кучер Аня': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
+  'Мартинчик Альона': { deliciaVkbGrn: 90000, deliciaVkbStores: 90 },
+  'Нагорняк Світлана': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
+  'Дюг Тетяна': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
+  'Івасишин Денис': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
+  'Олійник Влад': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
 };
 
 // Порядок відділів і агентів у таблиці
@@ -63,6 +91,55 @@ const DEPARTMENT_PLANS: Record<string, { vkb: number; akbJockey: number }> = {
   'Шепетівський відділ': { vkb: 380, akbJockey: 140 },
   "Кам'янець-Подільський відділ": { vkb: 380, akbJockey: 120 },
 };
+
+function normalizeText(value: string): string {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+function getRenderableDepartmentsByScope() {
+  const authEmail = getCurrentAuthorizedEmail();
+  const role = getUserRole(authEmail);
+  const department = getUserDepartment(authEmail);
+
+  if (role === 'agent') {
+    const representative = getUserRepresentative(authEmail);
+    if (!department || !representative) return DEPARTMENT_ORDER;
+    const allowed = department.split(',').map(part => normalizeText(part));
+    const deptEntry = DEPARTMENT_ORDER.find(item => {
+      const itemDept = normalizeText(item.dept);
+      if (itemDept.includes('місто+область (центр)')) {
+        return (
+          allowed.some(value => value.includes('місто')) ||
+          allowed.some(value => value.includes('область'))
+        );
+      }
+      return allowed.some(value => itemDept.includes(value));
+    });
+    if (!deptEntry) return [];
+    return [{ ...deptEntry, agents: [representative] }];
+  }
+
+  if (role !== 'supervisor' || !department) {
+    return DEPARTMENT_ORDER;
+  }
+
+  const allowed = department.split(',').map(part => normalizeText(part));
+
+  return DEPARTMENT_ORDER.filter(item => {
+    const itemDept = normalizeText(item.dept);
+    if (itemDept.includes('місто+область (центр)')) {
+      return (
+        allowed.some(value => value.includes('місто')) ||
+        allowed.some(value => value.includes('область'))
+      );
+    }
+    return allowed.some(value => itemDept.includes(value));
+  });
+}
 
 // ─── УТИЛІТИ ────────────────────────────────────────────────────────────────
 
@@ -109,6 +186,38 @@ function fmt(n: number): string {
   return new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 }).format(n);
 }
 
+const ORIMI_BRANDS = [
+  'Greenfield',
+  'TESS',
+  'Принцеса Нурі',
+  'Принцеса Канді',
+  'Принцеса Ява',
+  'Принцеса Гіта',
+  'Жокей',
+  'JARDIN',
+  'PIAZZA',
+];
+
+function normalizeBrand(brand: string): string {
+  return brand
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+const ORIMI_SET = new Set(ORIMI_BRANDS.map(normalizeBrand));
+const DELICIA_BRAND = 'Деліція';
+const DELICIA_NORMALIZED = normalizeBrand(DELICIA_BRAND);
+
+function isOrimiBrand(brand: string): boolean {
+  return ORIMI_SET.has(normalizeBrand(brand));
+}
+
+function isDeliciaBrand(brand: string): boolean {
+  return normalizeBrand(brand) === DELICIA_NORMALIZED;
+}
+
 // ─── РОЗРАХУНОК ─────────────────────────────────────────────────────────────
 
 type AgentStats = {
@@ -121,22 +230,35 @@ type AgentStats = {
   allStores: number;
   /** АКБ Жокей: ТТ Жокей із сумою ≥300 грн */
   akbJockeyStores: number;
+  /** Деліція факт у грн (сума по ТТ із сумою ≥0 грн) */
+  deliciaFactGrn: number;
+  /** Деліція факт ВКБ у ТТ (від 0 грн) */
+  deliciaStoresCount: number;
 };
 
-function calcStats(sales: Sale[]): Record<string, AgentStats> {
+function calcStats(
+  sales: Sale[],
+  deliciaSales: Sale[]
+): Record<string, AgentStats> {
   const byAgent: Record<
     string,
     {
       factGrn: number;
       storeSum: Record<string, number>;
       jockeyStoreSum: Record<string, number>;
+      deliciaStoreSum: Record<string, number>;
     }
   > = {};
 
   for (const s of sales) {
     if (!s.агент) continue;
     if (!byAgent[s.агент]) {
-      byAgent[s.агент] = { factGrn: 0, storeSum: {}, jockeyStoreSum: {} };
+      byAgent[s.агент] = {
+        factGrn: 0,
+        storeSum: {},
+        jockeyStoreSum: {},
+        deliciaStoreSum: {},
+      };
     }
     const a = byAgent[s.агент];
     a.factGrn += s.сума || 0;
@@ -152,6 +274,24 @@ function calcStats(sales: Sale[]): Record<string, AgentStats> {
     }
   }
 
+  for (const s of deliciaSales) {
+    if (!s.агент) continue;
+    if (!byAgent[s.агент]) {
+      byAgent[s.агент] = {
+        factGrn: 0,
+        storeSum: {},
+        jockeyStoreSum: {},
+        deliciaStoreSum: {},
+      };
+    }
+
+    if (s.торгова_точка) {
+      byAgent[s.агент].deliciaStoreSum[s.торгова_точка] =
+        (byAgent[s.агент].deliciaStoreSum[s.торгова_точка] || 0) +
+        (s.сума || 0);
+    }
+  }
+
   const result: Record<string, AgentStats> = {};
   for (const [agent, data] of Object.entries(byAgent)) {
     const akbFact = Object.values(data.storeSum).filter(v => v >= 500).length;
@@ -162,12 +302,20 @@ function calcStats(sales: Sale[]): Record<string, AgentStats> {
     const akbJockeyStores = Object.values(data.jockeyStoreSum).filter(
       v => v >= 300
     ).length;
+    const deliciaFactGrn = Object.values(data.deliciaStoreSum)
+      .filter(v => v >= 0)
+      .reduce((sum, value) => sum + value, 0);
+    const deliciaStoresCount = Object.values(data.deliciaStoreSum).filter(
+      v => v >= 0
+    ).length;
     result[agent] = {
       factGrn: data.factGrn,
       akbFact,
       vkbJockeyFact,
       allStores,
       akbJockeyStores,
+      deliciaFactGrn,
+      deliciaStoresCount,
     };
   }
   return result;
@@ -176,6 +324,10 @@ function calcStats(sales: Sale[]): Record<string, AgentStats> {
 // ─── КОМПОНЕНТ ──────────────────────────────────────────────────────────────
 
 export default function ImplementationPage({ onBack }: { onBack: () => void }) {
+  const renderDepartments = useMemo(
+    () => getRenderableDepartmentsByScope(),
+    []
+  );
   const {
     data = [],
     isLoading,
@@ -193,19 +345,29 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
     [data, currentMonth]
   );
 
-  const stats = useMemo(
-    () => calcStats(currentMonthSales),
+  const currentMonthOrimiSales = useMemo(
+    () => currentMonthSales.filter(s => isOrimiBrand(s.бренд)),
     [currentMonthSales]
+  );
+
+  const currentMonthDeliciaSales = useMemo(
+    () => currentMonthSales.filter(s => isDeliciaBrand(s.бренд)),
+    [currentMonthSales]
+  );
+
+  const stats = useMemo(
+    () => calcStats(currentMonthOrimiSales, currentMonthDeliciaSales),
+    [currentMonthOrimiSales, currentMonthDeliciaSales]
   );
 
   const lastUpdated = useMemo(() => {
     let maxDate = '';
-    for (const s of currentMonthSales) {
+    for (const s of currentMonthOrimiSales) {
       const iso = parseDateISO(s.дата);
       if (iso && iso > maxDate) maxDate = iso;
     }
     return maxDate ? formatKyivDateTime(maxDate) : null;
-  }, [currentMonthSales]);
+  }, [currentMonthOrimiSales]);
 
   if (isLoading) return <Loader />;
   if (error) return <div className={styles.error}>Помилка завантаження</div>;
@@ -220,6 +382,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         primaryFact: number;
         secondaryPlan: number;
         secondaryFact: number;
+        tertiaryPlan: number;
+        tertiaryFact: number;
+        quaternaryPlan: number;
+        quaternaryFact: number;
       }
     | {
         type: 'agent';
@@ -229,6 +395,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         primaryFact: number;
         secondaryPlan: number;
         secondaryFact: number;
+        tertiaryPlan: number;
+        tertiaryFact: number;
+        quaternaryPlan: number;
+        quaternaryFact: number;
       };
 
   const rows: Row[] = [];
@@ -238,14 +408,22 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
   let totalPrimaryFact = 0;
   let totalSecondaryPlan = 0;
   let totalSecondaryFact = 0;
+  let totalTertiaryPlan = 0;
+  let totalTertiaryFact = 0;
+  let totalQuaternaryPlan = 0;
+  let totalQuaternaryFact = 0;
 
-  for (const dept of DEPARTMENT_ORDER) {
+  for (const dept of renderDepartments) {
     const deptPlan = DEPARTMENT_PLANS[dept.dept] ?? { vkb: 0, akbJockey: 0 };
     let dFactGrn = 0,
       dPrimaryFact = 0,
-      dSecondaryFact = 0;
+      dSecondaryFact = 0,
+      dTertiaryFact = 0,
+      dQuaternaryFact = 0;
     const dPrimaryPlan = deptPlan.vkb;
     const dSecondaryPlan = deptPlan.akbJockey;
+    let dTertiaryPlan = 0;
+    let dQuaternaryPlan = 0;
 
     const agentRows: Row[] = [];
 
@@ -256,12 +434,22 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         vkbJockeyFact: 0,
         allStores: 0,
         akbJockeyStores: 0,
+        deliciaFactGrn: 0,
+        deliciaStoresCount: 0,
       };
       const plan = AGENT_PLANS[agent] ?? { akb: 0, vkbJockey: 0 };
+      const deliciaPlan = AGENT_DELICIA_PLANS[agent] ?? {
+        deliciaVkbGrn: 0,
+        deliciaVkbStores: 0,
+      };
 
       dFactGrn += s.factGrn;
       dPrimaryFact += s.allStores;
       dSecondaryFact += s.akbJockeyStores;
+      dTertiaryFact += s.deliciaFactGrn;
+      dQuaternaryFact += s.deliciaStoresCount;
+      dTertiaryPlan += deliciaPlan.deliciaVkbGrn;
+      dQuaternaryPlan += deliciaPlan.deliciaVkbStores;
 
       agentRows.push({
         type: 'agent',
@@ -271,6 +459,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         primaryFact: s.akbFact,
         secondaryPlan: plan.vkbJockey,
         secondaryFact: s.vkbJockeyFact,
+        tertiaryPlan: deliciaPlan.deliciaVkbGrn,
+        tertiaryFact: s.deliciaFactGrn,
+        quaternaryPlan: deliciaPlan.deliciaVkbStores,
+        quaternaryFact: s.deliciaStoresCount,
       });
     }
 
@@ -282,6 +474,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       primaryFact: dPrimaryFact,
       secondaryPlan: dSecondaryPlan,
       secondaryFact: dSecondaryFact,
+      tertiaryPlan: dTertiaryPlan,
+      tertiaryFact: dTertiaryFact,
+      quaternaryPlan: dQuaternaryPlan,
+      quaternaryFact: dQuaternaryFact,
     });
 
     rows.push(...agentRows);
@@ -291,6 +487,10 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
     totalPrimaryFact += dPrimaryFact;
     totalSecondaryPlan += dSecondaryPlan;
     totalSecondaryFact += dSecondaryFact;
+    totalTertiaryPlan += dTertiaryPlan;
+    totalTertiaryFact += dTertiaryFact;
+    totalQuaternaryPlan += dQuaternaryPlan;
+    totalQuaternaryFact += dQuaternaryFact;
   }
 
   const monthLabel = new Date().toLocaleString('uk-UA', {
@@ -328,8 +528,20 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
               <th className={styles.colGroup} colSpan={3}>
                 ТП: ВКБ Жокей / СВ: АКБ Жокей
               </th>
+              <th className={styles.colGroup} colSpan={3}>
+                Деліція: сума в грн (ВКБ від 0 грн)
+              </th>
+              <th className={styles.colGroup} colSpan={3}>
+                Деліція: ВКБ окремо (ТТ від 0 грн)
+              </th>
             </tr>
             <tr>
+              <th className={styles.colSub}>ПЛАН</th>
+              <th className={styles.colSub}>ФАКТ</th>
+              <th className={styles.colSub}>%%</th>
+              <th className={styles.colSub}>ПЛАН</th>
+              <th className={styles.colSub}>ФАКТ</th>
+              <th className={styles.colSub}>%%</th>
               <th className={styles.colSub}>ПЛАН</th>
               <th className={styles.colSub}>ФАКТ</th>
               <th className={styles.colSub}>%%</th>
@@ -362,6 +574,20 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   >
                     {pct(row.secondaryFact, row.secondaryPlan)}
                   </td>
+                  <td className={styles.numCell}>{fmt(row.tertiaryPlan)}</td>
+                  <td className={styles.numCell}>{fmt(row.tertiaryFact)}</td>
+                  <td
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.tertiaryFact, row.tertiaryPlan, styles)}`}
+                  >
+                    {pct(row.tertiaryFact, row.tertiaryPlan)}
+                  </td>
+                  <td className={styles.numCell}>{row.quaternaryPlan}</td>
+                  <td className={styles.numCell}>{row.quaternaryFact}</td>
+                  <td
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.quaternaryFact, row.quaternaryPlan, styles)}`}
+                  >
+                    {pct(row.quaternaryFact, row.quaternaryPlan)}
+                  </td>
                 </tr>
               );
             })}
@@ -383,6 +609,20 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                 className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalSecondaryFact, totalSecondaryPlan, styles)}`}
               >
                 {pct(totalSecondaryFact, totalSecondaryPlan)}
+              </td>
+              <td className={styles.numCell}>{fmt(totalTertiaryPlan)}</td>
+              <td className={styles.numCell}>{fmt(totalTertiaryFact)}</td>
+              <td
+                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalTertiaryFact, totalTertiaryPlan, styles)}`}
+              >
+                {pct(totalTertiaryFact, totalTertiaryPlan)}
+              </td>
+              <td className={styles.numCell}>{totalQuaternaryPlan}</td>
+              <td className={styles.numCell}>{totalQuaternaryFact}</td>
+              <td
+                className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalQuaternaryFact, totalQuaternaryPlan, styles)}`}
+              >
+                {pct(totalQuaternaryFact, totalQuaternaryPlan)}
               </td>
             </tr>
           </tfoot>
@@ -509,6 +749,102 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalSecondaryFact, totalSecondaryPlan, styles)}`}
                 >
                   {pct(totalSecondaryFact, totalSecondaryPlan)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Таблиця 4: Деліція: ВКБ від 0 грн */}
+        <p className={styles.mobileTableTitle}>
+          Деліція: сума в грн (ВКБ від 0 грн)
+        </p>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.colDept}>Відділ / ТП</th>
+                <th className={styles.colSub}>ПЛАН</th>
+                <th className={styles.colSub}>ФАКТ</th>
+                <th className={styles.colSub}>%%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr
+                  key={i}
+                  className={
+                    row.type === 'dept' ? styles.deptRow : styles.agentRow
+                  }
+                >
+                  <td className={styles.nameCell}>{row.label}</td>
+                  <td className={styles.numCell}>{fmt(row.tertiaryPlan)}</td>
+                  <td className={styles.numCell}>{fmt(row.tertiaryFact)}</td>
+                  <td
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.tertiaryFact, row.tertiaryPlan, styles)}`}
+                  >
+                    {pct(row.tertiaryFact, row.tertiaryPlan)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className={styles.totalRow}>
+                <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
+                <td className={styles.numCell}>{fmt(totalTertiaryPlan)}</td>
+                <td className={styles.numCell}>{fmt(totalTertiaryFact)}</td>
+                <td
+                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalTertiaryFact, totalTertiaryPlan, styles)}`}
+                >
+                  {pct(totalTertiaryFact, totalTertiaryPlan)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Таблиця 5: Деліція ВКБ окремо */}
+        <p className={styles.mobileTableTitle}>
+          Деліція: ВКБ окремо (ТТ від 0 грн)
+        </p>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.colDept}>Відділ / ТП</th>
+                <th className={styles.colSub}>ПЛАН</th>
+                <th className={styles.colSub}>ФАКТ</th>
+                <th className={styles.colSub}>%%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr
+                  key={i}
+                  className={
+                    row.type === 'dept' ? styles.deptRow : styles.agentRow
+                  }
+                >
+                  <td className={styles.nameCell}>{row.label}</td>
+                  <td className={styles.numCell}>{row.quaternaryPlan}</td>
+                  <td className={styles.numCell}>{row.quaternaryFact}</td>
+                  <td
+                    className={`${styles.numCell} ${styles.pctCell} ${getPctClass(row.quaternaryFact, row.quaternaryPlan, styles)}`}
+                  >
+                    {pct(row.quaternaryFact, row.quaternaryPlan)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className={styles.totalRow}>
+                <td className={styles.nameCell}>Загальний підсумок ВКБ</td>
+                <td className={styles.numCell}>{totalQuaternaryPlan}</td>
+                <td className={styles.numCell}>{totalQuaternaryFact}</td>
+                <td
+                  className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totalQuaternaryFact, totalQuaternaryPlan, styles)}`}
+                >
+                  {pct(totalQuaternaryFact, totalQuaternaryPlan)}
                 </td>
               </tr>
             </tfoot>
