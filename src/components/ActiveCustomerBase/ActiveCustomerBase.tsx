@@ -200,9 +200,10 @@ export default function ActiveCustomerBase({ onBack }: Props) {
       { orimi: number; delicia: number }
     >();
     const search = searchTerm.trim().toLowerCase();
+    const hasSearch = search.length > 0;
 
     filteredSales.forEach(item => {
-      if (getIsoWeekday(item.effectiveDate) === currentWeekday) {
+      if (hasSearch || getIsoWeekday(item.effectiveDate) === currentWeekday) {
         routeTodayStores.add(item.торгова_точка);
       }
 
@@ -384,7 +385,8 @@ export default function ActiveCustomerBase({ onBack }: Props) {
         <div className={styles.summaryRow}>
           <div className={styles.summaryMainGroup}>
             <span className={styles.summaryItem}>
-              Активні ТТ: <b>{summary.activeStores}</b>
+              {searchTerm.trim() ? 'Знайдено ТТ:' : 'Активні ТТ:'}{' '}
+              <b>{summary.activeStores}</b>
             </span>
             <span className={styles.summaryItem}>
               Orimi: <b>{formatQty(summary.totalSum)} грн</b>
@@ -411,7 +413,9 @@ export default function ActiveCustomerBase({ onBack }: Props) {
       <section className={styles.routeList}>
         {stores.length === 0 && (
           <p className={styles.emptyCell}>
-            Немає ТТ у маршруті на поточний день.
+            {searchTerm.trim()
+              ? 'За вашим пошуком ТТ не знайдено.'
+              : 'Немає ТТ у маршруті на поточний день.'}
           </p>
         )}
 

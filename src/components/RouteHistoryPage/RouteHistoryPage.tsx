@@ -193,7 +193,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
   const weekKeys = useMemo(() => {
     const keys: string[] = [];
 
-    for (let offset = 0; offset <= 3; offset += 1) {
+    for (let offset = 1; offset <= 4; offset += 1) {
       const date = shiftDays(today, -offset * 7);
       const info = getIsoWeekInfo(date);
       keys.push(`${info.year}-W${String(info.week).padStart(2, '0')}`);
@@ -222,8 +222,14 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
   const routeStores = useMemo(() => {
     const stores = new Set<string>();
+    const hasSearch = searchTerm.trim().length > 0;
 
     filtered.forEach(item => {
+      if (hasSearch) {
+        stores.add(item.торгова_точка);
+        return;
+      }
+
       const effectiveDate = getEffectiveDate(item);
       if (!effectiveDate) return;
 
@@ -233,7 +239,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
     });
 
     return Array.from(stores).sort((a, b) => storeNameCollator.compare(a, b));
-  }, [filtered, currentWeekday, storeNameCollator]);
+  }, [filtered, searchTerm, currentWeekday, storeNameCollator]);
 
   const visibleBrands = useMemo(() => {
     const princessBrandsFromData = [
@@ -279,7 +285,6 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
       const effectiveDate = getEffectiveDate(item);
       if (!effectiveDate) return;
-      if (getIsoWeekday(effectiveDate) !== currentWeekday) return;
 
       const weekInfo = getIsoWeekInfo(effectiveDate);
       const weekKey = `${weekInfo.year}-W${String(weekInfo.week).padStart(2, '0')}`;
@@ -354,7 +359,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
         hasHistory: totals.some(value => value !== 0),
       };
     });
-  }, [filtered, routeStores, currentWeekday, weekIndexMap, visibleBrands]);
+  }, [filtered, routeStores, weekIndexMap, visibleBrands]);
 
   const summary = useMemo(() => {
     const withoutHistory = storeHistory.filter(item => !item.hasHistory).length;
@@ -445,7 +450,8 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
       <section className={styles.summaryCard}>
         <p>
-          ТТ у маршруті (з усіх даних): <b>{summary.allStores}</b>
+          {searchTerm.trim() ? 'Знайдено ТТ:' : 'ТТ у маршруті (з усіх даних):'}{' '}
+          <b>{summary.allStores}</b>
         </p>
         <p>
           Без відвантажень за останні 4 тижні: <b>{summary.withoutHistory}</b>
