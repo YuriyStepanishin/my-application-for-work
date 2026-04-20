@@ -42,18 +42,18 @@ const AGENT_PLANS: Record<string, AgentPlan> = {
 };
 
 const AGENT_DELICIA_PLANS: Record<string, AgentDeliciaPlan> = {
-  'Гриник Ольга': { deliciaVkbGrn: 98000, deliciaVkbStores: 98 },
-  'Довга Діана': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
-  'Лаптєва Руслана': { deliciaVkbGrn: 90000, deliciaVkbStores: 90 },
-  'Могильна Оксана': { deliciaVkbGrn: 98000, deliciaVkbStores: 98 },
-  'Сторожук Аліна': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
-  'Ящишина Наталія': { deliciaVkbGrn: 110000, deliciaVkbStores: 110 },
-  'Кучер Аня': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
-  'Мартинчик Альона': { deliciaVkbGrn: 90000, deliciaVkbStores: 90 },
-  'Нагорняк Світлана': { deliciaVkbGrn: 100000, deliciaVkbStores: 100 },
-  'Дюг Тетяна': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
-  'Івасишин Денис': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
-  'Олійник Влад': { deliciaVkbGrn: 108000, deliciaVkbStores: 108 },
+  'Гриник Ольга': { deliciaVkbGrn: 145000, deliciaVkbStores: 98 },
+  'Довга Діана': { deliciaVkbGrn: 145000, deliciaVkbStores: 100 },
+  'Лаптєва Руслана': { deliciaVkbGrn: 170000, deliciaVkbStores: 90 },
+  'Могильна Оксана': { deliciaVkbGrn: 140000, deliciaVkbStores: 98 },
+  'Сторожук Аліна': { deliciaVkbGrn: 145000, deliciaVkbStores: 100 },
+  'Ящишина Наталія': { deliciaVkbGrn: 145000, deliciaVkbStores: 110 },
+  'Кучер Аня': { deliciaVkbGrn: 65000, deliciaVkbStores: 100 },
+  'Мартинчик Альона': { deliciaVkbGrn: 75000, deliciaVkbStores: 90 },
+  'Нагорняк Світлана': { deliciaVkbGrn: 135000, deliciaVkbStores: 100 },
+  'Дюг Тетяна': { deliciaVkbGrn: 100000, deliciaVkbStores: 108 },
+  'Івасишин Денис': { deliciaVkbGrn: 125000, deliciaVkbStores: 108 },
+  'Олійник Влад': { deliciaVkbGrn: 110000, deliciaVkbStores: 108 },
 };
 
 // Порядок відділів і агентів у таблиці
