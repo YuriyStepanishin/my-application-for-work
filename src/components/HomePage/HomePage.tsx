@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import bg from '../../assets/screensaver.png';
 import styles from './HomePage.module.css';
-import Popup from '../../components/Popup/Popup';
 
 interface Props {
   onOpenDisplay: () => void;
@@ -11,6 +9,8 @@ interface Props {
   onOpenRouteHistory: () => void;
   onOpenActiveCustomerBase: () => void;
   onOpenImplementation: () => void;
+  onOpenMessages: () => void;
+  unreadMessagesCount: number;
 }
 
 export default function HomePage({
@@ -21,9 +21,9 @@ export default function HomePage({
   onOpenRouteHistory,
   onOpenActiveCustomerBase,
   onOpenImplementation,
+  onOpenMessages,
+  unreadMessagesCount,
 }: Props) {
-  const [showPopup, setShowPopup] = useState(false);
-
   const handleRefreshApp = async () => {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.getRegistration();
@@ -62,7 +62,8 @@ export default function HomePage({
       key: 'messages',
       label: 'Повідомлення',
       icon: '/icons/message-icon-64.svg',
-      onClick: () => setShowPopup(true),
+      onClick: onOpenMessages,
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : null,
     },
     {
       key: 'implementation',
@@ -124,6 +125,9 @@ export default function HomePage({
               onClick={item.onClick}
               className={styles.button}
             >
+              {item.badge ? (
+                <span className={styles.badge}>{item.badge}</span>
+              ) : null}
               <img src={item.icon} className={styles.icon} />
               <span className={styles.menuLabel}>{item.label}</span>
             </button>
@@ -143,11 +147,6 @@ export default function HomePage({
           ))}
         </div>
       </div>
-
-      {/* popup (виносимо за контейнер кнопок) */}
-      {showPopup && (
-        <Popup message="В розробці" onClose={() => setShowPopup(false)} />
-      )}
 
       {/* footer */}
       <footer className={styles.footer}>

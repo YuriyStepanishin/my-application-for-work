@@ -12,7 +12,33 @@ type Props = {
 type StoreAggregate = {
   store: string;
   sum: number;
+  deliciaSum: number;
 };
+
+const ORIMI = [
+  'Greenfield',
+  'TESS',
+  'Принцеса Нурі',
+  'Принцеса Канді',
+  'Принцеса Ява',
+  'Принцеса Гіта',
+  'Жокей',
+  'JARDIN',
+  'PIAZZA',
+];
+
+const DELICIA = 'Деліція';
+
+function normalizeBrand(brand: string): string {
+  return brand
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+const ORIMI_SET = new Set(ORIMI.map(normalizeBrand));
+const DELICIA_NORMALIZED = normalizeBrand(DELICIA);
 
 function parseDateObject(input: string): Date | null {
   const trimmed = input.trim();
@@ -159,7 +185,10 @@ export default function ActiveCustomerBase({ onBack }: Props) {
 
   const stores = useMemo<StoreAggregate[]>(() => {
     const routeTodayStores = new Set<string>();
-    const monthSumsByStore = new Map<string, number>();
+    const monthSumsByStore = new Map<
+      string,
+      { orimi: number; delicia: number }
+    >();
     const search = searchTerm.trim().toLowerCase();
 
     filteredSales.forEach(item => {
@@ -168,10 +197,22 @@ export default function ActiveCustomerBase({ onBack }: Props) {
       }
 
       if (isSameMonth(item.effectiveDate, currentYear, currentMonth)) {
-        monthSumsByStore.set(
-          item.торгова_точка,
-          (monthSumsByStore.get(item.торгова_точка) || 0) + (item.сума || 0)
-        );
+        const storeKey = item.торгова_точка;
+        const normalizedBrand = normalizeBrand(item.бренд || '');
+        const current = monthSumsByStore.get(storeKey) ?? {
+          orimi: 0,
+          delicia: 0,
+        };
+
+        if (ORIMI_SET.has(normalizedBrand)) {
+          current.orimi += item.сума || 0;
+        }
+
+        if (normalizedBrand === DELICIA_NORMALIZED) {
+          current.delicia += item.сума || 0;
+        }
+
+        monthSumsByStore.set(storeKey, current);
       }
     });
 
@@ -179,7 +220,8 @@ export default function ActiveCustomerBase({ onBack }: Props) {
       .filter(store => !search || store.toLowerCase().includes(search))
       .map(store => ({
         store,
-        sum: monthSumsByStore.get(store) || 0,
+        sum: monthSumsByStore.get(store)?.orimi || 0,
+        deliciaSum: Math.max(0, monthSumsByStore.get(store)?.delicia || 0),
       }))
       .sort((a, b) => storeNameCollator.compare(a.store, b.store));
   }, [
@@ -193,12 +235,14 @@ export default function ActiveCustomerBase({ onBack }: Props) {
 
   const summary = useMemo(() => {
     let totalSum = 0;
+    let totalDeliciaSum = 0;
     let greenStores = 0;
     let yellowStores = 0;
     let redStores = 0;
 
     stores.forEach(store => {
       totalSum += store.sum;
+      totalDeliciaSum += store.deliciaSum;
 
       if (store.sum >= 500) {
         greenStores += 1;
@@ -212,6 +256,7 @@ export default function ActiveCustomerBase({ onBack }: Props) {
     return {
       activeStores: stores.length,
       totalSum,
+      totalDeliciaSum,
       greenStores,
       yellowStores,
       redStores,
@@ -225,11 +270,38 @@ export default function ActiveCustomerBase({ onBack }: Props) {
 
   const getShortageTo500 = (sum: number) => Math.max(0, 500 - sum);
 
-  const getTrafficClass = (sum: number) => {
-    if (sum >= 500) return styles.storeCardGreen;
-    if (sum > 0) return styles.storeCardYellow;
-    return styles.storeCardRed;
+  const getOrimiTrafficClass = (sum: number) => {
+    if (sum >= 500) return styles.valueGreen;
+    if (sum > 0) return styles.valueYellow;
+    return styles.valueRed;
   };
+
+  const getDeliciaTrafficClass = (sum: number) => {
+    if (sum > 0) return styles.valueGreen;
+    return styles.valueRed;
+  };
+
+  const renderOrimiValue = (sum: number) => {
+    const trafficClass = getOrimiTrafficClass(sum);
+    const isYellow = sum > 0 && sum < 500;
+
+    return (
+      <div className={`${styles.valueBox} ${trafficClass}`}>
+        <span className={styles.valueMain}>{formatQty(sum)} грн</span>
+        {isYellow && (
+          <span className={styles.valueSub}>
+            ({formatQty(getShortageTo500(sum))} грн)
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const renderDeliciaValue = (sum: number) => (
+    <div className={`${styles.valueBox} ${getDeliciaTrafficClass(sum)}`}>
+      <span className={styles.valueMain}>{formatQty(sum)} грн</span>
+    </div>
+  );
 
   if (isLoading) return <Loader />;
   if (error) return <div className={styles.error}>Помилка</div>;
@@ -296,7 +368,10 @@ export default function ActiveCustomerBase({ onBack }: Props) {
               Активні ТТ: <b>{summary.activeStores}</b>
             </span>
             <span className={styles.summaryItem}>
-              Сума: <b>{formatQty(summary.totalSum)} грн</b>
+              Orimi: <b>{formatQty(summary.totalSum)} грн</b>
+            </span>
+            <span className={styles.summaryItem}>
+              Delicia: <b>{formatQty(summary.totalDeliciaSum)} грн</b>
             </span>
           </div>
 
@@ -321,25 +396,56 @@ export default function ActiveCustomerBase({ onBack }: Props) {
           </p>
         )}
 
-        {stores.map(store => (
-          <article
-            key={store.store}
-            className={`${styles.storeCard} ${getTrafficClass(store.sum)}`}
-          >
-            <div className={styles.storeHead}>
-              <span className={styles.storeName}>{store.store}</span>
-              <span className={styles.storeSum}>
-                {formatQty(store.sum)} грн
-                {store.sum > 0 && store.sum < 500 && (
-                  <span className={styles.storeDelta}>
-                    {' '}
-                    ({formatQty(getShortageTo500(store.sum))} грн)
-                  </span>
-                )}
-              </span>
+        {stores.length > 0 && (
+          <>
+            <div className={styles.desktopTableWrap}>
+              <table className={styles.akbTable}>
+                <thead>
+                  <tr>
+                    <th>Назва ТТ</th>
+                    <th>Orimi</th>
+                    <th>Delicia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stores.map(store => (
+                    <tr key={store.store}>
+                      <td className={styles.storeNameCell}>{store.store}</td>
+                      <td className={styles.valueCell}>
+                        {renderOrimiValue(store.sum)}
+                      </td>
+                      <td className={styles.valueCell}>
+                        {renderDeliciaValue(store.deliciaSum)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </article>
-        ))}
+
+            <div className={styles.mobileList}>
+              {stores.map(store => (
+                <article
+                  key={`${store.store}-mobile`}
+                  className={styles.mobileCard}
+                >
+                  <div className={styles.mobileRow}>
+                    <span className={styles.mobileLabel}>Назва ТТ</span>
+                    <span className={styles.storeNameCell}>{store.store}</span>
+                  </div>
+                  <div className={styles.mobileRow}>
+                    <span className={styles.mobileLabel}>Orimi</span>
+                    {renderOrimiValue(store.sum)}
+                  </div>
+                  <div className={styles.mobileRow}>
+                    <span className={styles.mobileLabel}>Delicia</span>
+                    {renderDeliciaValue(store.deliciaSum)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       <button onClick={onBack} className={styles.backButton}>

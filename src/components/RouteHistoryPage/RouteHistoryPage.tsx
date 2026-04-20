@@ -37,6 +37,7 @@ const REQUIRED_BRANDS = [
   'Жокей',
   'JARDIN',
   'PIAZZA',
+  'Деліція',
 ];
 
 function parseDateObject(input: string): Date | null {
@@ -251,6 +252,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
       'Жокей',
       'JARDIN',
       'PIAZZA',
+      'Деліція',
     ];
   }, [filtered]);
 
@@ -366,9 +368,9 @@ export default function RouteHistoryPage({ onBack }: Props) {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h2 className={styles.pageTitle}>Маршрут/історія продажів</h2>
+        <h2 className={styles.pageTitle}>Історія продажів по маршруту</h2>
         <p className={styles.pageMeta}>
-          Поточна дата/день тижня: <b>{getDateLabel(today)}</b>
+          Поточна дата: <b>{getDateLabel(today)}</b>
         </p>
       </header>
 

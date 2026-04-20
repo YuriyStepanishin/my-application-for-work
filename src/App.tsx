@@ -26,6 +26,9 @@ const ActiveCustomerBase = lazy(
 const ImplementationPage = lazy(
   () => import('./components/ImplementationPage/ImplementationPage')
 );
+const MessagesPage = lazy(
+  () => import('./components/MessagesPage/MessagesPage')
+);
 
 import type { SheetRow } from './types/sheet';
 
@@ -34,6 +37,7 @@ import Loader from './components/Loader/Loader';
 import UserMenu from './components/UserMenu/UserMenu';
 
 import { useDisplaySheet, useBonusSheet } from './api/queries';
+import { useMessagesCenter } from './hooks/useMessagesCenter';
 
 export default function App() {
   const [page, setPage] = useState<
@@ -43,6 +47,7 @@ export default function App() {
     | 'route-history'
     | 'active-customer-base'
     | 'implementation'
+    | 'messages'
   >('home');
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
@@ -54,6 +59,7 @@ export default function App() {
     null
   );
   const [showGallery, setShowGallery] = useState(false);
+  const messagesCenter = useMessagesCenter(email);
   const shouldLoadDisplaySheet = showStoreSelector && reportType === 'display';
   const shouldLoadBonusSheet = showStoreSelector && reportType === 'bonus';
   const displayQuery = useDisplaySheet(shouldLoadDisplaySheet);
@@ -157,6 +163,20 @@ export default function App() {
     );
   }
 
+  if (page === 'messages' && email) {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <MessagesPage
+            userEmail={email}
+            onBack={() => setPage('home')}
+            messagesCenter={messagesCenter}
+          />
+        </Suspense>
+      </>
+    );
+  }
+
   // HOME PAGE
   if (!showStoreSelector) {
     return (
@@ -186,6 +206,8 @@ export default function App() {
             onOpenImplementation={() =>
               runProtectedAction(() => setPage('implementation'))
             }
+            onOpenMessages={() => runProtectedAction(() => setPage('messages'))}
+            unreadMessagesCount={messagesCenter.unreadCount}
           />
         </Suspense>
         <UserMenu
