@@ -25,6 +25,7 @@ interface SaveReportPayload {
   lng?: number;
 
   date?: string;
+  folderUrl?: string;
 }
 
 interface ApiResponse {

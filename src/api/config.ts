@@ -6,3 +6,9 @@ export const BONUS_API_URL =
 
 export const SALES_URL =
   'https://script.google.com/macros/s/AKfycbwVr7l4-MYv8lZyuSC2WF9_DMS6p79LVKq9f1rhcgmn1TiuTf72RG-6IQG_ZDvhgsq3/exec';
+
+export const STORE_CHECK_PHOTOS_FOLDER_URL =
+  'https://drive.google.com/drive/folders/10xN3EizeASLbLSRVjwbvBglKf_pJjMtv';
+
+export const STORE_CHECK_URL =
+  'https://script.google.com/macros/s/AKfycby-6cKyndfP89Pt35dhbwntAlFxAU_MqeHmmaHCQAYwtuD0Fo6TR0hm4Y2PejX_cHDOhA/exec';

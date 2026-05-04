@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { addStore } from '../../api/addStore';
 import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 import styles from './NewStoreModal.module.css';
 
 interface Props {
@@ -20,10 +21,11 @@ export default function NewStoreModal({
 }: Props) {
   const [store, setStore] = useState('');
   const [saving, setSaving] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
   async function handleSave() {
     if (!store) {
-      alert('Введіть назву ТТ');
+      setPopupMessage('Введіть назву ТТ');
       return;
     }
 
@@ -41,7 +43,7 @@ export default function NewStoreModal({
 
         onClose();
       } else {
-        alert(res.error);
+        setPopupMessage(res.error || 'Помилка збереження');
       }
     } finally {
       setSaving(false);
@@ -73,6 +75,10 @@ export default function NewStoreModal({
         <button className={styles.cancelButton} onClick={onClose}>
           Скасувати
         </button>
+
+        {popupMessage && (
+          <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
+        )}
       </div>
     </div>
   );

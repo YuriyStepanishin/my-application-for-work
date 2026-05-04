@@ -5,11 +5,11 @@ const HomePage = lazy(() => import('./components/HomePage/HomePage'));
 const StoreSelector = lazy(
   () => import('./components/StoreSelector/StoreSelector')
 );
-const ReportDetailsForm = lazy(
-  () => import('./components/ReportDetailsForm/ReportDetailsForm')
+const ShowcasePromotion = lazy(
+  () => import('./components/ShowcasePromotion/ShowcasePromotion')
 );
 const ReportBonusForm = lazy(
-  () => import('./components/ReportBonusForm/ReportBonusForm')
+  () => import('./components/PhotoReport/PhotoReport')
 );
 const PhotoGallery = lazy(
   () => import('./components/PhotoGallery/PhotoGallery')
@@ -27,17 +27,20 @@ const ActiveCustomerBase = lazy(
 const ImplementationPage = lazy(
   () => import('./components/ImplementationPage/ImplementationPage')
 );
-const MessagesPage = lazy(
-  () => import('./components/MessagesPage/MessagesPage')
+const InfoBoardPage = lazy(
+  () => import('./components/InfoBoardPage/InfoBoardPage')
 );
-
-import type { SheetRow } from './types/sheet';
+const StoreCheckPage = lazy(
+  () => import('./components/StoreCheckPage/StoreCheckPage')
+);
+const PlanTargetsPage = lazy(
+  () => import('./components/PlanTargetsPage/PlanTargetsPage')
+);
 
 import InstallButton from './components/InstallButton/InstallButton';
 import Loader from './components/Loader/Loader';
 import UserMenu from './components/UserMenu/UserMenu';
 
-import { useDisplaySheet, useBonusSheet } from './api/queries';
 import { useMessagesCenter } from './hooks/useMessagesCenter';
 import {
   canAccessSection,
@@ -56,7 +59,9 @@ export default function App() {
     | 'route-history'
     | 'active-customer-base'
     | 'implementation'
+    | 'store-check'
     | 'messages'
+    | 'plan-targets'
   >('home');
   const [email, setEmail] = useState<string | null>(() =>
     localStorage.getItem('auth')
@@ -73,10 +78,6 @@ export default function App() {
   const userDepartment = getUserDepartment(email);
   const canAccess = (section: AppSection) =>
     canAccessSection(userRole, section);
-  const shouldLoadDisplaySheet = showStoreSelector && reportType === 'display';
-  const shouldLoadBonusSheet = showStoreSelector && reportType === 'bonus';
-  const displayQuery = useDisplaySheet(shouldLoadDisplaySheet);
-  const bonusQuery = useBonusSheet(shouldLoadBonusSheet);
 
   const [selectedStore, setSelectedStore] = useState<{
     department: string;
@@ -182,11 +183,31 @@ export default function App() {
     );
   }
 
+  if (page === 'store-check') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <StoreCheckPage onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
+  if (page === 'plan-targets') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <PlanTargetsPage onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
   if (page === 'messages' && email && canAccess('messages')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
-          <MessagesPage
+          <InfoBoardPage
             userEmail={email}
             onBack={() => setPage('home')}
             messagesCenter={messagesCenter}
@@ -238,6 +259,13 @@ export default function App() {
                 'implementation'
               )
             }
+            onOpenStoreCheck={() =>
+              runProtectedAction(() => setPage('store-check'))
+            }
+            onOpenPlanTargets={() =>
+              runProtectedAction(() => setPage('plan-targets'))
+            }
+            canOpenPlanTargets={Boolean(email)}
             onOpenMessages={() =>
               runProtectedAction(() => setPage('messages'), 'messages')
             }
@@ -267,25 +295,13 @@ export default function App() {
     );
   }
 
-  if (
-    (reportType === 'display' && displayQuery.isLoading) ||
-    (reportType === 'bonus' && bonusQuery.isLoading)
-  ) {
-    return <Loader />;
-  }
-
-  const sheetData: SheetRow[] =
-    reportType === 'display'
-      ? (displayQuery.data ?? [])
-      : (bonusQuery.data ?? []);
-
   // STORE SELECTOR
   if (!selectedStore) {
     return (
       <>
         <Suspense fallback={<Loader />}>
           <StoreSelector
-            data={sheetData}
+            source={reportType === 'bonus' ? 'bonus' : 'sales'}
             onSelect={store => setSelectedStore(store)}
             onBack={() => {
               setShowStoreSelector(false);
@@ -303,7 +319,7 @@ export default function App() {
     <>
       <Suspense fallback={<Loader />}>
         {reportType === 'display' ? (
-          <ReportDetailsForm
+          <ShowcasePromotion
             storeData={selectedStore}
             onBack={() => setSelectedStore(null)}
           />

@@ -11,6 +11,7 @@ export type Report = {
   date: string;
   category: string;
   photos: unknown;
+  comment?: string;
 };
 
 export async function fetchReports(): Promise<Report[]> {
@@ -31,7 +32,7 @@ export async function fetchReports(): Promise<Report[]> {
   );
 }
 
-function extractDriveId(url: string): string {
+export function extractDriveId(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return '';
 
@@ -83,4 +84,16 @@ export function normalizePhotoUrls(input: unknown): string[] {
     .split(/[\n,;]+/)
     .map(item => item.trim())
     .filter(Boolean);
+}
+
+export async function deletePhoto(driveId: string): Promise<void> {
+  const res = await fetch(BONUS_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'deletePhoto', driveId }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Помилка видалення фото');
+  }
 }

@@ -1,0 +1,411 @@
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 80px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.addBtn {
+  padding: 9px 16px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.addBtn:hover {
+  background: #1565c0;
+}
+
+.saveAllBtn {
+  padding: 9px 16px;
+  background: #388e3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.saveAllBtn:hover {
+  background: #2e7d32;
+}
+
+.empty {
+  color: #888;
+  font-size: 14px;
+  margin: 24px 0;
+}
+
+.columnList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.columnCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.colInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.colLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colMeta {
+  font-size: 12px;
+  color: #666;
+}
+
+.colActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  width: 30px;
+  height: 30px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.iconBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.editBtn {
+  padding: 6px 12px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.editBtn:hover {
+  background: #1565c0;
+}
+
+.deleteBtn {
+  padding: 6px 10px;
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.deleteBtn:hover {
+  background: #c62828;
+}
+
+/* ─── Editor form ─────────────────────── */
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.formHint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.formInput,
+.formSelect {
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.multiSelect {
+  min-height: 112px;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.calcGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.calcBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafcff;
+}
+
+.calcLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3949ab;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chipBtn,
+.chipActive {
+  padding: 7px 10px;
+  border: 1px solid #c5cae9;
+  border-radius: 999px;
+  background: #fff;
+  color: #3949ab;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chipActive {
+  background: #3949ab;
+  border-color: #3949ab;
+  color: #fff;
+}
+
+.agentsTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.agentsTable {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.deptBlock {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.deptHeader {
+  background: #f0f4ff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 12px;
+  color: #1a237e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modeToggle {
+  display: flex;
+  gap: 4px;
+}
+
+.modeBtn,
+.modeActive {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #9fa8da;
+  background: #fff;
+  color: #3949ab;
+  transition: background 0.15s;
+}
+
+.modeActive {
+  background: #3949ab;
+  color: #fff;
+  border-color: #3949ab;
+}
+
+.modeBtn:hover {
+  background: #e8eaf6;
+}
+
+/* ─── Totals section ─────────────────────── */
+
+.totalsSection {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.totalsDepts {
+  display: flex;
+  flex-direction: column;
+}
+
+.totalDeptRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-top: 1px solid #f0f0f0;
+  gap: 12px;
+  background: #fafafa;
+}
+
+.totalDeptRow:first-child {
+  border-top: none;
+}
+
+.totalValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1976d2;
+  min-width: 90px;
+  text-align: right;
+}
+
+.grandTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background: #e8f5e9;
+  border-top: 2px solid #c8e6c9;
+  gap: 12px;
+}
+
+.grandTotalValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2e7d32;
+  min-width: 90px;
+  text-align: right;
+}
+
+.agentRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid #f0f0f0;
+  gap: 12px;
+}
+
+.agentRow:first-of-type {
+  border-top: none;
+}
+
+.agentName {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}
+
+.planInput {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: right;
+  background: #fff;
+}
+
+.planInput:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.editorActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.backBtn {
+  padding: 10px 18px;
+  background: #757575;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.backBtn:hover {
+  background: #616161;
+}

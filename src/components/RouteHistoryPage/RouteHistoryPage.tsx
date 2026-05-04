@@ -152,6 +152,9 @@ export default function RouteHistoryPage({ onBack }: Props) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const today = useMemo(() => normalizeWeekendToFriday(new Date()), []);
+  const currentWeekday = useMemo(() => getIsoWeekday(today), [today]);
+
   const uniqueDepartments = useMemo(
     () => [...new Set(data.map(item => item.відділ).filter(Boolean))].sort(),
     [data]
@@ -186,9 +189,6 @@ export default function RouteHistoryPage({ onBack }: Props) {
       return true;
     });
   }, [data, department, agent, searchTerm]);
-
-  const today = useMemo(() => normalizeWeekendToFriday(new Date()), []);
-  const currentWeekday = getIsoWeekday(today);
 
   const weekKeys = useMemo(() => {
     const keys: string[] = [];
@@ -274,7 +274,6 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
   const storeHistory = useMemo<StoreHistory[]>(() => {
     const storesSet = new Set(routeStores);
-
     const historyByStore = new Map<
       string,
       Map<string, Map<string, number[]>>

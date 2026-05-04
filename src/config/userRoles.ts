@@ -8,7 +8,8 @@ export type AppSection =
   | 'route-history'
   | 'active-customer-base'
   | 'messages'
-  | 'implementation';
+  | 'implementation'
+  | 'plan-targets';
 
 const ROLE_ACCESS: Record<UserRole, AppSection[]> = {
   agent: [
@@ -40,6 +41,7 @@ const ROLE_ACCESS: Record<UserRole, AppSection[]> = {
     'active-customer-base',
     'messages',
     'implementation',
+    'plan-targets',
   ],
 };
 

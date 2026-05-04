@@ -1,6 +1,15 @@
 import bg from '../../assets/screensaver.png';
 import styles from './HomePage.module.css';
 
+type MenuItem = {
+  key: string;
+  label: string;
+  icon: string;
+  onClick: () => void;
+  visible: boolean;
+  badge?: number | null;
+};
+
 interface Props {
   onOpenDisplay: () => void;
   onOpenBonus: () => void;
@@ -9,8 +18,11 @@ interface Props {
   onOpenRouteHistory: () => void;
   onOpenActiveCustomerBase: () => void;
   onOpenImplementation: () => void;
+  onOpenStoreCheck: () => void;
   onOpenMessages: () => void;
   unreadMessagesCount: number;
+  onOpenPlanTargets: () => void;
+  canOpenPlanTargets: boolean;
   canOpenDisplayReport: boolean;
   canOpenBonusReport: boolean;
   canOpenGallery: boolean;
@@ -29,8 +41,11 @@ export default function HomePage({
   onOpenRouteHistory,
   onOpenActiveCustomerBase,
   onOpenImplementation,
+  onOpenStoreCheck,
   onOpenMessages,
   unreadMessagesCount,
+  onOpenPlanTargets,
+  canOpenPlanTargets,
   canOpenDisplayReport,
   canOpenBonusReport,
   canOpenGallery,
@@ -45,11 +60,10 @@ export default function HomePage({
       const registration = await navigator.serviceWorker.getRegistration();
       await registration?.update();
     }
-
     window.location.reload();
   };
 
-  const topMenuItems = [
+  const topMenuItems: MenuItem[] = [
     {
       key: 'sales',
       label: 'Продажі',
@@ -80,7 +94,7 @@ export default function HomePage({
     },
     {
       key: 'messages',
-      label: 'Повідомлення',
+      label: 'Дошка інформації',
       icon: '/icons/message-icon-64.svg',
       onClick: onOpenMessages,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : null,
@@ -93,9 +107,23 @@ export default function HomePage({
       onClick: onOpenImplementation,
       visible: canOpenImplementation,
     },
+    {
+      key: 'store-check',
+      label: 'StoreCheck',
+      icon: '/icons/storecheck.svg',
+      onClick: onOpenStoreCheck,
+      visible: true,
+    },
+    {
+      key: 'plan-targets',
+      label: 'Планові показники',
+      icon: '/icons/implementation.svg',
+      onClick: onOpenPlanTargets,
+      visible: canOpenPlanTargets,
+    },
   ];
 
-  const bottomMenuItems = [
+  const bottomMenuItems: MenuItem[] = [
     {
       key: 'bonus',
       label: 'Додавання фотозвіту',
@@ -136,7 +164,7 @@ export default function HomePage({
         <span className={styles.refreshIcon} aria-hidden="true">
           ↻
         </span>
-        <span>Оновити v2.4.0</span>
+        <span>Оновити {__APP_VERSION__}</span>
       </button>
 
       {/* навігація */}

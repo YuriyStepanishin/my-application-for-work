@@ -1,0 +1,234 @@
+/* =========================
+   BASE
+========================= */
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+  background: linear-gradient(180deg, #e4eee7 0%, #dce9e1 100%);
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f4031;
+}
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* =========================
+   FORM
+========================= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #c6d8cb;
+  background: #fff;
+}
+/* =========================
+   CARD
+========================= */
+.contentCard {
+  background: #f4f9f5;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #cadacc;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1f4031;
+}
+
+/* =========================
+   GRID (mobile default)
+========================= */
+.numericGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* =========================
+   FIELD
+========================= */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  color: #2a4b3b;
+  white-space: nowrap;
+}
+
+/* =========================
+   INPUT
+========================= */
+.input {
+  width: 60px;
+  padding: 6px 8px;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #c6d8cb;
+  background: #fff;
+}
+.inputTerritory {
+  width: 200px;
+  padding: 6px 8px;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #c6d8cb;
+  background: #fff;
+}
+/* =========================
+   TOTAL
+========================= */
+.totalRow {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #204031;
+  display: flex;
+  justify-content: space-between;
+}
+
+.totalsSplit {
+  display: flex;
+  gap: 6px;
+}
+
+.totalsSplit .totalRow {
+  flex: 1;
+  justify-content: center;
+}
+
+/* =========================
+   TEXTAREA
+========================= */
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #c6d8cb;
+  font-size: 14px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.actions {
+  margin-top: 10px;
+}
+
+.submitButton {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #355f4a 0%, #4d7c63 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.backButton {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 13px;
+}
+
+/* =========================
+   MESSAGE
+========================= */
+.successMessage {
+  margin-top: 8px;
+  background: #e3f4e8;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.errorMessage {
+  margin-top: 8px;
+  background: #fde8e8;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+/* =========================
+   TABLET (>= 600px)
+========================= */
+@media (min-width: 600px) {
+  .numericGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .input {
+    width: 90px;
+  }
+}
+
+/* =========================
+   DESKTOP (>= 900px)
+========================= */
+@media (min-width: 900px) {
+  .numericGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .contentCard {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .label {
+    font-size: 14px;
+  }
+
+  .input {
+    width: 100px;
+    font-size: 15px;
+  }
+
+  .submitButton {
+    width: auto;
+    padding: 0 24px;
+  }
+}

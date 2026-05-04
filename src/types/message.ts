@@ -1,5 +1,6 @@
 export type MessageAudience = 'all' | 'direct' | 'feedback';
 
+import type { Attachment } from './photo';
 export interface MessageItem {
   id: string;
   title: string;
@@ -13,6 +14,7 @@ export interface MessageItem {
   requiresFeedback?: boolean;
   feedbackCount?: number;
   isRead?: boolean;
+  attachments?: Attachment[];
 }
 
 export interface SendMessagePayload {

@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import SearchInput from '../SearchInput';
 import {
   buildImageSources,
+  deletePhoto,
+  extractDriveId,
   fetchReports,
   normalizePhotoUrls,
   type Report,
@@ -30,6 +32,8 @@ type Photo = {
   lng: number;
   department: string;
   rep: string;
+  comment: string;
+  driveId: string;
 };
 
 export default function PhotoGallery({ onBack }: Props) {
@@ -38,6 +42,10 @@ export default function PhotoGallery({ onBack }: Props) {
   const ownRepresentative = getUserRepresentative(authEmail);
   const isSupervisor = userRole === 'supervisor';
   const isAgent = userRole === 'agent';
+  const canDelete = userRole === 'admin' || userRole === 'supervisor';
+  const [deletedDriveIds, setDeletedDriveIds] = useState<Set<string>>(
+    new Set()
+  );
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
   const [department, setDepartment] = useState('all');
   const [rep, setRep] = useState('all');
@@ -87,6 +95,8 @@ export default function PhotoGallery({ onBack }: Props) {
             lng: 0,
             department: report.department,
             rep: report.representative,
+            comment: report.comment ?? '',
+            driveId: extractDriveId(rawUrl),
           };
         })
       );
@@ -148,8 +158,9 @@ export default function PhotoGallery({ onBack }: Props) {
         const depOk = department === 'all' || p.department === department;
         const repOk = rep === 'all' || p.rep === rep;
         const searchOk = !query || p.store.toLowerCase().includes(query);
+        const notDeleted = !deletedDriveIds.has(p.driveId);
 
-        return depOk && repOk && searchOk;
+        return depOk && repOk && searchOk && notDeleted;
       })
       .sort((a, b) => {
         const dateDiff = parsePhotoDate(b.date) - parsePhotoDate(a.date);
@@ -157,7 +168,7 @@ export default function PhotoGallery({ onBack }: Props) {
 
         return storeNameCollator.compare(a.store, b.store);
       });
-  }, [photos, department, rep, searchTerm, storeNameCollator]);
+  }, [photos, department, rep, searchTerm, storeNameCollator, deletedDriveIds]);
 
   const filteredStoreCount = useMemo(() => {
     return new Set(filteredPhotos.map(photo => photo.store).filter(Boolean))
@@ -299,6 +310,19 @@ export default function PhotoGallery({ onBack }: Props) {
     });
   };
 
+  const handleDeletePhoto = async (photo: Photo, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Видалити фото для ТТ "${photo.store}"?`)) return;
+    if (photo.driveId) {
+      try {
+        await deletePhoto(photo.driveId);
+      } catch {
+        // Optimistic removal even if API fails
+      }
+    }
+    setDeletedDriveIds(prev => new Set(prev).add(photo.driveId || photo.id));
+  };
+
   if (isLoading) return <Loader />;
   if (error) return <div>Щось зламалось 😅</div>;
 
@@ -401,6 +425,9 @@ export default function PhotoGallery({ onBack }: Props) {
                 <div>ТТ: {photo.store}</div>
                 <div>Категорія: {photo.category}</div>
                 <div>{photo.date}</div>
+                {photo.comment && (
+                  <div className={styles.comment}>{photo.comment}</div>
+                )}
                 {storeSums[photo.store]?.days70 > 0 && (
                   <div className={styles.sums}>
                     Сума: {storeSums[photo.store].month.toLocaleString('uk-UA')}{' '}
@@ -408,6 +435,14 @@ export default function PhotoGallery({ onBack }: Props) {
                     {storeSums[photo.store].days70.toLocaleString('uk-UA')} грн
                     )
                   </div>
+                )}
+                {canDelete && (
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={e => handleDeletePhoto(photo, e)}
+                  >
+                    Видалити
+                  </button>
                 )}
               </div>
             </div>

@@ -1,0 +1,45 @@
+.attachmentsBox {
+  margin-top: 10px;
+  padding: 10px 0 0 0;
+  border-top: 1px solid #e0e8e2;
+}
+.composeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sendButton {
+  margin-top: 10px;
+  min-width: 120px;
+  min-height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2f6b4f 0%, #1f513c 100%);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(45, 106, 79, 0.12);
+  transition: background 0.2s;
+}
+.sendButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.successMsg {
+  margin-top: 8px;
+  color: #205637;
+  background: #ebf8ee;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 15px;
+}
+.errorMsg {
+  margin-top: 8px;
+  color: #8b3820;
+  background: #fff0ec;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 15px;
+}

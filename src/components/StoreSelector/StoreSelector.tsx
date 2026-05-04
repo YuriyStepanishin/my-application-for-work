@@ -1,11 +1,19 @@
 import { useMemo, useState } from 'react';
-import type { SheetRow } from '../../types/sheet';
+import { useQuery } from '@tanstack/react-query';
+
+import {
+  fetchStoreSelectorData,
+  type StoreSelectorSource,
+  type StoreSelectorRow,
+} from '../../api/fetchStoreSelectorData';
 
 import NewStoreModal from '../NewStoreModal/NewStoreModal';
+import Popup from '../Popup/Popup';
+import Loader from '../Loader/Loader';
 import styles from './StoreSelector.module.css';
 
 interface Props {
-  data: SheetRow[];
+  source: StoreSelectorSource;
   onSelect: (store: {
     department: string;
     representative: string;
@@ -14,8 +22,20 @@ interface Props {
   onBack?: () => void;
 }
 
-export default function StoreSelector({ data, onSelect, onBack }: Props) {
-  const normalizedData = useMemo<SheetRow[]>(() => {
+export default function StoreSelector({ source, onSelect, onBack }: Props) {
+  const [department, setDepartment] = useState('');
+  const [representative, setRepresentative] = useState('');
+  const [store, setStore] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [localStores, setLocalStores] = useState<string[]>([]);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['store-selector-data', source],
+    queryFn: () => fetchStoreSelectorData(source),
+  });
+
+  const normalizedData = useMemo<StoreSelectorRow[]>(() => {
     if (!Array.isArray(data)) {
       return [];
     }
@@ -28,12 +48,6 @@ export default function StoreSelector({ data, onSelect, onBack }: Props) {
         typeof item.store === 'string'
     );
   }, [data]);
-
-  const [department, setDepartment] = useState('');
-  const [representative, setRepresentative] = useState('');
-  const [store, setStore] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [localStores, setLocalStores] = useState<string[]>([]);
 
   const departments = useMemo(() => {
     return [...new Set(normalizedData.map(item => item.department))].sort(
@@ -82,7 +96,7 @@ export default function StoreSelector({ data, onSelect, onBack }: Props) {
 
   function handleConfirm() {
     if (!department || !representative || !store) {
-      alert('Оберіть всі поля');
+      setPopupMessage('Оберіть всі поля');
       return;
     }
 
@@ -91,6 +105,23 @@ export default function StoreSelector({ data, onSelect, onBack }: Props) {
       representative,
       store,
     });
+  }
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (isError) {
+    return (
+      <div className={styles.wrapper}>
+        <p>Не вдалося завантажити список торгових точок.</p>
+        {onBack && (
+          <button className={styles.backButton} onClick={onBack}>
+            ← Головна сторінка
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -176,6 +207,10 @@ export default function StoreSelector({ data, onSelect, onBack }: Props) {
             setShowModal(false);
           }}
         />
+      )}
+
+      {popupMessage && (
+        <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
       )}
     </div>
   );

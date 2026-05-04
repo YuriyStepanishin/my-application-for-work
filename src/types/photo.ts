@@ -7,3 +7,9 @@ export interface Photo {
   name: string;
   status: UploadStatus;
 }
+
+export interface Attachment {
+  url: string;
+  type: string;
+  name: string;
+}

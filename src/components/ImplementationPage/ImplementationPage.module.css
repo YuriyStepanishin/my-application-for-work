@@ -4,9 +4,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 16px;
+  max-width: 100%;
+  margin: 0;
+  padding: 10px 12px 80px;
   box-sizing: border-box;
   background: linear-gradient(180deg, #e4eee7 0%, #dce9e1 100%);
 }
@@ -15,9 +15,9 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .backBtn {
@@ -55,27 +55,27 @@
 
 .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #224434;
   flex: 1;
 }
 
 .monthBadge {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #557868;
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(183, 203, 189, 0.8);
   border-radius: 999px;
-  padding: 4px 12px;
+  padding: 3px 10px;
 }
 
 /* ─── Updated at ─────────────────────────────────────────── */
 .updatedAt {
-  margin: 0 0 10px;
-  font-size: 12px;
+  margin: 0 0 6px;
+  font-size: 11px;
   color: #557868;
 }
 
@@ -87,40 +87,40 @@
 .tableWrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(183, 203, 189, 0.9);
-  box-shadow: 0 8px 24px rgba(72, 103, 84, 0.08);
+  box-shadow: 0 4px 16px rgba(72, 103, 84, 0.08);
 }
 
 /* ─── Table ───────────────────────────────────────────────── */
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  min-width: 560px;
+  font-size: 12px;
+  min-width: 520px;
   background: rgba(251, 253, 251, 0.92);
 }
 
 .table th,
 .table td {
   border: 1px solid #d4dfda;
-  padding: 7px 8px;
-  line-height: 1.3;
+  padding: 5px 6px;
+  line-height: 1.25;
   vertical-align: middle;
 }
 
 /* column widths */
 .colDept {
-  min-width: 160px;
+  min-width: 140px;
   background: #f0f5f1;
   color: #224434;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-align: left;
 }
 
 .colFact {
-  min-width: 110px;
+  min-width: 90px;
   background: #fffde7;
   color: #5a4a00;
   font-weight: 700;
@@ -131,17 +131,18 @@
 .colGroup {
   background: #e8f5e9;
   color: #1b5e20;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+  white-space: nowrap;
 }
 
 .colSub {
   background: #f1f8f2;
   color: #2f4f3a;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-align: center;
   white-space: nowrap;
@@ -165,17 +166,17 @@
 
 .nameCell {
   text-align: left;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .deptRow .nameCell {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .agentRow .nameCell {
-  padding-left: 18px;
-  font-size: 12px;
+  padding-left: 14px;
+  font-size: 11px;
   color: #2f6b52;
 }
 
@@ -183,6 +184,7 @@
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  font-size: 11px;
 }
 
 /* ─── % colouring ─────────────────────────────────────────── */

@@ -4,8 +4,9 @@ import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
 import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 
-import styles from '../ReportDetailsForm/ReportDetailsForm.module.css';
+import styles from './PhotoReport.module.css';
 import type { Photo } from '../../types/photo';
 import { db } from '../PhotoUpload/db';
 
@@ -33,15 +34,16 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
   const [saving, setSaving] = useState(false);
 
   const [success, setSuccess] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
   async function handleSave() {
     if (!createdDate) {
-      alert('Оберіть дату створення');
+      setPopupMessage('Оберіть дату створення');
       return;
     }
 
     if (!category) {
-      alert('Оберіть категорію');
+      setPopupMessage('Оберіть категорію');
       return;
     }
 
@@ -74,10 +76,10 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
 
         setTimeout(onBack, 1500);
       } else {
-        alert(result.error || 'Помилка');
+        setPopupMessage(result.error || 'Помилка');
       }
     } catch {
-      alert('Server error');
+      setPopupMessage('Server error');
     } finally {
       setSaving(false);
     }
@@ -130,6 +132,10 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
 
       {success && (
         <div className={styles.successMessage}>✅ Звіт успішно збережено</div>
+      )}
+
+      {popupMessage && (
+        <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
       )}
 
       <div className={styles.bottomRow}>

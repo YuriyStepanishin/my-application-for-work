@@ -26,7 +26,6 @@ const ORIMI = [
   'Принцеса Нурі',
   'Принцеса Канді',
   'Принцеса Ява',
-  'Принцеса Гіта',
   'Жокей',
   'JARDIN',
   'PIAZZA',
@@ -247,20 +246,28 @@ export default function ActiveCustomerBase({ onBack }: Props) {
   const summary = useMemo(() => {
     let totalSum = 0;
     let totalDeliciaSum = 0;
-    let greenStores = 0;
-    let yellowStores = 0;
-    let redStores = 0;
+    let orimiGreenStores = 0;
+    let orimiYellowStores = 0;
+    let orimiRedStores = 0;
+    let deliciaGreenStores = 0;
+    let deliciaRedStores = 0;
 
     stores.forEach(store => {
       totalSum += store.sum;
       totalDeliciaSum += store.deliciaSum;
 
       if (store.sum >= 500) {
-        greenStores += 1;
+        orimiGreenStores += 1;
       } else if (store.sum > 0) {
-        yellowStores += 1;
+        orimiYellowStores += 1;
       } else {
-        redStores += 1;
+        orimiRedStores += 1;
+      }
+
+      if (store.deliciaSum > 0) {
+        deliciaGreenStores += 1;
+      } else {
+        deliciaRedStores += 1;
       }
     });
 
@@ -268,9 +275,11 @@ export default function ActiveCustomerBase({ onBack }: Props) {
       activeStores: stores.length,
       totalSum,
       totalDeliciaSum,
-      greenStores,
-      yellowStores,
-      redStores,
+      orimiGreenStores,
+      orimiYellowStores,
+      orimiRedStores,
+      deliciaGreenStores,
+      deliciaRedStores,
     };
   }, [stores]);
 
@@ -397,15 +406,28 @@ export default function ActiveCustomerBase({ onBack }: Props) {
           </div>
 
           <div className={styles.summaryTrafficGroup}>
-            <span className={styles.summaryItem}>
-              🟢: <b>{summary.greenStores}</b> ТТ
-            </span>
-            <span className={styles.summaryItem}>
-              🟡: <b>{summary.yellowStores}</b> ТТ
-            </span>
-            <span className={styles.summaryItem}>
-              🔴: <b>{summary.redStores}</b> ТТ
-            </span>
+            <div className={styles.trafficSubgroup}>
+              <span className={styles.trafficLabel}>Orimi:</span>
+              <span className={styles.summaryItem}>
+                🟢: <b>{summary.orimiGreenStores}</b> ТТ
+              </span>
+              <span className={styles.summaryItem}>
+                🟡: <b>{summary.orimiYellowStores}</b> ТТ
+              </span>
+              <span className={styles.summaryItem}>
+                🔴: <b>{summary.orimiRedStores}</b> ТТ
+              </span>
+            </div>
+
+            <div className={styles.trafficSubgroup}>
+              <span className={styles.trafficLabel}>Delicia:</span>
+              <span className={styles.summaryItem}>
+                🟢: <b>{summary.deliciaGreenStores}</b> ТТ
+              </span>
+              <span className={styles.summaryItem}>
+                🔴: <b>{summary.deliciaRedStores}</b> ТТ
+              </span>
+            </div>
           </div>
         </div>
       </section>

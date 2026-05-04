@@ -1,17 +1,16 @@
 import styles from './Popup.module.css';
 
-interface Props {
+type Props = {
   message: string;
   onClose: () => void;
-}
+};
 
 export default function Popup({ message, onClose }: Props) {
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} role="dialog" aria-modal="true">
       <div className={styles.popup}>
-        <p>{message}</p>
-
-        <button onClick={onClose} className={styles.button}>
+        <div className={styles.message}>{message}</div>
+        <button type="button" className={styles.button} onClick={onClose}>
           OK
         </button>
       </div>

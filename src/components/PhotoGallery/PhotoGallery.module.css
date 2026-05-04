@@ -146,6 +146,35 @@
   color: #2f4f3a;
 }
 
+.comment {
+  margin-top: 4px;
+  font-size: 13px;
+  font-style: italic;
+  color: #5a7a6a;
+  line-height: 1.4;
+}
+
+.deleteBtn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border: 1px solid #c0392b;
+  border-radius: 8px;
+  background: transparent;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.deleteBtn:hover {
+  background: #c0392b;
+  color: white;
+}
+
 .empty {
   padding: 20px;
   border-radius: 12px;
@@ -154,7 +183,10 @@
   color: #2f4f3a;
   font-weight: 600;
   text-align: center;
+
+  height: fit-content;
 }
+
 .viewer {
   position: fixed;
   inset: 0;

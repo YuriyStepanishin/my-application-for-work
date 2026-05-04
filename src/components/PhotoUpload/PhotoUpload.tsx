@@ -4,6 +4,7 @@ import styles from './PhotoUpload.module.css';
 import { db } from './db';
 import type { Photo } from '../../types/photo';
 import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 
 interface Props {
   photos: Photo[];
@@ -14,6 +15,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const [processing, setProcessing] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
   const compressionOptions = {
     maxSizeMB: 1.5,
@@ -51,7 +53,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
     const files = Array.from(e.target.files);
 
     if (photos.length + files.length > 3) {
-      alert('Максимум 3 фото');
+      setPopupMessage('Максимум 3 фото');
       return;
     }
 
@@ -67,7 +69,7 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
       setPhotos(fresh);
     } catch (err) {
       console.error(err);
-      alert('Помилка обробки фото');
+      setPopupMessage('Помилка обробки фото');
     } finally {
       setProcessing(false);
     }
@@ -147,6 +149,10 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
           </div>
         ))}
       </div>
+
+      {popupMessage && (
+        <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
+      )}
     </div>
   );
 }

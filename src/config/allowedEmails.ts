@@ -1,6 +1,6 @@
 export type UserRole = 'agent' | 'supervisor' | 'admin';
 
-export type UserProfile = {
+type UserProfile = {
   role: UserRole;
   department: string;
   representative?: string;
@@ -62,6 +62,11 @@ export const userAccessMap: Record<string, UserProfile> = {
     department: 'Область (Центр)',
     representative: 'Сторожук Аліна',
   },
+  'irashwetc89@gmail.com': {
+    role: 'agent',
+    department: 'Шепетівський відділ',
+    representative: 'Швець Ірина',
+  },
   'natasha14148282@icloud.com': {
     role: 'agent',
     department: 'Місто',
@@ -70,22 +75,27 @@ export const userAccessMap: Record<string, UserProfile> = {
   'y.stepanishin@gmail.com': {
     role: 'admin',
     department: 'Усі відділи',
+    representative: 'Юрій Степанишин',
   },
   'gutovskan@gmail.com': {
     role: 'admin',
     department: 'Усі відділи',
+    representative: 'Гутовська Наталія',
   },
   'vkamsnskiy@gmail.com': {
     role: 'supervisor',
     department: "Кам'янець-Подільський відділ",
+    representative: 'Камінський Володимир',
   },
   'nikolya202@gmail.com': {
     role: 'supervisor',
     department: 'Шепетівський відділ',
+    representative: 'Микола Швець',
   },
   'w18051985@gmail.com': {
     role: 'supervisor',
     department: 'Місто, Область (Центр)',
+    representative: 'Токарчук Микола',
   },
 };
 

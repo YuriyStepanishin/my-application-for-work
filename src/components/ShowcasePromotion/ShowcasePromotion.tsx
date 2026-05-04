@@ -5,8 +5,9 @@ import { saveReport } from '../../api/saveReport';
 
 import PhotoUpload from '../PhotoUpload/PhotoUpload';
 import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 
-import styles from './ReportDetailsForm.module.css';
+import styles from './ShowcasePromotion.module.css';
 import useGeolocation from '../../hooks/useGeolocation';
 import type { Photo } from '../../types/photo';
 import { db } from '../PhotoUpload/db';
@@ -21,7 +22,7 @@ interface Props {
   onBack: () => void;
 }
 
-export default function ReportDetailsForm({ storeData, onBack }: Props) {
+export default function ShowcasePromotion({ storeData, onBack }: Props) {
   const { getLocation } = useGeolocation();
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 
   function handleStartDate(value: string) {
     setStartDate(value);
@@ -53,12 +55,12 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
 
   async function handleSave() {
     if (!startDate) {
-      alert('Оберіть дату початку');
+      setPopupMessage('Оберіть дату початку');
       return;
     }
 
     if (!category) {
-      alert('Оберіть категорію');
+      setPopupMessage('Оберіть категорію');
       return;
     }
 
@@ -101,10 +103,10 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
           onBack();
         }, 1500);
       } else {
-        alert(result.error || 'Помилка');
+        setPopupMessage(result.error || 'Помилка');
       }
     } catch {
-      alert('Server error');
+      setPopupMessage('Server error');
     } finally {
       setSaving(false);
     }
@@ -170,6 +172,10 @@ export default function ReportDetailsForm({ storeData, onBack }: Props) {
       />
       {success && (
         <div className={styles.successMessage}>✅ Звіт успішно збережено</div>
+      )}
+
+      {popupMessage && (
+        <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
       )}
 
       {/* BOTTOM BUTTONS */}

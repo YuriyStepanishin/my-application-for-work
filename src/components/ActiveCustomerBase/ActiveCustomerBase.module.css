@@ -164,6 +164,22 @@
 
 .summaryTrafficGroup {
   justify-self: end;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.trafficSubgroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.trafficLabel {
+  color: #305544;
+  font-weight: 600;
+  min-width: 60px;
 }
 
 .summaryItem {
