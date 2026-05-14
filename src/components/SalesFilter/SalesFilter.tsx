@@ -65,10 +65,7 @@ export default function SalesFilter({
             <select
               className={styles.select}
               value={department}
-              onChange={e => {
-                onChangeDepartment(e.target.value);
-                onChangeAgent('');
-              }}
+              onChange={e => onChangeDepartment(e.target.value)}
             >
               <option value="">Всі відділи</option>
               {departments.map(d => (

@@ -117,7 +117,7 @@ export default function HomePage({
     {
       key: 'plan-targets',
       label: 'Планові показники',
-      icon: '/icons/implementation.svg',
+      icon: '/public/icons/icons_planning.svg',
       onClick: onOpenPlanTargets,
       visible: canOpenPlanTargets,
     },

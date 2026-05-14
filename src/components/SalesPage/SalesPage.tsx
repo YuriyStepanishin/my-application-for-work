@@ -45,6 +45,40 @@ type StoreDetailsRow = {
   }>;
 };
 
+type HierarchyStoreRow = {
+  name: string;
+  sum: number;
+  quantity: number;
+  sku: number;
+};
+
+type HierarchyDateRow = {
+  key: string;
+  label: string;
+  sum: number;
+  quantity: number;
+  sku: number;
+  stores: HierarchyStoreRow[];
+};
+
+type HierarchyAgentRow = {
+  name: string;
+  sum: number;
+  quantity: number;
+  stores: number;
+  sku: number;
+  dates: HierarchyDateRow[];
+};
+
+type HierarchyDepartmentRow = {
+  name: string;
+  sum: number;
+  quantity: number;
+  stores: number;
+  sku: number;
+  agents: HierarchyAgentRow[];
+};
+
 const EXCLUDED_BRANDS = new Set(['Принцесв Канді']);
 
 function getBrandOrderWeight(brand: string): number {
@@ -127,6 +161,8 @@ export default function SalesPage({
   const [showStores, setShowStores] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [showByDates, setShowByDates] = useState(false);
+  const [showByDepartments, setShowByDepartments] = useState(false);
+  const [showByAgents, setShowByAgents] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -425,6 +461,152 @@ export default function SalesPage({
     });
   }, [selectedStores, searchTerm]);
 
+  const prioritizedHierarchy = useMemo<HierarchyDepartmentRow[]>(() => {
+    const departmentsMap: Record<
+      string,
+      {
+        sum: number;
+        quantity: number;
+        stores: Set<string>;
+        products: Set<string>;
+        agents: Record<
+          string,
+          {
+            sum: number;
+            quantity: number;
+            stores: Set<string>;
+            products: Set<string>;
+            dates: Record<
+              string,
+              {
+                sum: number;
+                quantity: number;
+                products: Set<string>;
+                stores: Record<
+                  string,
+                  {
+                    sum: number;
+                    quantity: number;
+                    products: Set<string>;
+                  }
+                >;
+              }
+            >;
+          }
+        >;
+      }
+    > = {};
+
+    selectedSales.forEach(item => {
+      const departmentKey = item.відділ || 'Без відділу';
+      const agentKey = item.агент || 'Без торгового представника';
+      const dateKey = parseSaleDate(item.дата) || '';
+      const storeKey = item.торгова_точка || 'Без торгової точки';
+      const amount = item.сума || 0;
+      const quantity = item.кількість || 0;
+      const productKey = item.товар;
+
+      if (!departmentsMap[departmentKey]) {
+        departmentsMap[departmentKey] = {
+          sum: 0,
+          quantity: 0,
+          stores: new Set<string>(),
+          products: new Set<string>(),
+          agents: {},
+        };
+      }
+
+      const departmentGroup = departmentsMap[departmentKey];
+      departmentGroup.sum += amount;
+      departmentGroup.quantity += quantity;
+      departmentGroup.stores.add(storeKey);
+      if (productKey) departmentGroup.products.add(productKey);
+
+      if (!departmentGroup.agents[agentKey]) {
+        departmentGroup.agents[agentKey] = {
+          sum: 0,
+          quantity: 0,
+          stores: new Set<string>(),
+          products: new Set<string>(),
+          dates: {},
+        };
+      }
+
+      const agentGroup = departmentGroup.agents[agentKey];
+      agentGroup.sum += amount;
+      agentGroup.quantity += quantity;
+      agentGroup.stores.add(storeKey);
+      if (productKey) agentGroup.products.add(productKey);
+
+      if (!agentGroup.dates[dateKey]) {
+        agentGroup.dates[dateKey] = {
+          sum: 0,
+          quantity: 0,
+          products: new Set<string>(),
+          stores: {},
+        };
+      }
+
+      const dateGroup = agentGroup.dates[dateKey];
+      dateGroup.sum += amount;
+      dateGroup.quantity += quantity;
+      if (productKey) dateGroup.products.add(productKey);
+
+      if (!dateGroup.stores[storeKey]) {
+        dateGroup.stores[storeKey] = {
+          sum: 0,
+          quantity: 0,
+          products: new Set<string>(),
+        };
+      }
+
+      const storeGroup = dateGroup.stores[storeKey];
+      storeGroup.sum += amount;
+      storeGroup.quantity += quantity;
+      if (productKey) storeGroup.products.add(productKey);
+    });
+
+    return Object.entries(departmentsMap)
+      .map(([departmentName, department]) => ({
+        name: departmentName,
+        sum: department.sum,
+        quantity: department.quantity,
+        stores: department.stores.size,
+        sku: department.products.size,
+        agents: Object.entries(department.agents)
+          .map(([agentName, agentValue]) => ({
+            name: agentName,
+            sum: agentValue.sum,
+            quantity: agentValue.quantity,
+            stores: agentValue.stores.size,
+            sku: agentValue.products.size,
+            dates: Object.entries(agentValue.dates)
+              .map(([dateGroupKey, dateValue]) => ({
+                key: dateGroupKey,
+                label: formatDateLabel(dateGroupKey),
+                sum: dateValue.sum,
+                quantity: dateValue.quantity,
+                sku: dateValue.products.size,
+                stores: Object.entries(dateValue.stores)
+                  .map(([storeName, storeValue]) => ({
+                    name: storeName,
+                    sum: storeValue.sum,
+                    quantity: storeValue.quantity,
+                    sku: storeValue.products.size,
+                  }))
+                  .sort((a, b) => b.sum - a.sum),
+              }))
+              .sort((a, b) => {
+                if (!a.key) return 1;
+                if (!b.key) return -1;
+                return b.key.localeCompare(a.key);
+              }),
+          }))
+          .sort((a, b) => b.sum - a.sum),
+      }))
+      .sort((a, b) => b.sum - a.sum);
+  }, [selectedSales]);
+
   const format = (n: number) => numberFormatter.format(n);
 
   const uniqueDepartments = useMemo(
@@ -433,15 +615,11 @@ export default function SalesPage({
   );
 
   const uniqueAgents = useMemo(() => {
-    return [
-      ...new Set(
-        data
-          .filter(d => !department || d.відділ === department)
-          .map(d => d.агент)
-          .filter(Boolean)
-      ),
-    ];
-  }, [data, department]);
+    return [...new Set(data.map(d => d.агент).filter(Boolean))];
+  }, [data]);
+
+  const shouldShowStores = showStores || showProducts || showByDates;
+  const shouldShowHierarchy = showByDepartments || showByAgents;
 
   const handleDepartmentChange = (value: string) => {
     setDepartment(value);
@@ -576,7 +754,7 @@ export default function SalesPage({
 
     const fromPart = dateFrom || 'початок';
     const toPart = dateTo || 'кінець';
-    const fileName = `продажі_${fromPart}_${toPart}.xlsx`;
+    const fileName = `продажі_${agent}_${fromPart}_${toPart}.xlsx`;
 
     if (isMobile && typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
@@ -647,33 +825,55 @@ export default function SalesPage({
                   </label>
 
                   <label
-                    className={`${styles.brandChip} ${showProducts ? styles.brandChipActive : ''} ${!showStores ? styles.brandChipDisabled : ''}`}
+                    className={`${styles.brandChip} ${showProducts ? styles.brandChipActive : ''}`}
                   >
                     <input
                       type="checkbox"
                       className={styles.brandChipCheckbox}
                       checked={showProducts}
-                      disabled={!showStores}
                       onChange={e => setShowProducts(e.target.checked)}
                     />
                     <span>З товаром</span>
                   </label>
 
                   <label
-                    className={`${styles.brandChip} ${showByDates ? styles.brandChipActive : ''} ${!showStores ? styles.brandChipDisabled : ''}`}
+                    className={`${styles.brandChip} ${showByDates ? styles.brandChipActive : ''}`}
                   >
                     <input
                       type="checkbox"
                       className={styles.brandChipCheckbox}
                       checked={showByDates}
-                      disabled={!showStores}
                       onChange={e => setShowByDates(e.target.checked)}
                     />
                     <span>По датам</span>
                   </label>
+
+                  <label
+                    className={`${styles.brandChip} ${showByDepartments ? styles.brandChipActive : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={styles.brandChipCheckbox}
+                      checked={showByDepartments}
+                      onChange={e => setShowByDepartments(e.target.checked)}
+                    />
+                    <span>По відділам</span>
+                  </label>
+
+                  <label
+                    className={`${styles.brandChip} ${showByAgents ? styles.brandChipActive : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={styles.brandChipCheckbox}
+                      checked={showByAgents}
+                      onChange={e => setShowByAgents(e.target.checked)}
+                    />
+                    <span>По торговим представникам</span>
+                  </label>
                 </div>
 
-                {showStores && (
+                {shouldShowStores && (
                   <SearchInput
                     value={searchTerm}
                     onChange={setSearchTerm}
@@ -783,7 +983,7 @@ export default function SalesPage({
             </tbody>
           </table>
 
-          {showStores && (
+          {shouldShowStores && (
             <div className={styles.subBlock}>
               <div className={styles.subHeader}>
                 <h3 className={styles.subTitle}>
@@ -876,6 +1076,115 @@ export default function SalesPage({
                         ))}
                       </ul>
                     )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {shouldShowHierarchy && (
+            <div className={styles.subBlock}>
+              <div className={styles.subHeader}>
+                <h3 className={styles.subTitle}>
+                  Відділ → Торговий представник → Дата → ТТ (
+                  {prioritizedHierarchy.length})
+                </h3>
+              </div>
+
+              <div className={styles.storeList}>
+                {prioritizedHierarchy.map(departmentRow => (
+                  <div key={departmentRow.name} className={styles.storeCard}>
+                    <div className={styles.storeRow}>
+                      <span className={styles.storeName}>
+                        {departmentRow.name}
+                      </span>
+                      <span className={styles.storeAmountBlock}>
+                        <span className={styles.storeSum}>
+                          {format(departmentRow.sum)}
+                        </span>
+                      </span>
+                      <span className={styles.storeSku}>
+                        ТТ: {departmentRow.stores}
+                      </span>
+                      <span className={styles.storeSku}>
+                        SKU: {departmentRow.sku}
+                      </span>
+                      <span className={styles.storeSku}>
+                        К-сть: {format(departmentRow.quantity)}
+                      </span>
+                    </div>
+
+                    <div className={styles.dateGroupList}>
+                      {departmentRow.agents.map(agentRow => (
+                        <div
+                          key={`${departmentRow.name}-${agentRow.name}`}
+                          className={styles.dateGroup}
+                        >
+                          <div className={styles.dateGroupRow}>
+                            <span className={styles.dateGroupLabel}>
+                              {agentRow.name}
+                            </span>
+                            <span className={styles.dateGroupMetaItem}>
+                              К-сть: {format(agentRow.quantity)}
+                            </span>
+                            <span className={styles.dateGroupMetaItem}>
+                              Сума: {format(agentRow.sum)}
+                            </span>
+                            <span className={styles.dateGroupMetaItem}>
+                              ТТ: {agentRow.stores}
+                            </span>
+                          </div>
+
+                          <div className={styles.dateGroupList}>
+                            {agentRow.dates.map(dateRow => (
+                              <div
+                                key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}`}
+                                className={styles.dateGroup}
+                              >
+                                <div className={styles.dateGroupRow}>
+                                  <span className={styles.dateGroupLabel}>
+                                    {dateRow.label}
+                                  </span>
+                                  <span className={styles.dateGroupMetaItem}>
+                                    К-сть: {format(dateRow.quantity)}
+                                  </span>
+                                  <span className={styles.dateGroupMetaItem}>
+                                    Сума: {format(dateRow.sum)}
+                                  </span>
+                                  <span className={styles.dateGroupMetaItem}>
+                                    SKU: {dateRow.sku}
+                                  </span>
+                                </div>
+
+                                <ul className={styles.productList}>
+                                  {dateRow.stores.map(storeRow => (
+                                    <li
+                                      key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}-${storeRow.name}`}
+                                      className={styles.productItem}
+                                    >
+                                      <span className={styles.productName}>
+                                        {storeRow.name}
+                                      </span>
+                                      <span className={styles.productMeta}>
+                                        <span className={styles.productQty}>
+                                          {format(storeRow.quantity)}
+                                        </span>
+                                        <span className={styles.productAmount}>
+                                          {format(storeRow.sum)}
+                                        </span>
+                                        <span className={styles.productPrice}>
+                                          SKU: {storeRow.sku}
+                                        </span>
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>

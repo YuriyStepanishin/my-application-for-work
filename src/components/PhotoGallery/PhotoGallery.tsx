@@ -80,26 +80,28 @@ export default function PhotoGallery({ onBack }: Props) {
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     select: (reports: Report[]): Photo[] => {
-      const transformed = reports.flatMap((report, reportIndex) =>
-        normalizePhotoUrls(report.photos).map((rawUrl, photoIndex) => {
-          const sources = buildImageSources(rawUrl);
-          if (sources.length === 0) return null;
+      const transformed = reports
+        .filter(report => report.category.trim().toLowerCase() !== 'storecheck')
+        .flatMap((report, reportIndex) =>
+          normalizePhotoUrls(report.photos).map((rawUrl, photoIndex) => {
+            const sources = buildImageSources(rawUrl);
+            if (sources.length === 0) return null;
 
-          return {
-            id: `${report.date}-${report.store}-${reportIndex}-${photoIndex}`,
-            sources,
-            store: report.store,
-            category: report.category,
-            date: report.date,
-            lat: 0,
-            lng: 0,
-            department: report.department,
-            rep: report.representative,
-            comment: report.comment ?? '',
-            driveId: extractDriveId(rawUrl),
-          };
-        })
-      );
+            return {
+              id: `${report.date}-${report.store}-${reportIndex}-${photoIndex}`,
+              sources,
+              store: report.store,
+              category: report.category,
+              date: report.date,
+              lat: 0,
+              lng: 0,
+              department: report.department,
+              rep: report.representative,
+              comment: report.comment ?? '',
+              driveId: extractDriveId(rawUrl),
+            };
+          })
+        );
 
       return transformed.filter((photo): photo is Photo => photo !== null);
     },
