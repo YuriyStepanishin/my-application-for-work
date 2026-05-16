@@ -193,7 +193,7 @@ export default function App() {
     );
   }
 
-  if (page === 'plan-targets') {
+  if (page === 'plan-targets' && canAccess('plan-targets')) {
     return (
       <>
         <Suspense fallback={<Loader />}>
@@ -263,9 +263,9 @@ export default function App() {
               runProtectedAction(() => setPage('store-check'))
             }
             onOpenPlanTargets={() =>
-              runProtectedAction(() => setPage('plan-targets'))
+              runProtectedAction(() => setPage('plan-targets'), 'plan-targets')
             }
-            canOpenPlanTargets={Boolean(email)}
+            canOpenPlanTargets={canAccess('plan-targets')}
             onOpenMessages={() =>
               runProtectedAction(() => setPage('messages'), 'messages')
             }

@@ -140,7 +140,6 @@ type ColValues = { plan: number; fact: number };
 type DataRow = {
   type: 'dept' | 'agent';
   label: string;
-  factGrn: number;
   cols: ColValues[];
 };
 
@@ -190,21 +189,16 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       plan: 0,
       fact: 0,
     }));
-    let totalFactGrn = 0;
 
     for (const dept of renderDepartments) {
       const deptCols: ColValues[] = planColumns.map(() => ({
         plan: 0,
         fact: 0,
       }));
-      let dFactGrn = 0;
       const agentRows: DataRow[] = [];
 
       for (const agent of dept.agents) {
         const agentSales = agentSalesIndex[agent] ?? [];
-        const factGrn = agentSales.reduce((s, r) => s + (r.сума || 0), 0);
-        dFactGrn += factGrn;
-
         const cols: ColValues[] = planColumns.map((col, ci) => {
           const fact = calcColumnFact(agentSales, col);
           // If this dept uses total mode for the column, individual agent plan is not shown
@@ -217,13 +211,12 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
           return { plan, fact };
         });
 
-        agentRows.push({ type: 'agent', label: agent, factGrn, cols });
+        agentRows.push({ type: 'agent', label: agent, cols });
       }
 
       rows.push({
         type: 'dept',
         label: dept.label,
-        factGrn: dFactGrn,
         cols: deptCols.map((dc, ci) => {
           const col = planColumns[ci];
           // If dept uses total mode for this column, use deptPlans instead of agent sum
@@ -235,7 +228,6 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         }),
       });
       rows.push(...agentRows);
-      totalFactGrn += dFactGrn;
       deptCols.forEach((dc, ci) => {
         const col = planColumns[ci];
         const dPlan =
@@ -247,7 +239,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       });
     }
 
-    return { rows, totals: { factGrn: totalFactGrn, cols: totalCols } };
+    return { rows, totals: { cols: totalCols } };
   }, [renderDepartments, agentSalesIndex, planColumns]);
 
   const monthLabel = new Date().toLocaleString('uk-UA', {
@@ -279,9 +271,6 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
               <th className={styles.colDept} rowSpan={2}>
                 Відділ / ТП
               </th>
-              <th className={styles.colFact} rowSpan={2}>
-                Факт ГРН
-              </th>
               {planColumns.map(col => (
                 <th key={col.id} className={styles.colGroup} colSpan={3}>
                   {col.label}
@@ -303,7 +292,6 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                 }
               >
                 <td className={styles.nameCell}>{row.label}</td>
-                <td className={styles.numCell}>{fmt(row.factGrn)}</td>
                 {row.cols.map((c, ci) => (
                   <ColCells
                     key={ci}
@@ -319,7 +307,6 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
           <tfoot>
             <tr className={styles.totalRow}>
               <td className={styles.nameCell}>Загальний підсумок</td>
-              <td className={styles.numCell}>{fmt(totals.factGrn)}</td>
               {totals.cols.map((c, ci) => (
                 <ColCells
                   key={ci}
@@ -336,37 +323,6 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
 
       {/* ── MOBILE ── */}
       <div className={styles.mobileOnly}>
-        <p className={styles.mobileTableTitle}>Факт ГРН</p>
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.colDept}>Відділ / ТП</th>
-                <th className={styles.colFact}>Факт ГРН</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr
-                  key={i}
-                  className={
-                    row.type === 'dept' ? styles.deptRow : styles.agentRow
-                  }
-                >
-                  <td className={styles.nameCell}>{row.label}</td>
-                  <td className={styles.numCell}>{fmt(row.factGrn)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className={styles.totalRow}>
-                <td className={styles.nameCell}>Загальний підсумок</td>
-                <td className={styles.numCell}>{fmt(totals.factGrn)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
         {planColumns.map((col, ci) => {
           const grn = isGrnMetric(col.metric);
           return (

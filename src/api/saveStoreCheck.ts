@@ -43,6 +43,9 @@ interface StoreCheckPayload {
   fitness: number;
   bg: number;
   other_snacks: number;
+  drinks?: number;
+  categoryOrimi?: string;
+  categoryDelicia?: string;
   comment?: string;
 }
 

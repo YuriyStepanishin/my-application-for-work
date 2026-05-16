@@ -301,6 +301,8 @@ function StoreCheckForm({
           toNumber(numbers.other_snacks),
           toNumber(numbers.other_pryanik),
         ]),
+        categoryOrimi: categoryOrimi || undefined,
+        categoryDelicia: categoryDelicia || undefined,
         comment: comment.trim(),
       });
 
@@ -515,8 +517,6 @@ function StoreCheckForm({
           >
             {saving ? 'Збереження...' : 'Зберегти'}
           </button>
-
-          
         </div>
       </form>
 

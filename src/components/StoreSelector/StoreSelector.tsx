@@ -10,6 +10,12 @@ import {
 import NewStoreModal from '../NewStoreModal/NewStoreModal';
 import Popup from '../Popup/Popup';
 import Loader from '../Loader/Loader';
+import {
+  getCurrentAuthorizedEmail,
+  getUserDepartment,
+  getUserRepresentative,
+  getUserRole,
+} from '../../config/userRoles';
 import styles from './StoreSelector.module.css';
 
 interface Props {
@@ -22,7 +28,26 @@ interface Props {
   onBack?: () => void;
 }
 
+function normalizeText(value: string): string {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+function matchesProfileValue(profileValue: string, candidate: string): boolean {
+  const normalizedProfile = normalizeText(profileValue);
+  const normalizedCandidate = normalizeText(candidate);
+  return normalizedProfile === normalizedCandidate;
+}
+
 export default function StoreSelector({ source, onSelect, onBack }: Props) {
+  const authEmail = getCurrentAuthorizedEmail();
+  const userRole = getUserRole(authEmail);
+  const profileDepartment = getUserDepartment(authEmail) ?? '';
+  const profileRepresentative = getUserRepresentative(authEmail) ?? '';
+  const isAgent = userRole === 'agent';
   const [department, setDepartment] = useState('');
   const [representative, setRepresentative] = useState('');
   const [store, setStore] = useState('');
@@ -55,13 +80,48 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
     );
   }, [normalizedData]);
 
+  const profileDepartmentCandidates = useMemo(() => {
+    return profileDepartment
+      .split(',')
+      .map(value => value.trim())
+      .filter(Boolean);
+  }, [profileDepartment]);
+
+  const effectiveDepartment = useMemo(() => {
+    if (!isAgent) {
+      return department;
+    }
+
+    if (department) {
+      return department;
+    }
+
+    const matchedDepartment = departments.find(item =>
+      profileDepartmentCandidates.some(candidate =>
+        matchesProfileValue(candidate, item)
+      )
+    );
+
+    if (matchedDepartment) {
+      return matchedDepartment;
+    }
+
+    if (departments.length === 1) {
+      return departments[0];
+    }
+
+    return '';
+  }, [isAgent, department, departments, profileDepartmentCandidates]);
+
   const departmentRows = useMemo(() => {
-    if (!department) {
+    if (!effectiveDepartment) {
       return [];
     }
 
-    return normalizedData.filter(item => item.department === department);
-  }, [normalizedData, department]);
+    return normalizedData.filter(
+      item => item.department === effectiveDepartment
+    );
+  }, [normalizedData, effectiveDepartment]);
 
   const representatives = useMemo(() => {
     return [...new Set(departmentRows.map(item => item.representative))].sort(
@@ -69,19 +129,48 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
     );
   }, [departmentRows]);
 
+  const effectiveRepresentative = useMemo(() => {
+    if (!isAgent) {
+      return representative;
+    }
+
+    if (representative) {
+      return representative;
+    }
+
+    const matchedRepresentative = representatives.find(item =>
+      matchesProfileValue(profileRepresentative, item)
+    );
+
+    if (matchedRepresentative) {
+      return matchedRepresentative;
+    }
+
+    if (representatives.length === 1) {
+      return representatives[0];
+    }
+
+    return '';
+  }, [isAgent, representative, representatives, profileRepresentative]);
+
   const stores = useMemo(() => {
-    if (!department || !representative) {
+    if (!effectiveDepartment || !effectiveRepresentative) {
       return [];
     }
 
     const fromSheet = departmentRows
-      .filter(item => item.representative === representative)
+      .filter(item => item.representative === effectiveRepresentative)
       .map(item => item.store);
 
     return [...new Set([...fromSheet, ...localStores])].sort((a, b) =>
       a.localeCompare(b, 'uk')
     );
-  }, [department, representative, departmentRows, localStores]);
+  }, [
+    effectiveDepartment,
+    effectiveRepresentative,
+    departmentRows,
+    localStores,
+  ]);
 
   function handleDepartmentChange(value: string) {
     setDepartment(value);
@@ -95,14 +184,14 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
   }
 
   function handleConfirm() {
-    if (!department || !representative || !store) {
+    if (!effectiveDepartment || !effectiveRepresentative || !store) {
       setPopupMessage('Оберіть всі поля');
       return;
     }
 
     onSelect({
-      department,
-      representative,
+      department: effectiveDepartment,
+      representative: effectiveRepresentative,
       store,
     });
   }
@@ -126,43 +215,62 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
 
   return (
     <div className={styles.wrapper}>
-      <select
-        className={styles.select}
-        value={department}
-        onChange={e => handleDepartmentChange(e.target.value)}
-      >
-        <option value="" disabled hidden>
-          Відділ
-        </option>
+      {isAgent ? (
+        <>
+          <div className={styles.lockedField}>
+            <span className={styles.lockedLabel}>Відділ</span>
+            <div className={styles.lockedValue}>
+              {effectiveDepartment || '—'}
+            </div>
+          </div>
+          <div className={styles.lockedField}>
+            <span className={styles.lockedLabel}>Торговий представник</span>
+            <div className={styles.lockedValue}>
+              {effectiveRepresentative || '—'}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <select
+            className={styles.select}
+            value={department}
+            onChange={e => handleDepartmentChange(e.target.value)}
+          >
+            <option value="" disabled hidden>
+              Відділ
+            </option>
 
-        {departments.map(item => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
+            {departments.map(item => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
 
-      <select
-        className={styles.select}
-        value={representative}
-        disabled={!department}
-        onChange={e => handleRepresentativeChange(e.target.value)}
-      >
-        <option value="" disabled hidden>
-          Торговий представник
-        </option>
+          <select
+            className={styles.select}
+            value={representative}
+            disabled={!effectiveDepartment}
+            onChange={e => handleRepresentativeChange(e.target.value)}
+          >
+            <option value="" disabled hidden>
+              Торговий представник
+            </option>
 
-        {representatives.map(item => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
+            {representatives.map(item => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       <select
         className={styles.select}
         value={store}
-        disabled={!representative}
+        disabled={!effectiveRepresentative}
         onChange={e => setStore(e.target.value)}
       >
         <option value="" disabled hidden>
@@ -179,7 +287,7 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
       <button
         className={styles.newStoreButton}
         onClick={() => setShowModal(true)}
-        disabled={!department || !representative}
+        disabled={!effectiveDepartment || !effectiveRepresentative}
       >
         ➕ Нова торгова точка (якщо немає в списку)
       </button>
@@ -196,8 +304,8 @@ export default function StoreSelector({ source, onSelect, onBack }: Props) {
 
       {showModal && (
         <NewStoreModal
-          department={department}
-          representative={representative}
+          department={effectiveDepartment}
+          representative={effectiveRepresentative}
           onClose={() => setShowModal(false)}
           onCreated={newStore => {
             setLocalStores(prev =>

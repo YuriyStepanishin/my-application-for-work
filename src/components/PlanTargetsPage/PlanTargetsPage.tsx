@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState, type ChangeEvent } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Select, { type MultiValue } from 'react-select';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import {
-  ASSORTMENT_MODE_OPTIONS,
+  CALCULATION_MODE_OPTIONS,
   METRIC_BASE_OPTIONS,
   METRIC_UNIT_OPTIONS,
   type PlanColumn,
+  type CalculationMode,
   BRAND_OPTIONS,
   buildMetricType,
   inferMetricControls,
@@ -19,6 +21,7 @@ import {
 import {
   ALL_AGENTS,
   DEPARTMENT_ORDER,
+  type BrandFilter,
   getBrandLabel,
   matchesBrand,
 } from '../ImplementationPage/agentsConfig';
@@ -40,7 +43,7 @@ function buildEmpty(): PlanColumn {
     label: '',
     brand: 'jockey',
     metric: 'tt_from_x',
-    threshold: 500,
+    threshold: 0,
     agentPlans: Object.fromEntries(ALL_AGENTS.map(a => [a, 0])),
     deptMode,
     deptPlans,
@@ -80,24 +83,6 @@ export default function PlanTargetsPage({ onBack }: Props) {
     setColumns(prev => prev.filter(c => c.id !== id));
   }
 
-  function handleMoveUp(index: number) {
-    if (index === 0) return;
-    setColumns(prev => {
-      const next = [...prev];
-      [next[index - 1], next[index]] = [next[index], next[index - 1]];
-      return next;
-    });
-  }
-
-  function handleMoveDown(index: number) {
-    setColumns(prev => {
-      if (index >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1], next[index]];
-      return next;
-    });
-  }
-
   function handleSaveColumn(col: PlanColumn) {
     setColumns(prev => {
       const idx = prev.findIndex(c => c.id === col.id);
@@ -109,17 +94,6 @@ export default function PlanTargetsPage({ onBack }: Props) {
       return [...prev, col];
     });
     setEditing(null);
-  }
-
-  if (editing) {
-    return (
-      <ColumnEditor
-        column={editing}
-        sales={sales}
-        onSave={handleSaveColumn}
-        onCancel={() => setEditing(null)}
-      />
-    );
   }
 
   return (
@@ -150,91 +124,273 @@ export default function PlanTargetsPage({ onBack }: Props) {
           Немає колонок. Натисніть «+ Додати колонку».
         </p>
       ) : (
-        <div className={styles.columnList}>
-          {columns.map((col, idx) => {
-            const brandLabel = summarizeSelection(
-              (col.brands && col.brands.length > 0
-                ? col.brands
-                : [col.brand]
-              ).map(getBrandLabel),
-              'Без ТМ'
-            );
-            const assortmentLabel =
-              (col.assortmentMode ?? 'all') === 'specific' &&
-              ((col.assortmentProducts && col.assortmentProducts.length > 0) ||
-                col.assortmentProduct)
-                ? ` · ${summarizeSelection(
-                    col.assortmentProducts && col.assortmentProducts.length > 0
-                      ? col.assortmentProducts
-                      : col.assortmentProduct
-                        ? [col.assortmentProduct]
-                        : [],
-                    'Без асортименту'
-                  )}`
-                : '';
-            const calcLabel = metricLabel(col.metric, col.threshold);
-
-            return (
-              <div key={col.id} className={styles.columnCard}>
-                <div className={styles.colInfo}>
-                  <span className={styles.colLabel}>
-                    {col.label || '(без назви)'}
-                  </span>
-                  <span className={styles.colMeta}>
-                    {brandLabel}
-                    {assortmentLabel} · {calcLabel}
-                  </span>
-                </div>
-                <div className={styles.colActions}>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    onClick={() => handleMoveUp(idx)}
-                    disabled={idx === 0}
-                    title="Вгору"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    onClick={() => handleMoveDown(idx)}
-                    disabled={idx === columns.length - 1}
-                    title="Вниз"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.editBtn}
-                    onClick={() => handleEditColumn(col)}
-                  >
-                    ✎
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.deleteBtn}
-                    onClick={() => handleDeleteColumn(col.id)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <PersonnelTable
+          columns={columns}
+          onEdit={handleEditColumn}
+          onDelete={handleDeleteColumn}
+        />
       )}
 
       <button type="button" className={styles.backBtn} onClick={onBack}>
         ← Назад
       </button>
+
+      {editing && (
+        <ColumnEditorModal
+          column={editing}
+          sales={sales}
+          onSave={handleSaveColumn}
+          onCancel={() => setEditing(null)}
+        />
+      )}
     </div>
   );
 }
 
-// ─── Column Editor ────────────────────────────────────────────────────────────
+// ─── Personnel Table ──────────────────────────────────────────────────────────
 
-type EditorProps = {
+type PersonnelTableProps = {
+  columns: PlanColumn[];
+  onEdit: (col: PlanColumn) => void;
+  onDelete: (id: string) => void;
+};
+
+function PersonnelTable({ columns, onEdit, onDelete }: PersonnelTableProps) {
+  return (
+    <>
+      {/* Desktop view: single table with all columns */}
+      <div className={styles.desktopTable}>
+        <div className={styles.tableWrapper}>
+          <table className={styles.personnelTable}>
+            <thead>
+              <tr>
+                <th className={styles.thName}>Персонал</th>
+                {columns.map(col => (
+                  <th key={col.id} className={styles.thColumn}>
+                    <div className={styles.colHeader}>
+                      <span className={styles.colTitle}>
+                        {col.label || '(без назви)'}
+                      </span>
+                      <span className={styles.colSubtitle}>
+                        {metricLabel(col.metric, col.threshold)}
+                      </span>
+                    </div>
+                    <div className={styles.colActions}>
+                      <button
+                        type="button"
+                        className={styles.tableIconBtn}
+                        onClick={() => onEdit(col)}
+                        title="Редагувати"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.tableIconBtn}
+                        onClick={() => onDelete(col.id)}
+                        title="Видалити"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {DEPARTMENT_ORDER.map(dept => (
+                <React.Fragment key={dept.dept}>
+                  {/* Department header */}
+                  <tr className={styles.deptGroupHeader}>
+                    <td className={styles.deptName}>
+                      <strong>{dept.label}</strong>
+                    </td>
+                    {columns.map(col => {
+                      const deptTotal = dept.agents.reduce(
+                        (sum, agent) => sum + (col.agentPlans[agent] ?? 0),
+                        0
+                      );
+                      return (
+                        <td
+                          key={`dept-total-${dept.dept}-${col.id}`}
+                          className={styles.deptTotal}
+                        >
+                          <div className={styles.deptTotalValue}>
+                            {deptTotal}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {/* Department agents */}
+                  {dept.agents.map(agent => (
+                    <tr key={agent} className={styles.tableAgentRow}>
+                      <td className={styles.tdName}>{agent}</td>
+                      {columns.map(col => (
+                        <td
+                          key={`${agent}-${col.id}`}
+                          className={styles.tdValue}
+                        >
+                          <span className={styles.cellValue}>
+                            {col.agentPlans[agent] ?? 0}
+                          </span>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+
+                  {/* Department subtotal */}
+                </React.Fragment>
+              ))}
+
+              {/* Grand total */}
+              <tr className={styles.grandTotalRow}>
+                <td className={styles.grandTotalLabel}>
+                  <strong>Всього</strong>
+                </td>
+                {columns.map(col => {
+                  const grandTotal = DEPARTMENT_ORDER.reduce(
+                    (sum, dept) =>
+                      sum +
+                      dept.agents.reduce(
+                        (deptSum, agent) =>
+                          deptSum + (col.agentPlans[agent] ?? 0),
+                        0
+                      ),
+                    0
+                  );
+                  return (
+                    <td
+                      key={`grand-total-${col.id}`}
+                      className={styles.grandTotalCell}
+                    >
+                      <strong>{grandTotal}</strong>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Mobile view: columns grouped by page size */}
+      <div className={styles.mobileTable}>
+        <div className={styles.mobileTablePage}>
+          <div className={`${styles.mobileTableGrid} ${styles.grid1}`}>
+            {columns.map(col => (
+              <div key={col.id} className={styles.mobileTableContainer}>
+                <div className={styles.mobileTableHeader}>
+                  <div>
+                    <div className={styles.mobileColTitle}>
+                      {col.label || '(без назви)'}
+                    </div>
+                    <div className={styles.mobileColSubtitle}>
+                      {metricLabel(col.metric, col.threshold)}
+                    </div>
+                  </div>
+                  <div className={styles.mobileColActions}>
+                    <button
+                      type="button"
+                      className={styles.tableIconBtn}
+                      onClick={() => onEdit(col)}
+                      title="Редагувати"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.tableIconBtn}
+                      onClick={() => onDelete(col.id)}
+                      title="Видалити"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <table className={styles.personnelTable}>
+                  <thead>
+                    <tr>
+                      <th className={styles.thName}>Персонал</th>
+                      <th className={styles.mobileThValue}>Значення</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {DEPARTMENT_ORDER.map(dept => (
+                      <React.Fragment key={dept.dept}>
+                        {/* Department header */}
+                        <tr className={styles.deptGroupHeader}>
+                          <td className={styles.deptName} colSpan={2}>
+                            <strong>{dept.label}</strong>
+                          </td>
+                        </tr>
+
+                        {/* Department agents */}
+                        {dept.agents.map(agent => (
+                          <tr key={agent} className={styles.tableAgentRow}>
+                            <td className={styles.tdName}>{agent}</td>
+                            <td className={styles.tdValue}>
+                              <span className={styles.cellValue}>
+                                {col.agentPlans[agent] ?? 0}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Department subtotal */}
+                        <tr className={styles.deptSubtotal}>
+                          <td className={styles.subtotalLabel}>
+                            <strong>{dept.label} – разом</strong>
+                          </td>
+                          <td className={styles.subtotalValue}>
+                            <strong>
+                              {dept.agents.reduce(
+                                (sum, agent) =>
+                                  sum + (col.agentPlans[agent] ?? 0),
+                                0
+                              )}
+                            </strong>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    ))}
+
+                    {/* Grand total */}
+                    <tr className={styles.grandTotalRow}>
+                      <td className={styles.grandTotalLabel}>
+                        <strong>Всього</strong>
+                      </td>
+                      <td className={styles.grandTotalCell}>
+                        <strong>
+                          {DEPARTMENT_ORDER.reduce(
+                            (sum, dept) =>
+                              sum +
+                              dept.agents.reduce(
+                                (deptSum, agent) =>
+                                  deptSum + (col.agentPlans[agent] ?? 0),
+                                0
+                              ),
+                            0
+                          )}
+                        </strong>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Column Editor Modal ─────────────────────────────────────────────────────
+
+type ColumnEditorModalProps = {
   column: PlanColumn;
   sales: Sale[];
   onSave: (col: PlanColumn) => void;
@@ -251,9 +407,7 @@ function summarizeSelection(values: string[], emptyLabel: string): string {
   return `${values.slice(0, 2).join(', ')} +${values.length - 2}`;
 }
 
-function readSelectedValues(event: ChangeEvent<HTMLSelectElement>): string[] {
-  return Array.from(event.target.selectedOptions, option => option.value);
-}
+type SelectOption<T extends string = string> = { value: T; label: string };
 
 function normalizeText(value: string): string {
   return value
@@ -263,9 +417,14 @@ function normalizeText(value: string): string {
     .toLocaleLowerCase('uk-UA');
 }
 
-function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
+function ColumnEditorModal({
+  column,
+  sales,
+  onSave,
+  onCancel,
+}: ColumnEditorModalProps) {
   const [label, setLabel] = useState(column.label);
-  const [selectedBrands, setSelectedBrands] = useState(() =>
+  const [selectedBrands, setSelectedBrands] = useState<BrandFilter[]>(() =>
     column.brands && column.brands.length > 0 ? column.brands : [column.brand]
   );
   const controls = useMemo(
@@ -274,8 +433,8 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
   );
   const [metricBase, setMetricBase] = useState<MetricBase>(controls.base);
   const [metricUnit, setMetricUnit] = useState<MetricUnit>(controls.unit);
-  const [thresholdEnabled, setThresholdEnabled] = useState(
-    controls.thresholdEnabled
+  const [calcMode, setCalcMode] = useState<CalculationMode>(
+    column.calcMode ?? 'period'
   );
   const [threshold, setThreshold] = useState(String(column.threshold));
   const [assortmentMode, setAssortmentMode] = useState(
@@ -294,9 +453,7 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
       ALL_AGENTS.map(a => [a, String(column.agentPlans[a] ?? 0)])
     )
   );
-  const [deptMode, setDeptMode] = useState<
-    Record<string, 'total' | 'individual'>
-  >(() => {
+  const [deptMode] = useState<Record<string, 'total' | 'individual'>>(() => {
     const modes: Record<string, 'total' | 'individual'> = {};
     for (const d of DEPARTMENT_ORDER) {
       modes[d.dept] = column.deptMode?.[d.dept] ?? 'individual';
@@ -310,6 +467,7 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
     }
     return dp;
   });
+  const [showCalcModal, setShowCalcModal] = useState(false);
 
   const brandOptions = useMemo(() => {
     const firstBrand = selectedBrands[0] ?? column.brand;
@@ -340,31 +498,32 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
       .sort((a, b) => a.localeCompare(b, 'uk-UA'));
   }, [sales, selectedBrands]);
 
-  const showThreshold =
-    metricBase === 'tt' && (thresholdEnabled || metricUnit !== 'grn');
-  const unitOptions = METRIC_UNIT_OPTIONS.filter(option => {
-    if (metricBase === 'sum') return option.value !== 'sku';
-    if (metricBase === 'tt') return true;
-    return option.value === 'sku';
-  });
-
-  const taTotal = DEPARTMENT_ORDER.filter(
-    dept => (deptMode[dept.dept] ?? 'individual') === 'individual'
-  ).reduce(
-    (sum, dept) =>
-      sum +
-      dept.agents.reduce(
-        (agentSum, agent) => agentSum + parseNum(plans[agent] ?? '0'),
-        0
-      ),
-    0
+  const brandSelectOptions = useMemo<SelectOption<BrandFilter>[]>(
+    () => brandOptions.map(o => ({ value: o.value, label: o.label })),
+    [brandOptions]
   );
 
-  const deptGrandTotal = DEPARTMENT_ORDER.filter(
-    dept => (deptMode[dept.dept] ?? 'individual') === 'total'
-  ).reduce((sum, dept) => sum + parseNum(deptPlans[dept.dept] ?? '0'), 0);
+  const assortmentSelectOptions = useMemo<SelectOption[]>(
+    () => assortmentOptions.map(o => ({ value: o, label: o })),
+    [assortmentOptions]
+  );
 
-  const overallTotal = taTotal + deptGrandTotal;
+  const departmentTotals = DEPARTMENT_ORDER.map(dept => {
+    const mode = deptMode[dept.dept] ?? 'individual';
+    const total =
+      mode === 'total'
+        ? parseNum(deptPlans[dept.dept] ?? '0')
+        : dept.agents.reduce(
+            (agentSum, agent) => agentSum + parseNum(plans[agent] ?? '0'),
+            0
+          );
+    return { dept: dept.dept, total };
+  });
+
+  const overallTotal = departmentTotals.reduce(
+    (sum, dept) => sum + dept.total,
+    0
+  );
 
   function handlePlanChange(agent: string, val: string) {
     if (val !== '' && !/^\d*([.,]\d{0,2})?$/.test(val)) return;
@@ -387,17 +546,14 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
       deptModeSaved[d.dept] = deptMode[d.dept];
       deptPlansSaved[d.dept] = parseNum(deptPlans[d.dept] ?? '0');
     }
-    const metric = buildMetricType(
-      metricBase,
-      metricUnit,
-      metricBase === 'tt' ? thresholdEnabled || metricUnit !== 'grn' : false
-    );
+    const metric = buildMetricType(metricBase, metricUnit, metricBase === 'tt');
     onSave({
       id: column.id,
       label: label.trim(),
       brand: selectedBrands[0] ?? column.brand,
       brands: selectedBrands,
       assortmentMode,
+      calcMode: metricBase === 'tt' ? calcMode : 'period',
       assortmentProduct:
         assortmentMode === 'specific'
           ? (selectedAssortmentProducts[0] ?? '')
@@ -405,7 +561,7 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
       assortmentProducts:
         assortmentMode === 'specific' ? selectedAssortmentProducts : [],
       metric,
-      threshold: parseNum(threshold),
+      threshold: metricBase === 'tt' ? parseNum(threshold) : 0,
       agentPlans,
       deptMode: deptModeSaved,
       deptPlans: deptPlansSaved,
@@ -413,307 +569,398 @@ function ColumnEditor({ column, sales, onSave, onCancel }: EditorProps) {
   }
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h2 className={styles.title}>
-          {column.label ? `Редагувати: ${column.label}` : 'Нова колонка'}
-        </h2>
-      </header>
+    <>
+      {/* Backdrop */}
+      <div className={styles.modalBackdrop} onClick={onCancel} />
 
-      <div className={styles.editorForm}>
-        {/* Назва */}
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>Назва колонки</label>
-          <input
-            className={styles.formInput}
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            placeholder="напр. АКБ Жокей"
-          />
-        </div>
-
-        {/* ТМ */}
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>Торгова марка</label>
-          <span className={styles.formHint}>
-            {summarizeSelection(
-              selectedBrands.map(getBrandLabel),
-              'Оберіть одну або кілька ТМ'
-            )}
-          </span>
-          <select
-            className={`${styles.formSelect} ${styles.multiSelect}`}
-            multiple
-            size={Math.min(brandOptions.length, 8)}
-            value={selectedBrands}
-            onChange={e =>
-              setSelectedBrands(readSelectedValues(e) as typeof selectedBrands)
-            }
-          >
-            {brandOptions.map(o => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>Асортимент по ТМ</label>
-          <select
-            className={styles.formSelect}
-            value={assortmentMode}
-            onChange={e =>
-              setAssortmentMode(e.target.value as 'all' | 'specific')
-            }
-          >
-            {ASSORTMENT_MODE_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {assortmentMode === 'specific' && (
-          <div className={styles.formRow}>
-            <label className={styles.formLabel}>Визначений асортимент</label>
-            <span className={styles.formHint}>
-              {summarizeSelection(
-                selectedAssortmentProducts,
-                'Оберіть одну або кілька позицій'
-              )}
-            </span>
-            <select
-              className={`${styles.formSelect} ${styles.multiSelect}`}
-              multiple
-              size={Math.min(Math.max(assortmentOptions.length, 4), 10)}
-              value={selectedAssortmentProducts}
-              onChange={e =>
-                setSelectedAssortmentProducts(readSelectedValues(e))
-              }
+      {/* Modal */}
+      <div className={styles.modalDialog}>
+        <div className={styles.modalContent}>
+          <div className={styles.modalHeader}>
+            <h2 className={styles.modalTitle}>
+              {column.label ? `Редагувати: ${column.label}` : 'Нова колонка'}
+            </h2>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={onCancel}
             >
-              {assortmentOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+              ✕
+            </button>
           </div>
-        )}
 
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>Тип розрахунку</label>
-          <div className={styles.calcGrid}>
-            <div className={styles.calcBlock}>
-              <span className={styles.calcLabel}>Показник</span>
-              <div className={styles.chipRow}>
-                {METRIC_BASE_OPTIONS.map(option => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={
-                      metricBase === option.value
-                        ? styles.chipActive
-                        : styles.chipBtn
-                    }
-                    onClick={() => {
-                      setMetricBase(option.value);
-                      if (option.value === 'sku') {
-                        setMetricUnit('sku');
-                        setThresholdEnabled(false);
-                      }
-                      if (option.value === 'sum' && metricUnit === 'sku') {
-                        setMetricUnit('grn');
-                      }
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+          <div className={styles.modalBody}>
+            <div className={styles.editorForm}>
+              {/* Назва */}
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>Назва колонки</label>
+                <input
+                  className={styles.formInput}
+                  value={label}
+                  onChange={e => setLabel(e.target.value)}
+                  placeholder="напр. АКБ Жокей"
+                />
               </div>
-            </div>
 
-            <div className={styles.calcBlock}>
-              <span className={styles.calcLabel}>Одиниця</span>
-              <div className={styles.chipRow}>
-                {unitOptions.map(option => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={
-                      metricUnit === option.value
-                        ? styles.chipActive
-                        : styles.chipBtn
-                    }
-                    onClick={() => {
-                      setMetricUnit(option.value);
-                      if (metricBase !== 'tt') setThresholdEnabled(false);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {metricBase === 'tt' && metricUnit === 'grn' && (
-              <div className={styles.calcBlock}>
-                <span className={styles.calcLabel}>Модуль «від»</span>
-                <div className={styles.chipRow}>
-                  <button
-                    type="button"
-                    className={
-                      !thresholdEnabled ? styles.chipActive : styles.chipBtn
-                    }
-                    onClick={() => setThresholdEnabled(false)}
-                  >
-                    Без порогу
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      thresholdEnabled ? styles.chipActive : styles.chipBtn
-                    }
-                    onClick={() => setThresholdEnabled(true)}
-                  >
-                    Від
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showThreshold && (
-          <div className={styles.formRow}>
-            <label className={styles.formLabel}>
-              {thresholdLabel(buildMetricType('tt', metricUnit, true))}
-            </label>
-            <input
-              className={styles.formInput}
-              type="text"
-              inputMode="decimal"
-              value={threshold}
-              onChange={e => {
-                if (/^\d*([.,]\d*)?$/.test(e.target.value))
-                  setThreshold(e.target.value);
-              }}
-              placeholder="0"
-            />
-          </div>
-        )}
-
-        {/* Плани по агентах */}
-        <h3 className={styles.agentsTitle}>Плани по агентах</h3>
-
-        <div className={styles.agentsTable}>
-          {DEPARTMENT_ORDER.map(dept => {
-            const mode = deptMode[dept.dept] ?? 'individual';
-            return (
-              <div key={dept.dept} className={styles.deptBlock}>
-                <div className={styles.deptHeader}>
-                  <span>{dept.label}</span>
-                  <div className={styles.modeToggle}>
-                    <button
-                      type="button"
-                      className={
-                        mode === 'individual'
-                          ? styles.modeActive
-                          : styles.modeBtn
-                      }
-                      onClick={() =>
-                        setDeptMode(p => ({ ...p, [dept.dept]: 'individual' }))
-                      }
-                    >
-                      Окремо
-                    </button>
-                    <button
-                      type="button"
-                      className={
-                        mode === 'total' ? styles.modeActive : styles.modeBtn
-                      }
-                      onClick={() =>
-                        setDeptMode(p => ({ ...p, [dept.dept]: 'total' }))
-                      }
-                    >
-                      Сумарно
-                    </button>
-                  </div>
-                </div>
-
-                {mode === 'total' ? (
-                  <div className={styles.agentRow}>
-                    <span className={styles.agentName}>План по відділу</span>
+              {/* ТМ */}
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>Торгова марка</label>
+                <span className={styles.formHint}>
+                  {summarizeSelection(
+                    selectedBrands.map(getBrandLabel),
+                    'Оберіть одну або кілька ТМ'
+                  )}
+                </span>
+                <Select
+                  isMulti
+                  closeMenuOnSelect={false}
+                  hideSelectedOptions={false}
+                  options={brandSelectOptions}
+                  value={brandSelectOptions.filter(option =>
+                    selectedBrands.includes(option.value)
+                  )}
+                  onChange={(newValue: MultiValue<SelectOption<BrandFilter>>) =>
+                    setSelectedBrands(newValue.map(option => option.value))
+                  }
+                  placeholder="Оберіть одну або кілька ТМ"
+                  classNamePrefix="multiDropdown"
+                  menuPortalTarget={document.body}
+                  styles={{ menuPortal: base => ({ ...base, zIndex: 1200 }) }}
+                />
+                <div className={styles.assortmentModeRadioGroup}>
+                  <label className={styles.assortmentModeRadioItem}>
                     <input
-                      className={styles.planInput}
-                      type="text"
-                      inputMode="decimal"
-                      value={deptPlans[dept.dept] ?? '0'}
-                      onChange={e =>
-                        handleDeptPlanChange(dept.dept, e.target.value)
-                      }
+                      type="radio"
+                      name={`assortment-mode-${column.id}`}
+                      checked={assortmentMode === 'all'}
+                      onChange={() => setAssortmentMode('all')}
                     />
-                  </div>
-                ) : (
-                  dept.agents.map(agent => (
-                    <div key={agent} className={styles.agentRow}>
-                      <span className={styles.agentName}>{agent}</span>
-                      <input
-                        className={styles.planInput}
-                        type="text"
-                        inputMode="decimal"
-                        value={plans[agent] ?? '0'}
-                        onChange={e => handlePlanChange(agent, e.target.value)}
-                      />
-                    </div>
-                  ))
-                )}
+                    <span>Увесь асортимент</span>
+                  </label>
+                  <label className={styles.assortmentModeRadioItem}>
+                    <input
+                      type="radio"
+                      name={`assortment-mode-${column.id}`}
+                      checked={assortmentMode === 'specific'}
+                      onChange={() => setAssortmentMode('specific')}
+                    />
+                    <span>Визначений асортимент</span>
+                  </label>
+                </div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Динамічні підсумки */}
-        <div className={styles.totalsSection}>
-          <h3 className={styles.agentsTitle}>Підсумки</h3>
-          {taTotal > 0 && (
-            <div className={styles.totalDeptRow}>
-              <span className={styles.agentName}>Загалом ТА</span>
-              <span className={styles.totalValue}>
-                {taTotal.toLocaleString('uk-UA')}
-              </span>
+              {assortmentMode === 'specific' && (
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>
+                    Визначений асортимент
+                  </label>
+                  <span className={styles.formHint}>
+                    {summarizeSelection(
+                      selectedAssortmentProducts,
+                      'Оберіть одну або кілька позицій'
+                    )}
+                  </span>
+                  <Select
+                    isMulti
+                    closeMenuOnSelect={false}
+                    hideSelectedOptions={false}
+                    options={assortmentSelectOptions}
+                    value={assortmentSelectOptions.filter(option =>
+                      selectedAssortmentProducts.includes(option.value)
+                    )}
+                    onChange={(newValue: MultiValue<SelectOption>) =>
+                      setSelectedAssortmentProducts(
+                        newValue.map(option => option.value)
+                      )
+                    }
+                    placeholder="Оберіть одну або кілька позицій"
+                    noOptionsMessage={() => 'Немає доступних позицій'}
+                    classNamePrefix="multiDropdown"
+                    menuPortalTarget={document.body}
+                    styles={{ menuPortal: base => ({ ...base, zIndex: 1200 }) }}
+                  />
+                </div>
+              )}
+
+              {/* Кнопка для модального вікна розрахунку */}
+              <div className={styles.formRow}>
+                <button
+                  type="button"
+                  className={styles.calcMethodBtn}
+                  onClick={() => setShowCalcModal(true)}
+                >
+                  Методи розрахунку (Сума, кількість, SKU)
+                </button>
+              </div>
+
+              {/* Плани по агентах */}
+              <h3 className={styles.agentsTitle}>Плани по агентах</h3>
+
+              <div className={styles.agentsTable}>
+                {DEPARTMENT_ORDER.map(dept => {
+                  const mode = deptMode[dept.dept] ?? 'individual';
+                  const deptTotal =
+                    departmentTotals.find(item => item.dept === dept.dept)
+                      ?.total ?? 0;
+                  return (
+                    <div key={dept.dept} className={styles.deptBlock}>
+                      <div className={styles.deptHeader}>
+                        <span>{dept.label}</span>
+                        <span className={styles.deptHeaderTotal}>
+                          {deptTotal.toLocaleString('uk-UA')}
+                        </span>
+                      </div>
+
+                      {mode === 'total' ? (
+                        <div className={styles.agentRow}>
+                          <span className={styles.agentName}>
+                            План по відділу
+                          </span>
+                          <input
+                            className={styles.planInput}
+                            type="text"
+                            inputMode="decimal"
+                            value={deptPlans[dept.dept] ?? '0'}
+                            onChange={e =>
+                              handleDeptPlanChange(dept.dept, e.target.value)
+                            }
+                          />
+                        </div>
+                      ) : (
+                        dept.agents.map(agent => (
+                          <div key={agent} className={styles.agentRow}>
+                            <span className={styles.agentName}>{agent}</span>
+                            <input
+                              className={styles.planInput}
+                              type="text"
+                              inputMode="decimal"
+                              value={plans[agent] ?? '0'}
+                              onChange={e =>
+                                handlePlanChange(agent, e.target.value)
+                              }
+                            />
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Динамічні підсумки */}
+              <div className={styles.totalsSection}>
+                <h3 className={styles.agentsTitle}>Підсумки</h3>
+                <div className={styles.modalGrandTotalRow}>
+                  <span className={styles.agentName}>Загалом</span>
+                  <span className={styles.grandTotalValue}>
+                    {overallTotal.toLocaleString('uk-UA')}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
-          {deptGrandTotal > 0 && (
-            <div className={styles.totalDeptRow}>
-              <span className={styles.agentName}>Загалом відділи</span>
-              <span className={styles.totalValue}>
-                {deptGrandTotal.toLocaleString('uk-UA')}
-              </span>
-            </div>
-          )}
-          <div className={styles.grandTotalRow}>
-            <span className={styles.agentName}>Загалом</span>
-            <span className={styles.grandTotalValue}>
-              {overallTotal.toLocaleString('uk-UA')}
-            </span>
           </div>
-        </div>
 
-        <div className={styles.editorActions}>
-          <button
-            type="button"
-            className={styles.saveAllBtn}
-            onClick={handleSave}
-          >
-            Зберегти колонку
-          </button>
-          <button type="button" className={styles.backBtn} onClick={onCancel}>
-            Скасувати
-          </button>
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.saveAllBtn}
+              onClick={handleSave}
+            >
+              Зберегти колонку
+            </button>
+            <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={onCancel}
+            >
+              Скасувати
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Calculation Methods Modal */}
+      {showCalcModal && (
+        <CalcMethodsModal
+          metricBase={metricBase}
+          metricUnit={metricUnit}
+          calcMode={calcMode}
+          threshold={threshold}
+          onMetricBaseChange={setMetricBase}
+          onMetricUnitChange={setMetricUnit}
+          onCalcModeChange={setCalcMode}
+          onThresholdChange={setThreshold}
+          onClose={() => setShowCalcModal(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ─── Calculation Methods Modal ────────────────────────────────────────────────
+
+type CalcMethodsModalProps = {
+  metricBase: MetricBase;
+  metricUnit: MetricUnit;
+  calcMode: CalculationMode;
+  threshold: string;
+  onMetricBaseChange: (v: MetricBase) => void;
+  onMetricUnitChange: (v: MetricUnit) => void;
+  onCalcModeChange: (v: CalculationMode) => void;
+  onThresholdChange: (v: string) => void;
+  onClose: () => void;
+};
+
+function CalcMethodsModal({
+  metricBase,
+  metricUnit,
+  calcMode,
+  threshold,
+  onMetricBaseChange,
+  onMetricUnitChange,
+  onCalcModeChange,
+  onThresholdChange,
+  onClose,
+}: CalcMethodsModalProps) {
+  const unitOptions = METRIC_UNIT_OPTIONS.filter(option => {
+    if (metricBase === 'sum') return option.value !== 'sku';
+    if (metricBase === 'tt') return true;
+    return option.value === 'sku';
+  });
+
+  const showCalculationMode = metricBase === 'tt';
+  const showThreshold = metricBase === 'tt';
+
+  const thresholdInputLabel = thresholdLabel(
+    buildMetricType('tt', metricUnit, true)
+  );
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className={styles.modalBackdrop} onClick={onClose} />
+
+      {/* Modal */}
+      <div className={styles.calcModalDialog}>
+        <div className={styles.modalContent}>
+          <div className={styles.modalHeader}>
+            <h2 className={styles.modalTitle}>Методи розрахунку</h2>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={onClose}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className={styles.modalBody}>
+            <div className={styles.calcGrid}>
+              <div className={styles.calcBlock}>
+                <span className={styles.calcLabel}>Показник</span>
+                <div className={styles.chipRow}>
+                  {METRIC_BASE_OPTIONS.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={
+                        metricBase === option.value
+                          ? styles.chipActive
+                          : styles.chipBtn
+                      }
+                      onClick={() => {
+                        onMetricBaseChange(option.value);
+                        if (option.value === 'sku') {
+                          onMetricUnitChange('sku');
+                        }
+                        if (option.value === 'sum' && metricUnit === 'sku') {
+                          onMetricUnitChange('grn');
+                        }
+                        if (option.value !== 'tt') {
+                          onCalcModeChange('period');
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.calcBlock}>
+                <span className={styles.calcLabel}>Одиниця</span>
+                <div className={styles.chipRow}>
+                  {unitOptions.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={
+                        metricUnit === option.value
+                          ? styles.chipActive
+                          : styles.chipBtn
+                      }
+                      onClick={() => onMetricUnitChange(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {showCalculationMode && (
+                <div className={styles.calcBlock}>
+                  <span className={styles.calcLabel}>Розрахунок</span>
+                  <div className={styles.chipRow}>
+                    {CALCULATION_MODE_OPTIONS.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={
+                          calcMode === option.value
+                            ? styles.chipActive
+                            : styles.chipBtn
+                        }
+                        onClick={() => onCalcModeChange(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {showThreshold && (
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>
+                  {thresholdInputLabel}
+                </label>
+                <input
+                  className={styles.formInput}
+                  type="text"
+                  inputMode="decimal"
+                  value={threshold}
+                  onChange={e => {
+                    if (/^\d*([.,]\d*)?$/.test(e.target.value))
+                      onThresholdChange(e.target.value);
+                  }}
+                  placeholder="0"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.saveAllBtn}
+              onClick={onClose}
+            >
+              Готово
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

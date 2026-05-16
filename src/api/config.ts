@@ -11,4 +11,6 @@ export const STORE_CHECK_PHOTOS_FOLDER_URL =
   'https://drive.google.com/drive/folders/10xN3EizeASLbLSRVjwbvBglKf_pJjMtv';
 
 export const STORE_CHECK_URL =
-  'https://script.google.com/macros/s/AKfycby-6cKyndfP89Pt35dhbwntAlFxAU_MqeHmmaHCQAYwtuD0Fo6TR0hm4Y2PejX_cHDOhA/exec';
+  'https://script.google.com/macros/s/AKfycbzVsmmO3h6adCmEyHOtk4nGMsyYtaa_0oBLMZfsCcWYd5-SikPxlZ6uZG2CMkujx8Sc/exec';
+
+  

@@ -27,15 +27,16 @@
   z-index: 20;
   height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.35);
+  border: 1px solid rgba(47, 79, 58, 0.28);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.26);
   color: #2f4f3a;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -44,7 +45,7 @@
 
 @media (hover: hover) {
   .backBtn:hover {
-    background: rgba(215, 215, 215, 0.9);
+    background: rgba(255, 255, 255, 0.38);
     transform: translateY(-1px);
   }
 }
@@ -86,6 +87,7 @@
 /* ─── Table wrapper (horizontal scroll on mobile) ─────────── */
 .tableWrapper {
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   border-radius: 10px;
   border: 1px solid rgba(183, 203, 189, 0.9);
@@ -94,10 +96,11 @@
 
 /* ─── Table ───────────────────────────────────────────────── */
 .table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  min-width: 520px;
+  min-width: 920px;
   background: rgba(251, 253, 251, 0.92);
 }
 
@@ -111,21 +114,12 @@
 
 /* column widths */
 .colDept {
-  min-width: 140px;
+  min-width: 320px;
   background: #f0f5f1;
   color: #224434;
   font-size: 11px;
   font-weight: 700;
   text-align: left;
-}
-
-.colFact {
-  min-width: 90px;
-  background: #fffde7;
-  color: #5a4a00;
-  font-weight: 700;
-  text-align: center;
-  white-space: nowrap;
 }
 
 .colGroup {
@@ -146,6 +140,7 @@
   font-weight: 700;
   text-align: center;
   white-space: nowrap;
+  min-width: 104px;
 }
 
 /* ─── Rows ────────────────────────────────────────────────── */
@@ -185,6 +180,38 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-size: 11px;
+  min-width: 104px;
+}
+
+@media (min-width: 1024px) {
+  .table {
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
+    padding: 7px 10px;
+  }
+
+  .colDept {
+    min-width: 360px;
+    font-size: 12px;
+  }
+
+  .nameCell {
+    font-size: 13px;
+  }
+
+  .agentRow .nameCell {
+    font-size: 12px;
+    padding-left: 16px;
+  }
+
+  .colSub,
+  .numCell {
+    min-width: 112px;
+    font-size: 12px;
+  }
 }
 
 /* ─── % colouring ─────────────────────────────────────────── */
@@ -267,6 +294,7 @@
   .table {
     font-size: 12px;
     min-width: unset;
+    width: 100%;
   }
 
   .table th,

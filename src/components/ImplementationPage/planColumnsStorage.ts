@@ -4,6 +4,7 @@ import { type BrandFilter, matchesBrand } from './agentsConfig';
 export type AssortmentMode = 'all' | 'specific';
 export type MetricBase = 'sum' | 'tt' | 'sku';
 export type MetricUnit = 'grn' | 'kg' | 'pcs' | 'sku';
+export type CalculationMode = 'period' | 'shipment';
 
 export type MetricType =
   | 'grn' // Сума грн
@@ -29,6 +30,8 @@ export interface PlanColumn {
   metric: MetricType;
   /** Поріг для tt_from_* метрик */
   threshold: number;
+  /** Метод застосування порогу: за період або разово за одне відвантаження */
+  calcMode?: CalculationMode;
   /** План на агента: { 'Гриник Ольга': 65, ... } */
   agentPlans: Record<string, number>;
   /** Режим плану по відділу: 'total' — один план на відділ, 'individual' — на кожного агента */
@@ -69,6 +72,14 @@ export const METRIC_UNIT_OPTIONS: { value: MetricUnit; label: string }[] = [
   { value: 'kg', label: 'кг' },
   { value: 'pcs', label: 'шт' },
   { value: 'sku', label: 'SKU' },
+];
+
+export const CALCULATION_MODE_OPTIONS: {
+  value: CalculationMode;
+  label: string;
+}[] = [
+  { value: 'period', label: 'За період' },
+  { value: 'shipment', label: 'Разово за одне відвантаження' },
 ];
 
 function normalizeText(value: string): string {
@@ -197,6 +208,7 @@ function normalizePlanColumn(column: PlanColumn): PlanColumn {
     assortmentMode: column.assortmentMode ?? 'all',
     assortmentProduct: assortmentProducts[0] ?? '',
     assortmentProducts,
+    calcMode: column.calcMode ?? 'period',
     deptMode: column.deptMode ?? {},
     deptPlans: column.deptPlans ?? {},
   };
@@ -204,9 +216,9 @@ function normalizePlanColumn(column: PlanColumn): PlanColumn {
 
 /** Мітка порогу для tt_from_* метрик */
 export function thresholdLabel(metric: MetricType): string {
-  if (metric === 'tt_from_x') return 'Мінімальна грн у ТТ';
-  if (metric === 'tt_from_kg') return 'Мінімальна кг у ТТ';
-  if (metric === 'tt_from_pcs') return 'Мінімальна шт у ТТ';
+  if (metric === 'tt_from_x') return 'Мінімальна сума грн у ТТ';
+  if (metric === 'tt_from_kg') return 'Мінімальна вага кг у ТТ';
+  if (metric === 'tt_from_pcs') return 'Мінімальна кількість шт у ТТ';
   if (metric === 'tt_from_sku') return 'Мінімальна кількість SKU у ТТ';
   return 'Поріг';
 }
@@ -335,108 +347,129 @@ export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
   const filtered = agentSales.filter(
     s => matchesAnyBrand(s.бренд, column) && matchesAssortment(s.товар, column)
   );
+  const calcMode = column.calcMode ?? 'period';
+
+  const thresholdByMetric = (metric: MetricType): number => {
+    if (metric === 'tt') return 0;
+    if (metric === 'grn' || metric === 'kg' || metric === 'pcs') return 0;
+    if (
+      metric === 'total_sku' ||
+      metric === 'checkin_sku' ||
+      metric === 'avg_sku'
+    )
+      return 0;
+    return Math.max(0, column.threshold || 0);
+  };
+
+  const saleValue = (sale: Sale, metric: MetricType): number => {
+    if (metric === 'kg' || metric === 'tt_from_kg') return sale.вага || 0;
+    if (metric === 'pcs' || metric === 'tt_from_pcs')
+      return sale.кількість || 0;
+    if (
+      metric === 'tt_from_sku' ||
+      metric === 'total_sku' ||
+      metric === 'checkin_sku' ||
+      metric === 'avg_sku'
+    ) {
+      return 1;
+    }
+    return sale.сума || 0;
+  };
+
+  const sumByThreshold = (metric: MetricType): number => {
+    const threshold = thresholdByMetric(metric);
+    if (threshold <= 0 || calcMode === 'period') {
+      return filtered.reduce((sum, s) => sum + saleValue(s, metric), 0);
+    }
+    return filtered.reduce((sum, s) => {
+      const value = saleValue(s, metric);
+      return value >= threshold ? sum + value : sum;
+    }, 0);
+  };
+
+  const countStoresByThreshold = (metric: MetricType): number => {
+    const threshold = thresholdByMetric(metric);
+    const byStore = new Map<string, number[]>();
+
+    for (const s of filtered) {
+      if (!s.торгова_точка) continue;
+      if (!byStore.has(s.торгова_точка)) byStore.set(s.торгова_точка, []);
+      byStore.get(s.торгова_точка)!.push(saleValue(s, metric));
+    }
+
+    if (calcMode === 'shipment') {
+      return [...byStore.values()].filter(values =>
+        values.some(v => v >= threshold)
+      ).length;
+    }
+
+    return [...byStore.values()].filter(values => {
+      const total = values.reduce((sum, v) => sum + v, 0);
+      return total >= threshold;
+    }).length;
+  };
+
+  const skuSetsByStore = (): Map<string, Set<string>> => {
+    const skuByStore = new Map<string, Set<string>>();
+    for (const s of filtered) {
+      if (!s.торгова_точка || !s.товар) continue;
+      if (!skuByStore.has(s.торгова_точка))
+        skuByStore.set(s.торгова_точка, new Set());
+      const key = s.товар.trim().toLocaleLowerCase('uk-UA');
+      if (!key) continue;
+      skuByStore.get(s.торгова_точка)!.add(key);
+    }
+    return skuByStore;
+  };
+
+  const skuSet = (): Set<string> => {
+    const all = new Set<string>();
+    for (const s of filtered) {
+      if (s.товар) all.add(s.товар.trim().toLocaleLowerCase('uk-UA'));
+    }
+    return all;
+  };
 
   switch (column.metric) {
     case 'grn':
-      return filtered.reduce((sum, s) => sum + (s.сума || 0), 0);
+      return sumByThreshold('grn');
 
     case 'tt': {
-      const storeSum = new Map<string, number>();
-      for (const s of filtered) {
-        if (s.торгова_точка)
-          storeSum.set(
-            s.торгова_точка,
-            (storeSum.get(s.торгова_точка) ?? 0) + (s.сума || 0)
-          );
-      }
-      return [...storeSum.values()].filter(v => v >= 0).length;
+      return countStoresByThreshold('tt');
     }
 
     case 'tt_from_x': {
-      const storeSum = new Map<string, number>();
-      for (const s of filtered) {
-        if (s.торгова_точка)
-          storeSum.set(
-            s.торгова_точка,
-            (storeSum.get(s.торгова_точка) ?? 0) + (s.сума || 0)
-          );
-      }
-      return [...storeSum.values()].filter(v => v >= column.threshold).length;
+      return countStoresByThreshold('tt_from_x');
     }
 
     case 'kg':
-      return filtered.reduce((sum, s) => sum + (s.вага || 0), 0);
+      return sumByThreshold('kg');
 
     case 'pcs':
-      return filtered.reduce((sum, s) => sum + (s.кількість || 0), 0);
+      return sumByThreshold('pcs');
 
     case 'tt_from_kg': {
-      const storeKg = new Map<string, number>();
-      for (const s of filtered) {
-        if (s.торгова_точка)
-          storeKg.set(
-            s.торгова_точка,
-            (storeKg.get(s.торгова_точка) ?? 0) + (s.вага || 0)
-          );
-      }
-      return [...storeKg.values()].filter(v => v >= column.threshold).length;
+      return countStoresByThreshold('tt_from_kg');
     }
 
     case 'tt_from_pcs': {
-      const storeQty = new Map<string, number>();
-      for (const s of filtered) {
-        if (s.торгова_точка)
-          storeQty.set(
-            s.торгова_точка,
-            (storeQty.get(s.торгова_точка) ?? 0) + (s.кількість || 0)
-          );
-      }
-      return [...storeQty.values()].filter(v => v >= column.threshold).length;
+      return countStoresByThreshold('tt_from_pcs');
     }
 
     case 'tt_from_sku': {
-      const storeSkuCount = new Map<string, Set<string>>();
-      for (const s of filtered) {
-        if (!s.торгова_точка) continue;
-        if (!storeSkuCount.has(s.торгова_точка))
-          storeSkuCount.set(s.торгова_точка, new Set());
-        if (s.товар)
-          storeSkuCount
-            .get(s.торгова_точка)!
-            .add(s.товар.trim().toLocaleLowerCase('uk-UA'));
-      }
-      return [...storeSkuCount.values()].filter(v => v.size >= column.threshold)
-        .length;
+      return countStoresByThreshold('tt_from_sku');
     }
 
     case 'checkin_sku': {
-      // Кількість унікальних SKU по ТМ серед чекін-ТТ
-      const skus = new Set<string>();
-      for (const s of filtered) {
-        if (s.товар) skus.add(s.товар.trim().toLocaleLowerCase('uk-UA'));
-      }
-      return skus.size;
+      return skuSet().size;
     }
 
     case 'total_sku': {
-      const skus = new Set<string>();
-      for (const s of filtered) {
-        if (s.товар) skus.add(s.товар.trim().toLocaleLowerCase('uk-UA'));
-      }
-      return skus.size;
+      return skuSet().size;
     }
 
     case 'avg_sku': {
-      const storeSkus = new Map<string, Set<string>>();
-      for (const s of filtered) {
-        if (!s.торгова_точка) continue;
-        if (!storeSkus.has(s.торгова_точка))
-          storeSkus.set(s.торгова_точка, new Set());
-        if (s.товар)
-          storeSkus
-            .get(s.торгова_точка)!
-            .add(s.товар.trim().toLocaleLowerCase('uk-UA'));
-      }
+      const storeSkus = skuSetsByStore();
       if (storeSkus.size === 0) return 0;
       const total = [...storeSkus.values()].reduce(
         (sum, set) => sum + set.size,

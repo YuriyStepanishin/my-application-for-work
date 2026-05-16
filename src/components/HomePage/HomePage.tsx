@@ -117,7 +117,7 @@ export default function HomePage({
     {
       key: 'plan-targets',
       label: 'Планові показники',
-      icon: '/public/icons/icons_planning.svg',
+      icon: '/icons/icons_planning.svg',
       onClick: onOpenPlanTargets,
       visible: canOpenPlanTargets,
     },
@@ -127,7 +127,7 @@ export default function HomePage({
     {
       key: 'bonus',
       label: 'Додавання фотозвіту',
-      icon: './icons/camera-icon-64.svg',
+      icon: '/icons/camera-icon-64.svg',
       onClick: onOpenBonus,
       visible: canOpenBonusReport,
     },
