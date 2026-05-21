@@ -297,6 +297,8 @@ function StoreCheckForm({
         bisquit: toNumber(numbers.margaritka),
         fitness: toNumber(numbers.yin_yan),
         bg: toNumber(numbers.superStarBG),
+        other_snacks_cookie: toNumber(numbers.other_snacks),
+        other_snacks_pryanik: toNumber(numbers.other_pryanik),
         other_snacks: sumValues([
           toNumber(numbers.other_snacks),
           toNumber(numbers.other_pryanik),

@@ -24,7 +24,13 @@ var SHEET_NAME = 'StoreCheck';
 
 function doPost(e) {
   try {
-    var payload = JSON.parse(e.postData.contents);
+    var payload = parsePayload(e);
+    if (!payload) {
+      return jsonResponse({
+        success: false,
+        error: 'Empty or invalid payload',
+      });
+    }
 
     if (payload.action === 'uploadPhoto') {
       return handlePhotoUpload(payload);
@@ -38,6 +44,46 @@ function doPost(e) {
 
 function doGet() {
   return jsonResponse({ success: true, message: 'StoreCheck API is running' });
+}
+
+function parsePayload(e) {
+  if (!e) return null;
+
+  if (e.postData && e.postData.contents) {
+    var raw = e.postData.contents;
+    try {
+      return JSON.parse(raw);
+    } catch (jsonErr) {
+      if (e.parameter && e.parameter.data) {
+        try {
+          return JSON.parse(e.parameter.data);
+        } catch (paramErr) {
+          // continue to multipart fallback
+        }
+      }
+
+      var fromMultipart = extractMultipartField(raw, 'data');
+      if (fromMultipart) {
+        try {
+          return JSON.parse(fromMultipart);
+        } catch (multipartErr) {
+          return null;
+        }
+      }
+
+      return null;
+    }
+  }
+
+  if (e.parameter && e.parameter.data) {
+    try {
+      return JSON.parse(e.parameter.data);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  return null;
 }
 
 // ─── Збереження StoreCheck у Sheets ──────────────────────────────────────────
@@ -267,7 +313,19 @@ function handlePhotoUpload(data) {
 // ─── Допоміжні функції ────────────────────────────────────────────────────────
 
 function num(value) {
-  return typeof value === 'number' ? value : 0;
+  if (typeof value === 'number') {
+    return isNaN(value) ? 0 : value;
+  }
+
+  if (typeof value === 'string') {
+    var normalized = value.replace(',', '.').trim();
+    if (!normalized) return 0;
+
+    var parsed = Number(normalized);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  return 0;
 }
 
 function resolvePhotoDate(data) {
@@ -303,6 +361,20 @@ function getOrCreateFolder(parent, name) {
   var iter = parent.getFoldersByName(name);
   if (iter.hasNext()) return iter.next();
   return parent.createFolder(name);
+}
+
+function extractMultipartField(raw, fieldName) {
+  if (!raw) return null;
+
+  var escapedName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var re = new RegExp(
+    'name="' + escapedName + '"[\\s\\S]*?\\r?\\n\\r?\\n([\\s\\S]*?)\\r?\\n--',
+    'i'
+  );
+  var match = raw.match(re);
+  if (!match || match.length < 2) return null;
+
+  return String(match[1] || '').trim();
 }
 
 function jsonResponse(data) {
