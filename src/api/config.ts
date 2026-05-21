@@ -8,7 +8,7 @@ export const SALES_URL =
   'https://script.google.com/macros/s/AKfycbwVr7l4-MYv8lZyuSC2WF9_DMS6p79LVKq9f1rhcgmn1TiuTf72RG-6IQG_ZDvhgsq3/exec';
 
 export const STORE_CHECK_PHOTOS_FOLDER_URL =
-  'https://drive.google.com/drive/folders/10xN3EizeASLbLSRVjwbvBglKf_pJjMtv';
+  'https://drive.google.com/drive/folders/1lv-_uceNjbLVfb8dK1crV3kW-YE0L6_y';
 
 export const STORE_CHECK_URL =
   'https://script.google.com/macros/s/AKfycbzVsmmO3h6adCmEyHOtk4nGMsyYtaa_0oBLMZfsCcWYd5-SikPxlZ6uZG2CMkujx8Sc/exec';
