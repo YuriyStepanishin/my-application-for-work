@@ -5,6 +5,8 @@ interface PhotoPayload {
   base64: string;
   type: string;
   name: string;
+  capturedAt?: string;
+  device?: string;
 }
 
 // універсальний тип

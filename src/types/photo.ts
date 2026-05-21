@@ -5,6 +5,8 @@ export interface Photo {
   base64: string;
   type: string;
   name: string;
+  capturedAt?: string;
+  device?: string;
   status: UploadStatus;
 }
 

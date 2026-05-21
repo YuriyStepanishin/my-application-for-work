@@ -109,6 +109,18 @@ function getWeekdayOrderFromSimpleDate(date: {
   return day === 0 ? 7 : day;
 }
 
+function normalizeBrandValue(value: string): string {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+function isDeliciaBrand(brand: string): boolean {
+  return normalizeBrandValue(brand) === normalizeBrandValue('Деліція');
+}
+
 export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
   const [agent, setAgent] = useState('');
   const [department, setDepartment] = useState('');
@@ -220,6 +232,17 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
       ),
     ].sort((a, b) => a.localeCompare(b, 'uk'));
   }, [filteredByDepartmentAgent]);
+
+  const orimiBrands = useMemo(
+    () => uniqueBrands.filter(brand => !isDeliciaBrand(brand)),
+    [uniqueBrands]
+  );
+
+  const isOrimiBrandsSelected = useMemo(() => {
+    if (orimiBrands.length === 0) return false;
+    if (brands.size !== orimiBrands.length) return false;
+    return orimiBrands.every(brand => brands.has(brand));
+  }, [brands, orimiBrands]);
 
   const rows = useMemo<DayStats[]>(() => {
     const grouped: Record<
@@ -558,6 +581,15 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
           onClick={() => setBrands(new Set())}
         >
           Усі ТМ
+        </button>
+
+        <button
+          className={`${styles.brandButton} ${
+            isOrimiBrandsSelected ? styles.brandButtonActive : ''
+          }`}
+          onClick={() => setBrands(new Set(orimiBrands))}
+        >
+          Усі ТМ Orimi
         </button>
 
         {uniqueBrands.map(tm => (

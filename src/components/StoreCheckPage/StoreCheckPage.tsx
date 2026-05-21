@@ -111,7 +111,7 @@ const ALL_NUMERIC_KEYS = NUMERIC_SECTIONS.flatMap(section =>
 ) as NumericFieldKey[];
 
 const EMPTY_NUMBERS: NumericFormState = Object.fromEntries(
-  ALL_NUMERIC_KEYS.map(k => [k, '0'])
+  ALL_NUMERIC_KEYS.map(k => [k, ''])
 ) as NumericFormState;
 
 function toNumber(value: string): number {

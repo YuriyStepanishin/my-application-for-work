@@ -69,6 +69,7 @@ export default function ShowcasePromotion({ storeData, onBack }: Props) {
 
       const geo = await getLocation(); // ← отримуємо координати
       const dbPhotos = await db.photos.toArray();
+      const captureDate = dbPhotos.find(photo => photo.capturedAt)?.capturedAt;
 
       const result = await saveReport(
         {
@@ -87,7 +88,8 @@ export default function ShowcasePromotion({ storeData, onBack }: Props) {
           lat: geo.lat,
           lng: geo.lng,
 
-          date: new Date().toISOString(),
+          date:
+            captureDate || startDate || new Date().toISOString().slice(0, 10),
         },
         'display'
       );

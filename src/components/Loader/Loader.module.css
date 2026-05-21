@@ -15,7 +15,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  color: #25b09b;
+  color: #201380;
 
   box-shadow:
     calc(1 * var(--d)) calc(0 * var(--d)) 0 0,

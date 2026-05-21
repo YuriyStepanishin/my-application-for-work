@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import imageCompression from 'browser-image-compression';
+import exifr from 'exifr';
 import styles from './PhotoUpload.module.css';
 import { db } from './db';
 import type { Photo } from '../../types/photo';
@@ -24,7 +25,51 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
     useWebWorker: true,
   };
 
+  function formatDateOnlyLocal(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  async function readPhotoMeta(file: File): Promise<{
+    capturedAt?: string;
+    device?: string;
+  }> {
+    try {
+      const exif = await exifr.parse(file, {
+        pick: [
+          'DateTimeOriginal',
+          'CreateDate',
+          'DateTimeDigitized',
+          'Make',
+          'Model',
+        ],
+      });
+
+      const rawDate =
+        (exif?.DateTimeOriginal as Date | undefined) ||
+        (exif?.CreateDate as Date | undefined) ||
+        (exif?.DateTimeDigitized as Date | undefined);
+
+      const capturedAt =
+        rawDate instanceof Date && !Number.isNaN(rawDate.getTime())
+          ? formatDateOnlyLocal(rawDate)
+          : undefined;
+
+      const make = String(exif?.Make || '').trim();
+      const model = String(exif?.Model || '').trim();
+      const device =
+        [make, model].filter(Boolean).join(' ').trim() || undefined;
+
+      return { capturedAt, device };
+    } catch {
+      return {};
+    }
+  }
+
   async function fileToBase64(file: File): Promise<Photo> {
+    const meta = await readPhotoMeta(file);
     const compressed = await imageCompression(file, compressionOptions);
 
     return new Promise((resolve, reject) => {
@@ -38,6 +83,8 @@ export default function PhotoUpload({ photos, setPhotos }: Props) {
           base64,
           type: compressed.type,
           name: compressed.name,
+          capturedAt: meta.capturedAt,
+          device: meta.device,
           status: 'pending',
         });
       };

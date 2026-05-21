@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
 * {
   box-sizing: border-box;
 }
@@ -16,18 +18,21 @@ body,
 }
 
 body {
-  background: linear-gradient(135deg, #edf7ed 0%, #d4edda 50%, #b7e4c7 100%);
+  background:
+    radial-gradient(
+      circle at 14% 10%,
+      rgba(56, 125, 242, 0.22),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 80% 84%,
+      rgba(0, 210, 255, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(145deg, #030e24 0%, #041430 48%, #051329 100%);
   overflow-x: hidden;
-
-  font-family:
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Ubuntu,
-    sans-serif;
-
-  color: #1b4332;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  color: #dce8ff;
 }
 
 img,
@@ -54,7 +59,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(47, 128, 237, 0.28);
+  outline: 3px solid rgba(97, 155, 255, 0.36);
   outline-offset: 2px;
 }
 

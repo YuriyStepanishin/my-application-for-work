@@ -1,4 +1,8 @@
 import type { Sale } from '../../api/fetchSales';
+import {
+  fetchPlanColumns,
+  savePlanColumnsToSheet,
+} from '../../api/planTargets';
 import { type BrandFilter, matchesBrand } from './agentsConfig';
 
 export type AssortmentMode = 'all' | 'specific';
@@ -22,6 +26,8 @@ export type MetricType =
 export interface PlanColumn {
   id: string;
   label: string;
+  /** Порядковий номер колонки для відображення у таблиці виконання */
+  displayOrder?: number;
   brand: BrandFilter;
   brands?: BrandFilter[];
   assortmentMode?: AssortmentMode;
@@ -39,6 +45,11 @@ export interface PlanColumn {
   /** Загальний план по відділу (використовується коли deptMode[dept] === 'total') */
   deptPlans?: Record<string, number>;
 }
+
+export type StoreFactDetail = {
+  store: string;
+  value: number;
+};
 
 export const BRAND_OPTIONS: { value: BrandFilter; label: string }[] = [
   { value: 'jockey', label: 'Жокей' },
@@ -198,11 +209,28 @@ export function metricLabel(metric: MetricType, threshold: number): string {
   }
 }
 
-function normalizePlanColumn(column: PlanColumn): PlanColumn {
+function normalizeDisplayOrder(value: number | undefined): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  const normalized = Math.trunc(value);
+  return normalized > 0 ? normalized : undefined;
+}
+
+export function sortPlanColumns(columns: PlanColumn[]): PlanColumn[] {
+  return [...columns].sort((a, b) => {
+    const aOrder = a.displayOrder ?? Number.MAX_SAFE_INTEGER;
+    const bOrder = b.displayOrder ?? Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return a.label.localeCompare(b.label, 'uk-UA');
+  });
+}
+
+function normalizePlanColumn(column: PlanColumn, index: number): PlanColumn {
   const brands = selectedBrands(column);
   const assortmentProducts = selectedAssortmentProducts(column);
+  const displayOrder = normalizeDisplayOrder(column.displayOrder) ?? index + 1;
   return {
     ...column,
+    displayOrder,
     brand: brands[0] ?? column.brand,
     brands,
     assortmentMode: column.assortmentMode ?? 'all',
@@ -231,8 +259,6 @@ export function isThresholdMetric(metric: MetricType): boolean {
     metric === 'tt_from_sku'
   );
 }
-
-const STORAGE_KEY = 'implementation_plan_columns_v2';
 
 const DEFAULT_COLUMNS: PlanColumn[] = [
   {
@@ -325,22 +351,28 @@ const DEFAULT_COLUMNS: PlanColumn[] = [
   },
 ];
 
-export function loadPlanColumns(): PlanColumn[] {
+export async function loadPlanColumns(): Promise<PlanColumn[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_COLUMNS.map(normalizePlanColumn);
-    const parsed = JSON.parse(raw) as PlanColumn[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return DEFAULT_COLUMNS.map(normalizePlanColumn);
+    const columns = await fetchPlanColumns();
+    if (!Array.isArray(columns) || columns.length === 0) {
+      return sortPlanColumns(
+        DEFAULT_COLUMNS.map((column, index) =>
+          normalizePlanColumn(column, index)
+        )
+      );
     }
-    return parsed.map(normalizePlanColumn);
+    return sortPlanColumns(
+      columns.map((column, index) => normalizePlanColumn(column, index))
+    );
   } catch {
-    return DEFAULT_COLUMNS.map(normalizePlanColumn);
+    return sortPlanColumns(
+      DEFAULT_COLUMNS.map((column, index) => normalizePlanColumn(column, index))
+    );
   }
 }
 
-export function savePlanColumns(cols: PlanColumn[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cols));
+export async function savePlanColumns(cols: PlanColumn[]): Promise<void> {
+  await savePlanColumnsToSheet(cols);
 }
 
 export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
@@ -477,6 +509,117 @@ export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
       );
       return total / storeSkus.size;
     }
+  }
+}
+
+export function calcColumnFactDetailsByStore(
+  agentSales: Sale[],
+  column: PlanColumn
+): StoreFactDetail[] {
+  const filtered = agentSales.filter(
+    s => matchesAnyBrand(s.бренд, column) && matchesAssortment(s.товар, column)
+  );
+  const calcMode = column.calcMode ?? 'period';
+
+  const saleValue = (sale: Sale, metric: MetricType): number => {
+    if (metric === 'kg' || metric === 'tt_from_kg') return sale.вага || 0;
+    if (metric === 'pcs' || metric === 'tt_from_pcs')
+      return sale.кількість || 0;
+    if (
+      metric === 'tt_from_sku' ||
+      metric === 'total_sku' ||
+      metric === 'checkin_sku' ||
+      metric === 'avg_sku'
+    ) {
+      return 1;
+    }
+    return sale.сума || 0;
+  };
+
+  const sortDesc = (rows: StoreFactDetail[]): StoreFactDetail[] =>
+    rows.sort((a, b) => {
+      if (b.value !== a.value) return b.value - a.value;
+      return a.store.localeCompare(b.store, 'uk-UA');
+    });
+
+  const sumMetricByStore = (metric: MetricType): StoreFactDetail[] => {
+    const sums = new Map<string, number>();
+    for (const sale of filtered) {
+      const store = sale.торгова_точка?.trim();
+      if (!store) continue;
+      const prev = sums.get(store) ?? 0;
+      sums.set(store, prev + saleValue(sale, metric));
+    }
+    return sortDesc(
+      [...sums.entries()].map(([store, value]) => ({ store, value }))
+    );
+  };
+
+  const ttMetricByStore = (metric: MetricType): StoreFactDetail[] => {
+    const byStore = new Map<string, number[]>();
+
+    for (const sale of filtered) {
+      const store = sale.торгова_точка?.trim();
+      if (!store) continue;
+      if (!byStore.has(store)) byStore.set(store, []);
+      byStore.get(store)!.push(saleValue(sale, metric));
+    }
+
+    const rows = [...byStore.entries()].map(([store, values]) => {
+      if (calcMode === 'shipment') {
+        const maxShipment = values.reduce(
+          (max, current) => (current > max ? current : max),
+          0
+        );
+        return { store, value: maxShipment };
+      }
+
+      const total = values.reduce((sum, current) => sum + current, 0);
+      return { store, value: total };
+    });
+
+    return sortDesc(rows);
+  };
+
+  const skuMetricByStore = (): StoreFactDetail[] => {
+    const skuByStore = new Map<string, Set<string>>();
+    for (const sale of filtered) {
+      const store = sale.торгова_точка?.trim();
+      const product = sale.товар?.trim().toLocaleLowerCase('uk-UA');
+      if (!store || !product) continue;
+      if (!skuByStore.has(store)) skuByStore.set(store, new Set<string>());
+      skuByStore.get(store)!.add(product);
+    }
+
+    return sortDesc(
+      [...skuByStore.entries()].map(([store, products]) => ({
+        store,
+        value: products.size,
+      }))
+    );
+  };
+
+  switch (column.metric) {
+    case 'grn':
+      return sumMetricByStore('grn');
+    case 'kg':
+      return sumMetricByStore('kg');
+    case 'pcs':
+      return sumMetricByStore('pcs');
+    case 'tt':
+      return ttMetricByStore('tt');
+    case 'tt_from_x':
+      return ttMetricByStore('tt_from_x');
+    case 'tt_from_kg':
+      return ttMetricByStore('tt_from_kg');
+    case 'tt_from_pcs':
+      return ttMetricByStore('tt_from_pcs');
+    case 'tt_from_sku':
+      return ttMetricByStore('tt_from_sku');
+    case 'checkin_sku':
+    case 'total_sku':
+    case 'avg_sku':
+      return skuMetricByStore();
   }
 }
 

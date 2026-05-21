@@ -13,7 +13,7 @@
 .error {
   padding: 40px;
   text-align: center;
-  color: red;
+  color: #fecaca;
 }
 
 .header {
@@ -22,13 +22,13 @@
 
 .pageTitle {
   margin: 0;
-  color: #204133;
+  color: #eaf3ff;
   font-size: 24px;
 }
 
 .pageMeta {
   margin: 8px 0 0;
-  color: #305544;
+  color: rgba(194, 214, 247, 0.9);
   font-size: 14px;
 }
 
@@ -38,9 +38,9 @@
   gap: 10px;
   align-items: end;
   padding: 12px;
-  border: 1px solid #bfd2c4;
+  border: 1px solid rgba(110, 154, 232, 0.28);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.74);
+  background: rgba(8, 31, 73, 0.82);
 }
 
 .field {
@@ -51,7 +51,7 @@
 
 .field span {
   font-size: 13px;
-  color: #315546;
+  color: #d8e9ff;
   font-weight: 600;
 }
 
@@ -59,9 +59,9 @@
   height: 42px;
   padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(113, 154, 223, 0.38);
+  background: rgba(14, 46, 98, 0.76);
+  color: #edf5ff;
   font-size: 14px;
 }
 
@@ -69,9 +69,9 @@
   height: 42px;
   padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(113, 154, 223, 0.38);
+  background: rgba(14, 46, 98, 0.76);
+  color: #edf5ff;
   font-size: 14px;
   font-weight: 600;
   display: flex;
@@ -86,9 +86,9 @@
   height: 42px;
   padding: 0 40px 0 36px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(113, 154, 223, 0.38);
+  background: rgba(14, 46, 98, 0.76);
+  color: #edf5ff;
   font-size: 14px;
   width: 100%;
   box-sizing: border-box;
@@ -99,12 +99,12 @@
 }
 
 .searchInput .input:focus {
-  border-color: #83a78f;
-  box-shadow: 0 0 0 3px rgba(131, 167, 143, 0.15);
+  border-color: rgba(143, 188, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(82, 146, 245, 0.24);
 }
 
 .searchInput .input::placeholder {
-  color: #7d9a88;
+  color: rgba(184, 208, 245, 0.82);
 }
 
 .searchInput .clearButton {
@@ -113,8 +113,8 @@
   height: 24px;
   border: none;
   border-radius: 999px;
-  background: rgba(33, 66, 51, 0.08);
-  color: #315546;
+  background: rgba(111, 162, 242, 0.18);
+  color: #d5e9ff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +127,7 @@
 }
 
 .searchInput .clearButton:hover {
-  background: rgba(33, 66, 51, 0.16);
+  background: rgba(111, 162, 242, 0.3);
 }
 
 .searchInput .clearButton:active {
@@ -137,20 +137,20 @@
 .searchInput .icon {
   left: 12px;
   font-size: 14px;
-  color: #5b795f;
+  color: #8abfff;
 }
 
 .summaryCard {
   margin-top: 12px;
   padding: 10px 12px;
-  border: 1px solid #cadacc;
+  border: 1px solid rgba(110, 154, 232, 0.26);
   border-radius: 12px;
-  background: #f4f9f5;
+  background: rgba(8, 31, 73, 0.84);
 }
 
 .summaryCard p {
   margin: 4px 0;
-  color: #214233;
+  color: #e4f0ff;
   font-size: 14px;
 }
 
@@ -163,15 +163,15 @@
 }
 
 .storeCard {
-  border: 1px solid #c5d8ca;
+  border: 1px solid rgba(106, 149, 226, 0.28);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(8, 31, 73, 0.84);
   overflow: hidden;
 }
 
 .storeCardAlert {
-  border-color: #c95c5c;
-  box-shadow: inset 0 0 0 1px rgba(201, 92, 92, 0.22);
+  border-color: rgba(240, 114, 114, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.25);
 }
 
 .storeHead {
@@ -185,12 +185,12 @@
   gap: 10px;
   text-align: left;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(10, 37, 85, 0.86);
   transition: background 0.2s ease;
 }
 
 .storeName {
-  color: #1d3f30;
+  color: #ecf5ff;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
@@ -203,9 +203,9 @@
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: #ffe8e8;
-  color: #a03030;
-  border: 1px solid #d88080;
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.5);
   padding: 3px 8px;
   font-size: 11px;
   font-weight: 700;
@@ -216,12 +216,12 @@
   width: 24px;
   text-align: center;
   font-size: 22px;
-  color: #335b49;
+  color: #9cc9ff;
   line-height: 1;
 }
 
 .historyWrap {
-  border-top: 1px solid #dbe7de;
+  border-top: 1px solid rgba(102, 143, 212, 0.3);
   padding: 10px;
   overflow-x: auto;
 }
@@ -243,18 +243,18 @@
 
 .historyTable th,
 .historyTable td {
-  border: 1px solid #d8e3db;
+  border: 1px solid rgba(98, 139, 207, 0.28);
   padding: 7px;
   font-size: 12px;
-  color: #1f3d30;
+  color: #deedff;
   line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
 .historyTable th {
-  background: #e8f1eb;
-  color: #224434;
+  background: rgba(14, 46, 98, 0.9);
+  color: #f2f8ff;
 }
 
 .historyTable th:nth-child(1),
@@ -273,46 +273,46 @@
 }
 
 .brandRow {
-  background: rgba(236, 244, 238, 0.92);
+  background: rgba(15, 53, 112, 0.58);
 }
 
 .brandRowAlert {
-  background: rgba(255, 226, 226, 0.9);
+  background: rgba(239, 68, 68, 0.18);
 }
 
 .brandRowAlert td {
-  color: #a03030;
-  border-color: #e1aaaa;
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.45);
 }
 
 .brandOnlyRowAlert td {
-  background: rgba(255, 226, 226, 0.72);
-  color: #a03030;
-  border-color: #e1aaaa;
+  background: rgba(239, 68, 68, 0.13);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.38);
 }
 
 .mobileBrandBlock {
-  border: 1px solid #d6e4da;
+  border: 1px solid rgba(103, 145, 214, 0.3);
   border-radius: 10px;
-  background: #f8fcf9;
+  background: rgba(10, 37, 84, 0.8);
   padding: 8px;
   margin-bottom: 8px;
 }
 
 .mobileBrandBlockAlert {
-  background: #ffeaea;
-  border-color: #e1aaaa;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(248, 113, 113, 0.45);
 }
 
 .mobileBrandTitle {
   margin: 0 0 8px;
   font-size: 13px;
-  color: #1f3d30;
+  color: #e7f2ff;
 }
 
 .mobileBrandTitleAlert {
   margin-bottom: 0;
-  color: #a03030;
+  color: #fecaca;
 }
 
 .mobileBrandHeader {
@@ -321,21 +321,21 @@
   justify-content: space-between;
   gap: 8px;
   padding: 0 0 6px;
-  border-bottom: 1px solid #d8e3db;
+  border-bottom: 1px solid rgba(101, 143, 211, 0.3);
   margin-bottom: 4px;
 }
 
 .mobileWeekHeader {
   font-size: 12px;
   font-weight: 700;
-  color: #2a4b3a;
+  color: #cfe4ff;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .mobileProductRow {
   padding: 6px 0;
-  border-top: 1px dashed #d6e4da;
+  border-top: 1px dashed rgba(103, 145, 214, 0.34);
 }
 
 .mobileProductRow:first-of-type {
@@ -347,20 +347,20 @@
   margin: 0 0 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #214233;
+  color: #e8f3ff;
 }
 
 .mobileWeeksLine {
   margin: 0;
   font-size: 12px;
   line-height: 1.3;
-  color: #1f3d30;
+  color: #d3e8ff;
   word-break: break-word;
 }
 
 .emptyCell {
   text-align: center;
-  color: #7a4a4a;
+  color: #fecaca;
   padding: 12px;
 }
 
@@ -371,25 +371,25 @@
   z-index: 20;
   height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.28);
+  border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
-  color: #2f4f3a;
+  background: rgba(14, 38, 79, 0.46);
+  color: #eef5ff;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
+  box-shadow: 0 8px 20px rgba(3, 18, 45, 0.35);
 }
 
 @media (hover: hover) {
   .storeHead:hover {
-    background: rgba(233, 242, 235, 0.82);
+    background: rgba(16, 52, 109, 0.92);
   }
 
   .backButton:hover {
-    background: rgba(255, 255, 255, 0.38);
+    background: rgba(20, 52, 107, 0.58);
     transform: translateY(-1px);
   }
 }

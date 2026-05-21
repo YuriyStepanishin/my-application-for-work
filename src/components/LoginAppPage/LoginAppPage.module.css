@@ -19,6 +19,7 @@
 
 .card {
   background: white;
+  color: #1f3653;
 
   padding: 28px;
 
@@ -48,6 +49,7 @@
   margin-top: 4px;
 
   font-size: 16px;
+  color: #24486f;
 
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -59,6 +61,15 @@
 
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.card h2 {
+  margin: 0;
+  color: #173a63;
+}
+
+.card > div {
+  color: #4b6280;
 }
 
 /* кнопки */

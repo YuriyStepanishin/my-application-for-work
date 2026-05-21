@@ -570,7 +570,7 @@
   }
 
   .button:hover {
-    background: rgba(255, 255, 255, 0.38);
+    background: rgba(20, 52, 107, 0.58);
     transform: translateY(-1px);
   }
 }
@@ -584,7 +584,7 @@
 .error {
   padding: 40px;
   text-align: center;
-  color: red;
+  color: #fecaca;
 }
 
 /* button */
@@ -614,7 +614,7 @@
 @media (max-width: 560px) {
   .container {
     padding: 10px;
-    background: linear-gradient(180deg, #e4eee7 0%, #dce9e1 100%);
+    background: transparent;
   }
 
   .desktopLayout {
@@ -635,8 +635,8 @@
     gap: 10px;
     padding: 10px;
     border-radius: 16px;
-    background: transparent;
-    border: 1px solid rgba(183, 203, 189, 0.9);
+    background: rgba(8, 31, 73, 0.78);
+    border: 1px solid rgba(108, 152, 232, 0.24);
   }
 
   .sidebarCard {
@@ -653,7 +653,7 @@
   .table {
     table-layout: fixed;
     font-size: 13px;
-    background: rgba(230, 240, 233, 0.82);
+    background: rgba(7, 30, 70, 0.86);
   }
 
   .salesByDaysButton {
@@ -781,4 +781,119 @@
   .storeCard {
     padding: 12px 14px;
   }
+}
+
+/* ===== Dark Dashboard Theme Overrides ===== */
+
+.container {
+  background: transparent;
+  color: #dce9ff;
+}
+
+.filtersSticky {
+  background: linear-gradient(
+    170deg,
+    rgba(7, 30, 70, 0.95),
+    rgba(5, 24, 58, 0.93)
+  );
+  border: 1px solid rgba(108, 152, 232, 0.22);
+  box-shadow: 0 22px 44px rgba(1, 14, 34, 0.52);
+}
+
+.sidebarCard {
+  border: 1px solid rgba(108, 152, 232, 0.2);
+  background: rgba(10, 36, 82, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sidebarSectionTitle,
+.subTitle,
+.brandName,
+.dateGroupLabel,
+.storeName,
+.table th {
+  color: #e6f0ff;
+}
+
+.brandChip {
+  border: 1px solid rgba(108, 152, 232, 0.34);
+  background: rgba(11, 41, 92, 0.7);
+  color: #d9e8ff;
+}
+
+.brandChipActive {
+  background: linear-gradient(165deg, #2a87ff, #1667e7);
+  border-color: rgba(140, 183, 255, 0.6);
+  color: #f7faff;
+}
+
+.brandChipAll,
+.brandChipAllActive {
+  background: rgba(15, 51, 112, 0.76);
+  border-color: rgba(108, 152, 232, 0.4);
+  color: #dceaff;
+  box-shadow: none;
+}
+
+.sidebarSaveButton,
+.salesByDaysButton,
+.sidebarActionButton,
+.button {
+  border: 1px solid rgba(108, 152, 232, 0.36);
+  color: #eff6ff;
+}
+
+.sidebarSaveButton,
+.button {
+  background: rgba(10, 38, 85, 0.78);
+}
+
+.salesByDaysButton,
+.sidebarActionButton {
+  background: linear-gradient(166deg, #2a87ff, #1667e7);
+  box-shadow: 0 14px 24px rgba(22, 103, 231, 0.35);
+}
+
+.table {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(108, 152, 232, 0.2);
+  background: rgba(7, 30, 70, 0.86);
+}
+
+.table th,
+.table td {
+  border-color: rgba(108, 152, 232, 0.2);
+  color: #dce9ff;
+}
+
+.table th {
+  background: rgba(13, 44, 97, 0.88);
+}
+
+.totalRow {
+  background: rgba(24, 70, 142, 0.35);
+}
+
+.totalRow td {
+  color: #edf5ff;
+}
+
+.storeCard,
+.dateGroup,
+.productList {
+  background: rgba(10, 36, 82, 0.64);
+  border-color: rgba(108, 152, 232, 0.2);
+}
+
+.storeSum,
+.productName,
+.productMeta,
+.dateGroupMetaItem,
+.storeSku {
+  color: #d9e8ff;
+}
+
+.storeStar {
+  color: #52e28a;
 }

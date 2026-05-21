@@ -1,7 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Select, { type MultiValue } from 'react-select';
 import { fetchSales, type Sale } from '../../api/fetchSales';
+import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 import {
   CALCULATION_MODE_OPTIONS,
   METRIC_BASE_OPTIONS,
@@ -41,6 +43,7 @@ function buildEmpty(): PlanColumn {
   return {
     id: crypto.randomUUID(),
     label: '',
+    displayOrder: 0,
     brand: 'jockey',
     metric: 'tt_from_x',
     threshold: 0,
@@ -51,23 +54,52 @@ function buildEmpty(): PlanColumn {
 }
 
 export default function PlanTargetsPage({ onBack }: Props) {
-  const [columns, setColumns] = useState<PlanColumn[]>(loadPlanColumns);
+  const queryClient = useQueryClient();
+  const [columns, setColumns] = useState<PlanColumn[]>([]);
   const [editing, setEditing] = useState<PlanColumn | null>(null);
   const [saved, setSaved] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const { data: sales = [] } = useQuery<Sale[]>({
     queryKey: ['sales'],
     queryFn: fetchSales,
     staleTime: 1000 * 60 * 5,
   });
+  const { data: loadedColumns = [], isLoading } = useQuery<PlanColumn[]>({
+    queryKey: ['plan-targets'],
+    queryFn: loadPlanColumns,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    if (loadedColumns.length > 0) {
+      setColumns(loadedColumns);
+    }
+  }, [loadedColumns]);
+
+  const saveMutation = useMutation({
+    mutationFn: savePlanColumns,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['plan-targets'] });
+      setSaved(true);
+      setPopupMessage('Збережено');
+      setTimeout(() => setSaved(false), 2000);
+    },
+    onError: () => {
+      setPopupMessage('Помилка...');
+    },
+  });
 
   const handleSaveAll = useCallback(() => {
-    savePlanColumns(columns);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [columns]);
+    void saveMutation.mutateAsync(columns);
+  }, [columns, saveMutation]);
 
   function handleAddColumn() {
-    setEditing(buildEmpty());
+    const nextOrder =
+      columns.reduce(
+        (max, col) => Math.max(max, Math.trunc(col.displayOrder ?? 0)),
+        0
+      ) + 1;
+    setEditing({ ...buildEmpty(), displayOrder: nextOrder });
   }
 
   function handleEditColumn(col: PlanColumn) {
@@ -96,6 +128,10 @@ export default function PlanTargetsPage({ onBack }: Props) {
     setEditing(null);
   }
 
+  if (isLoading && columns.length === 0) {
+    return <Loader />;
+  }
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -114,8 +150,13 @@ export default function PlanTargetsPage({ onBack }: Props) {
           type="button"
           className={styles.saveAllBtn}
           onClick={handleSaveAll}
+          disabled={saveMutation.isPending}
         >
-          {saved ? '✓ Збережено' : 'Зберегти всі'}
+          {saveMutation.isPending
+            ? 'Збереження...'
+            : saved
+              ? '✓ Збережено'
+              : 'Зберегти всі'}
         </button>
       </div>
 
@@ -142,6 +183,10 @@ export default function PlanTargetsPage({ onBack }: Props) {
           onSave={handleSaveColumn}
           onCancel={() => setEditing(null)}
         />
+      )}
+
+      {popupMessage && (
+        <Popup message={popupMessage} onClose={() => setPopupMessage(null)} />
       )}
     </div>
   );
@@ -424,6 +469,9 @@ function ColumnEditorModal({
   onCancel,
 }: ColumnEditorModalProps) {
   const [label, setLabel] = useState(column.label);
+  const [displayOrder, setDisplayOrder] = useState(
+    column.displayOrder ? String(column.displayOrder) : ''
+  );
   const [selectedBrands, setSelectedBrands] = useState<BrandFilter[]>(() =>
     column.brands && column.brands.length > 0 ? column.brands : [column.brand]
   );
@@ -547,9 +595,14 @@ function ColumnEditorModal({
       deptPlansSaved[d.dept] = parseNum(deptPlans[d.dept] ?? '0');
     }
     const metric = buildMetricType(metricBase, metricUnit, metricBase === 'tt');
+    const normalizedDisplayOrder = Math.max(
+      1,
+      Math.trunc(Number(displayOrder) || 1)
+    );
     onSave({
       id: column.id,
       label: label.trim(),
+      displayOrder: normalizedDisplayOrder,
       brand: selectedBrands[0] ?? column.brand,
       brands: selectedBrands,
       assortmentMode,
@@ -599,6 +652,19 @@ function ColumnEditorModal({
                   value={label}
                   onChange={e => setLabel(e.target.value)}
                   placeholder="напр. АКБ Жокей"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>Номер стовпця</label>
+                <input
+                  className={styles.formInput}
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={displayOrder}
+                  onChange={e => setDisplayOrder(e.target.value)}
+                  placeholder="1"
                 />
               </div>
 

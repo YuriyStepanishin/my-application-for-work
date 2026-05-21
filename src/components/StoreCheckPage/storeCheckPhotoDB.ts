@@ -12,6 +12,7 @@ export interface StoreCheckPhoto {
   department: string;
   representative: string;
   date: string;
+  device?: string;
   createdAt: number;
 }
 

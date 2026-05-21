@@ -20,6 +20,13 @@ export default defineConfig({
         secure: true,
         rewrite: () => '/exec',
       },
+      '/api/plan-targets': {
+        target:
+          'https://script.google.com/macros/s/AKfycbxS1DQ-oL3zzFU6bir5pF7NaoE2IM3t7zOS65dvaFQQfz0FSsNyE2BOKXgUdyXS0s7YDQ',
+        changeOrigin: true,
+        secure: true,
+        rewrite: () => '/exec',
+      },
     },
   },
   plugins: [

@@ -1,4 +1,7 @@
-import bg from '../../assets/screensaver.png';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchSales, type Sale } from '../../api/fetchSales';
+import { fetchReports, type Report } from '../../api/fetchReports';
 import styles from './HomePage.module.css';
 
 type MenuItem = {
@@ -9,6 +12,53 @@ type MenuItem = {
   visible: boolean;
   badge?: number | null;
 };
+
+type TopClientRow = {
+  name: string;
+  value: number;
+};
+
+function getCurrentMonthKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function formatMonthLabel(monthKey: string): string {
+  const match = monthKey.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return monthKey;
+
+  const monthNames = [
+    'січень',
+    'лютий',
+    'березень',
+    'квітень',
+    'травень',
+    'червень',
+    'липень',
+    'серпень',
+    'вересень',
+    'жовтень',
+    'листопад',
+    'грудень',
+  ];
+
+  const monthIndex = Number(match[2]) - 1;
+  const monthName = monthNames[monthIndex] || match[2];
+  return `${monthName} ${match[1]}`;
+}
+
+function parseSaleDateKey(raw: string): string {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+
+  const dmy = text.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().slice(0, 10);
+}
 
 interface Props {
   onOpenDisplay: () => void;
@@ -55,6 +105,132 @@ export default function HomePage({
   canOpenImplementation,
   canOpenMessages,
 }: Props) {
+  const moneyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('uk-UA', {
+        maximumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const integerFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('uk-UA', {
+        maximumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const { data: sales = [], isLoading: salesLoading } = useQuery<Sale[]>({
+    queryKey: ['home-sales-preview'],
+    queryFn: fetchSales,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: photoReports = [] } = useQuery<Report[]>({
+    queryKey: ['home-photo-reports-preview'],
+    queryFn: fetchReports,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const salesInsights = useMemo(() => {
+    const currentMonthKey = getCurrentMonthKey();
+    const storeAmount: Record<string, number> = {};
+    const storeSkuSet: Record<string, Set<string>> = {};
+    const productQuantity: Record<string, number> = {};
+    const stores = new Set<string>();
+
+    let totalAmount = 0;
+    let monthlySalesRows = 0;
+
+    sales.forEach(row => {
+      const amount = row.сума || 0;
+      const quantity = row.кількість || 0;
+      const product = (row.товар || '').trim();
+      const store = (row.торгова_точка || '').trim();
+      const dateKey = parseSaleDateKey(row.дата || '');
+      if (!dateKey || !dateKey.startsWith(currentMonthKey)) return;
+
+      monthlySalesRows += 1;
+
+      totalAmount += amount;
+
+      if (store) {
+        stores.add(store);
+        storeAmount[store] = (storeAmount[store] || 0) + amount;
+      }
+      if (product) {
+        productQuantity[product] = (productQuantity[product] || 0) + quantity;
+      }
+      if (store && product) {
+        if (!storeSkuSet[store]) storeSkuSet[store] = new Set<string>();
+        storeSkuSet[store].add(product);
+      }
+    });
+
+    const topClients: TopClientRow[] = Object.entries(storeAmount)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }))
+      .filter(item => item.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+
+    const topProducts = Object.entries(productQuantity)
+      .map(([name, quantity]) => ({ name, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
+
+    const topClientsSku: TopClientRow[] = Object.entries(storeSkuSet)
+      .map(([name, skuSet]) => ({ name, value: skuSet.size }))
+      .filter(item => item.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+
+    return {
+      currentMonthKey,
+      totalAmount,
+      storesCount: stores.size,
+      salesCount: monthlySalesRows,
+      topClients,
+      topProducts,
+      topClientsSku,
+    };
+  }, [sales]);
+
+  const currentMonthLabel = formatMonthLabel(salesInsights.currentMonthKey);
+
+  const photoReportsTtCount = useMemo(() => {
+    const currentMonthKey = getCurrentMonthKey();
+    const storesInReports = new Set<string>();
+
+    photoReports.forEach(report => {
+      const dateKey = parseSaleDateKey(report.date || '');
+      if (!dateKey || !dateKey.startsWith(currentMonthKey)) return;
+
+      const store = (report.store || '').trim();
+      if (store) storesInReports.add(store);
+    });
+
+    return storesInReports.size;
+  }, [photoReports]);
+
+  const maxProductQty =
+    salesInsights.topProducts.length > 0
+      ? Math.max(...salesInsights.topProducts.map(item => item.quantity), 1)
+      : 1;
+
+  const maxClientAmount =
+    salesInsights.topClients.length > 0
+      ? Math.max(...salesInsights.topClients.map(item => item.value), 1)
+      : 1;
+
+  const maxClientSku =
+    salesInsights.topClientsSku.length > 0
+      ? Math.max(...salesInsights.topClientsSku.map(item => item.value), 1)
+      : 1;
+
   const handleRefreshApp = async () => {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.getRegistration();
@@ -74,7 +250,7 @@ export default function HomePage({
     {
       key: 'gallery',
       label: 'Фотогалерея',
-      icon: './icons/gallery-icon-64.svg',
+      icon: '/icons/gallery-icon-64.svg',
       onClick: onOpenGallery,
       visible: canOpenGallery,
     },
@@ -150,7 +326,7 @@ export default function HomePage({
       }}
     >
       {/* фон */}
-      <img src={bg} className={styles.background} />
+      <div className={styles.backgroundOverlay} aria-hidden="true" />
 
       <button
         type="button"
@@ -164,11 +340,19 @@ export default function HomePage({
         <span className={styles.refreshIcon} aria-hidden="true">
           ↻
         </span>
-        <span>Оновити {__APP_VERSION__}</span>
+        <span className={styles.refreshText}>Оновити v{__APP_VERSION__}</span>
       </button>
 
       {/* навігація */}
       <div className={styles.buttonContainer}>
+        <div className={styles.brandBlock}>
+          <span className={styles.brandLogo}>S</span>
+          <div className={styles.brandMeta}>
+            <strong className={styles.brandName}>SODA</strong>
+            <span className={styles.brandSub}>Головна панель</span>
+          </div>
+        </div>
+
         <p className={styles.sidebarTitle}>Розділи</p>
         <div className={styles.topGroup}>
           {topMenuItems
@@ -182,7 +366,9 @@ export default function HomePage({
                 {item.badge ? (
                   <span className={styles.badge}>{item.badge}</span>
                 ) : null}
-                <img src={item.icon} className={styles.icon} />
+                <span className={styles.iconWrap}>
+                  <img src={item.icon} className={styles.icon} />
+                </span>
                 <span className={styles.menuLabel}>{item.label}</span>
               </button>
             ))}
@@ -197,18 +383,136 @@ export default function HomePage({
                 onClick={item.onClick}
                 className={styles.button}
               >
-                <img src={item.icon} className={styles.icon} />
+                <span className={styles.iconWrap}>
+                  <img src={item.icon} className={styles.icon} />
+                </span>
                 <span className={styles.menuLabel}>{item.label}</span>
               </button>
             ))}
         </div>
       </div>
 
-      {/* footer */}
-      <footer className={styles.footer}>
-        <span>© 2026</span>
-        <span>v{__APP_VERSION__}</span>
-      </footer>
+      <main className={styles.dashboardArea}>
+        <section className={styles.dashboardCard}>
+          <h2 className={styles.dashboardTitle}>
+            Найпопулярніші продажі ({currentMonthLabel})
+          </h2>
+          <div className={styles.kpiRow}>
+            <div className={styles.kpiItem}>
+              <span className={styles.kpiLabel}>Сума продажів</span>
+              <strong className={styles.kpiValue}>
+                {moneyFormatter.format(salesInsights.totalAmount)} ₴
+              </strong>
+            </div>
+            <div className={styles.kpiItem}>
+              <span className={styles.kpiLabel}>Активні ТТ</span>
+              <strong className={styles.kpiValue}>
+                {integerFormatter.format(salesInsights.storesCount)}
+              </strong>
+            </div>
+            <div className={styles.kpiItem}>
+              <span className={styles.kpiLabel}>Кількість ТТ у фотозвітах</span>
+              <strong className={styles.kpiValue}>
+                {integerFormatter.format(photoReportsTtCount)}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.dashboardGrid}>
+          <article className={styles.chartCard}>
+            <h3 className={styles.chartTitle}>ТОП 10 клієнтів</h3>
+            {salesLoading ? (
+              <p className={styles.chartHint}>Завантаження...</p>
+            ) : salesInsights.topClients.length === 0 ? (
+              <p className={styles.chartHint}>Немає даних для графіка</p>
+            ) : (
+              <ul className={styles.barList}>
+                {salesInsights.topClients.map(item => (
+                  <li key={item.name} className={styles.barItem}>
+                    <div className={styles.barMeta}>
+                      <span className={styles.barName}>{item.name}</span>
+                      <span className={styles.barValue}>
+                        {moneyFormatter.format(item.value)} ₴
+                      </span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <div
+                        className={styles.barFill}
+                        style={{
+                          width: `${(item.value / maxClientAmount) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+
+          <article className={styles.chartCard}>
+            <h3 className={styles.chartTitle}>Топ 10 товарів (шт)</h3>
+            {salesLoading ? (
+              <p className={styles.chartHint}>Завантаження...</p>
+            ) : salesInsights.topProducts.length === 0 ? (
+              <p className={styles.chartHint}>Немає даних для графіка</p>
+            ) : (
+              <ul className={styles.barList}>
+                {salesInsights.topProducts.map(item => (
+                  <li key={item.name} className={styles.barItem}>
+                    <div className={styles.barMeta}>
+                      <span className={styles.barName}>{item.name}</span>
+                      <span className={styles.barValue}>
+                        {integerFormatter.format(item.quantity)}
+                      </span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <div
+                        className={styles.barFillAlt}
+                        style={{
+                          width: `${(item.quantity / maxProductQty) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+
+          <article className={`${styles.chartCard} ${styles.trendCard}`}>
+            <h3 className={styles.chartTitle}>
+              ТОП 10 клієнтів по кількості SKU
+            </h3>
+            {salesLoading ? (
+              <p className={styles.chartHint}>Завантаження...</p>
+            ) : salesInsights.topClientsSku.length === 0 ? (
+              <p className={styles.chartHint}>Немає даних для графіка</p>
+            ) : (
+              <ul className={styles.barList}>
+                {salesInsights.topClientsSku.map(item => (
+                  <li key={item.name} className={styles.barItem}>
+                    <div className={styles.barMeta}>
+                      <span className={styles.barName}>{item.name}</span>
+                      <span className={styles.barValue}>
+                        {integerFormatter.format(item.value)} SKU
+                      </span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <div
+                        className={styles.barFillWarn}
+                        style={{
+                          width: `${(item.value / maxClientSku) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+        </section>
+      </main>
     </div>
   );
 }

@@ -93,6 +93,7 @@
   border-radius: 8px;
   border: 1px solid #c6d8cb;
   background: #fff;
+  color: #1e3a2f;
 }
 .inputTerritory {
   width: 200px;
@@ -102,6 +103,7 @@
   border-radius: 8px;
   border: 1px solid #c6d8cb;
   background: #fff;
+  color: #1e3a2f;
 }
 /* =========================
    TOTAL
@@ -153,6 +155,11 @@
   color: #fff;
   font-weight: 700;
   font-size: 14px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .backButton {
@@ -179,10 +186,20 @@
 }
 
 @media (hover: hover) {
+  .submitButton:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 8px 18px rgba(40, 71, 56, 0.25);
+  }
+
   .backButton:hover {
     background: rgba(255, 255, 255, 0.38);
     transform: translateY(-1px);
   }
+}
+
+.submitButton:active {
+  transform: scale(0.98);
 }
 
 /* =========================

@@ -13,4 +13,6 @@ export const STORE_CHECK_PHOTOS_FOLDER_URL =
 export const STORE_CHECK_URL =
   'https://script.google.com/macros/s/AKfycbzVsmmO3h6adCmEyHOtk4nGMsyYtaa_0oBLMZfsCcWYd5-SikPxlZ6uZG2CMkujx8Sc/exec';
 
-  
+export const PLAN_TARGETS_URL = import.meta.env.DEV
+  ? '/api/plan-targets'
+  : 'https://script.google.com/macros/s/AKfycbxS1DQ-oL3zzFU6bir5pF7NaoE2IM3t7zOS65dvaFQQfz0FSsNyE2BOKXgUdyXS0s7YDQ/exec';

@@ -49,6 +49,7 @@ type HierarchyStoreRow = {
   name: string;
   sum: number;
   quantity: number;
+  weight: number;
   sku: number;
 };
 
@@ -57,6 +58,7 @@ type HierarchyDateRow = {
   label: string;
   sum: number;
   quantity: number;
+  weight: number;
   sku: number;
   stores: HierarchyStoreRow[];
 };
@@ -65,6 +67,7 @@ type HierarchyAgentRow = {
   name: string;
   sum: number;
   quantity: number;
+  weight: number;
   stores: number;
   sku: number;
   dates: HierarchyDateRow[];
@@ -74,9 +77,22 @@ type HierarchyDepartmentRow = {
   name: string;
   sum: number;
   quantity: number;
+  weight: number;
   stores: number;
   sku: number;
   agents: HierarchyAgentRow[];
+};
+
+type FlatHierarchyAgentRow = HierarchyAgentRow & {
+  departmentName: string;
+};
+
+type ProductSummaryRow = {
+  name: string;
+  quantity: number;
+  amount: number;
+  weight: number;
+  tt: number;
 };
 
 const EXCLUDED_BRANDS = new Set(['Принцесв Канді']);
@@ -136,6 +152,97 @@ function formatDateLabel(dateKey: string): string {
   if (match) return `${match[3]}.${match[2]}.${match[1]}`;
 
   return dateKey;
+}
+
+function normalizeFilterValue(value: string): string {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+function isDeliciaBrand(brand: string): boolean {
+  return normalizeFilterValue(brand) === normalizeFilterValue('Деліція');
+}
+
+function isSameBrandSelection(selected: string[], target: string[]): boolean {
+  if (selected.length !== target.length) return false;
+  const targetSet = new Set(target);
+  return selected.every(brand => targetSet.has(brand));
+}
+
+function aggregateStoresFromDates(
+  dates: HierarchyDateRow[]
+): HierarchyStoreRow[] {
+  const storesMap: Record<
+    string,
+    {
+      sum: number;
+      quantity: number;
+      weight: number;
+      sku: number;
+    }
+  > = {};
+
+  dates.forEach(dateRow => {
+    dateRow.stores.forEach(storeRow => {
+      if (!storesMap[storeRow.name]) {
+        storesMap[storeRow.name] = { sum: 0, quantity: 0, weight: 0, sku: 0 };
+      }
+      storesMap[storeRow.name].sum += storeRow.sum;
+      storesMap[storeRow.name].quantity += storeRow.quantity;
+      storesMap[storeRow.name].weight += storeRow.weight;
+      storesMap[storeRow.name].sku = Math.max(
+        storesMap[storeRow.name].sku,
+        storeRow.sku
+      );
+    });
+  });
+
+  return Object.entries(storesMap)
+    .map(([name, value]) => ({
+      name,
+      sum: value.sum,
+      quantity: value.quantity,
+      weight: value.weight,
+      sku: value.sku,
+    }))
+    .sort((a, b) => b.sum - a.sum);
+}
+
+function aggregateProductsFromSales(rows: Sale[]): ProductSummaryRow[] {
+  const products: Record<
+    string,
+    { quantity: number; amount: number; weight: number; stores: Set<string> }
+  > = {};
+
+  rows.forEach(item => {
+    const product = item.товар?.trim();
+    if (!product) return;
+    if (!products[product]) {
+      products[product] = {
+        quantity: 0,
+        amount: 0,
+        weight: 0,
+        stores: new Set<string>(),
+      };
+    }
+    products[product].quantity += item.кількість || 0;
+    products[product].amount += item.сума || 0;
+    products[product].weight += (item.кількість || 0) * (item.вага || 0);
+    if (item.торгова_точка) products[product].stores.add(item.торгова_точка);
+  });
+
+  return Object.entries(products)
+    .map(([name, value]) => ({
+      name,
+      quantity: value.quantity,
+      amount: value.amount,
+      weight: value.weight,
+      tt: value.stores.size,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'uk-UA'));
 }
 
 type SalesPageProps = {
@@ -212,8 +319,16 @@ export default function SalesPage({
 
   const filtered = useMemo(() => {
     return data.filter(i => {
-      if (department && i.відділ !== department) return false;
-      if (agent && i.агент !== agent) return false;
+      if (
+        department &&
+        normalizeFilterValue(i.відділ) !== normalizeFilterValue(department)
+      )
+        return false;
+      if (
+        agent &&
+        normalizeFilterValue(i.агент) !== normalizeFilterValue(agent)
+      )
+        return false;
 
       if (dateFrom || dateTo) {
         const saleDate = parseSaleDate(i.дата);
@@ -296,6 +411,19 @@ export default function SalesPage({
       }))
       .sort(sortBrandRows);
   }, [groupedAllBrands]);
+
+  const orimiBrandSelection = useMemo(
+    () =>
+      brandOptions
+        .map(option => option.brand)
+        .filter(brand => !isDeliciaBrand(brand)),
+    [brandOptions]
+  );
+
+  const isOrimiBrandSelectionActive = useMemo(
+    () => isSameBrandSelection(effectiveSelectedBrands, orimiBrandSelection),
+    [effectiveSelectedBrands, orimiBrandSelection]
+  );
 
   const brandsList = useMemo(() => {
     return Object.entries(grouped)
@@ -467,6 +595,7 @@ export default function SalesPage({
       {
         sum: number;
         quantity: number;
+        weight: number;
         stores: Set<string>;
         products: Set<string>;
         agents: Record<
@@ -474,6 +603,7 @@ export default function SalesPage({
           {
             sum: number;
             quantity: number;
+            weight: number;
             stores: Set<string>;
             products: Set<string>;
             dates: Record<
@@ -481,12 +611,14 @@ export default function SalesPage({
               {
                 sum: number;
                 quantity: number;
+                weight: number;
                 products: Set<string>;
                 stores: Record<
                   string,
                   {
                     sum: number;
                     quantity: number;
+                    weight: number;
                     products: Set<string>;
                   }
                 >;
@@ -504,12 +636,14 @@ export default function SalesPage({
       const storeKey = item.торгова_точка || 'Без торгової точки';
       const amount = item.сума || 0;
       const quantity = item.кількість || 0;
+      const weight = (item.кількість || 0) * (item.вага || 0);
       const productKey = item.товар;
 
       if (!departmentsMap[departmentKey]) {
         departmentsMap[departmentKey] = {
           sum: 0,
           quantity: 0,
+          weight: 0,
           stores: new Set<string>(),
           products: new Set<string>(),
           agents: {},
@@ -519,6 +653,7 @@ export default function SalesPage({
       const departmentGroup = departmentsMap[departmentKey];
       departmentGroup.sum += amount;
       departmentGroup.quantity += quantity;
+      departmentGroup.weight += weight;
       departmentGroup.stores.add(storeKey);
       if (productKey) departmentGroup.products.add(productKey);
 
@@ -526,6 +661,7 @@ export default function SalesPage({
         departmentGroup.agents[agentKey] = {
           sum: 0,
           quantity: 0,
+          weight: 0,
           stores: new Set<string>(),
           products: new Set<string>(),
           dates: {},
@@ -535,6 +671,7 @@ export default function SalesPage({
       const agentGroup = departmentGroup.agents[agentKey];
       agentGroup.sum += amount;
       agentGroup.quantity += quantity;
+      agentGroup.weight += weight;
       agentGroup.stores.add(storeKey);
       if (productKey) agentGroup.products.add(productKey);
 
@@ -542,6 +679,7 @@ export default function SalesPage({
         agentGroup.dates[dateKey] = {
           sum: 0,
           quantity: 0,
+          weight: 0,
           products: new Set<string>(),
           stores: {},
         };
@@ -550,12 +688,14 @@ export default function SalesPage({
       const dateGroup = agentGroup.dates[dateKey];
       dateGroup.sum += amount;
       dateGroup.quantity += quantity;
+      dateGroup.weight += weight;
       if (productKey) dateGroup.products.add(productKey);
 
       if (!dateGroup.stores[storeKey]) {
         dateGroup.stores[storeKey] = {
           sum: 0,
           quantity: 0,
+          weight: 0,
           products: new Set<string>(),
         };
       }
@@ -563,6 +703,7 @@ export default function SalesPage({
       const storeGroup = dateGroup.stores[storeKey];
       storeGroup.sum += amount;
       storeGroup.quantity += quantity;
+      storeGroup.weight += weight;
       if (productKey) storeGroup.products.add(productKey);
     });
 
@@ -571,6 +712,7 @@ export default function SalesPage({
         name: departmentName,
         sum: department.sum,
         quantity: department.quantity,
+        weight: department.weight,
         stores: department.stores.size,
         sku: department.products.size,
         agents: Object.entries(department.agents)
@@ -578,6 +720,7 @@ export default function SalesPage({
             name: agentName,
             sum: agentValue.sum,
             quantity: agentValue.quantity,
+            weight: agentValue.weight,
             stores: agentValue.stores.size,
             sku: agentValue.products.size,
             dates: Object.entries(agentValue.dates)
@@ -586,12 +729,14 @@ export default function SalesPage({
                 label: formatDateLabel(dateGroupKey),
                 sum: dateValue.sum,
                 quantity: dateValue.quantity,
+                weight: dateValue.weight,
                 sku: dateValue.products.size,
                 stores: Object.entries(dateValue.stores)
                   .map(([storeName, storeValue]) => ({
                     name: storeName,
                     sum: storeValue.sum,
                     quantity: storeValue.quantity,
+                    weight: storeValue.weight,
                     sku: storeValue.products.size,
                   }))
                   .sort((a, b) => b.sum - a.sum),
@@ -607,6 +752,217 @@ export default function SalesPage({
       .sort((a, b) => b.sum - a.sum);
   }, [selectedSales]);
 
+  const prioritizedAgents = useMemo<FlatHierarchyAgentRow[]>(() => {
+    return prioritizedHierarchy
+      .flatMap(departmentRow =>
+        departmentRow.agents.map(agentRow => ({
+          ...agentRow,
+          departmentName: departmentRow.name,
+        }))
+      )
+      .sort((a, b) => b.sum - a.sum);
+  }, [prioritizedHierarchy]);
+
+  const productsByDeptAgent = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const key = `${item.відділ || 'Без відділу'}||${item.агент || 'Без торгового представника'}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
+  const productsByDepartment = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const key = item.відділ || 'Без відділу';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
+  const productsByDepartmentDate = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const dateKey = parseSaleDate(item.дата) || '';
+      const key = `${item.відділ || 'Без відділу'}||${dateKey}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
+  const datesByDepartment = useMemo(() => {
+    const map: Record<
+      string,
+      Record<
+        string,
+        {
+          sum: number;
+          quantity: number;
+          weight: number;
+          products: Set<string>;
+          stores: Record<
+            string,
+            {
+              sum: number;
+              quantity: number;
+              weight: number;
+              products: Set<string>;
+            }
+          >;
+        }
+      >
+    > = {};
+
+    selectedSales.forEach(item => {
+      const departmentKey = item.відділ || 'Без відділу';
+      const dateKey = parseSaleDate(item.дата) || '';
+      const storeKey = item.торгова_точка || 'Без торгової точки';
+      const amount = item.сума || 0;
+      const quantity = item.кількість || 0;
+      const weight = (item.кількість || 0) * (item.вага || 0);
+      const productKey = item.товар;
+
+      if (!map[departmentKey]) map[departmentKey] = {};
+      if (!map[departmentKey][dateKey]) {
+        map[departmentKey][dateKey] = {
+          sum: 0,
+          quantity: 0,
+          weight: 0,
+          products: new Set<string>(),
+          stores: {},
+        };
+      }
+
+      const dateGroup = map[departmentKey][dateKey];
+      dateGroup.sum += amount;
+      dateGroup.quantity += quantity;
+      dateGroup.weight += weight;
+      if (productKey) dateGroup.products.add(productKey);
+
+      if (!dateGroup.stores[storeKey]) {
+        dateGroup.stores[storeKey] = {
+          sum: 0,
+          quantity: 0,
+          weight: 0,
+          products: new Set<string>(),
+        };
+      }
+
+      const store = dateGroup.stores[storeKey];
+      store.sum += amount;
+      store.quantity += quantity;
+      store.weight += weight;
+      if (productKey) store.products.add(productKey);
+    });
+
+    const result: Record<string, HierarchyDateRow[]> = {};
+    Object.entries(map).forEach(([departmentKey, dateMap]) => {
+      result[departmentKey] = Object.entries(dateMap)
+        .map(([dateKey, dateValue]) => ({
+          key: dateKey,
+          label: formatDateLabel(dateKey),
+          sum: dateValue.sum,
+          quantity: dateValue.quantity,
+          weight: dateValue.weight,
+          sku: dateValue.products.size,
+          stores: Object.entries(dateValue.stores)
+            .map(([storeName, storeValue]) => ({
+              name: storeName,
+              sum: storeValue.sum,
+              quantity: storeValue.quantity,
+              weight: storeValue.weight,
+              sku: storeValue.products.size,
+            }))
+            .sort((a, b) => b.sum - a.sum),
+        }))
+        .sort((a, b) => {
+          if (!a.key) return 1;
+          if (!b.key) return -1;
+          return b.key.localeCompare(a.key);
+        });
+    });
+
+    return result;
+  }, [selectedSales]);
+
+  const productsByDeptAgentDate = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const dateKey = parseSaleDate(item.дата) || '';
+      const key = `${item.відділ || 'Без відділу'}||${item.агент || 'Без торгового представника'}||${dateKey}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
+  const productsByAgent = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const key = item.агент || 'Без торгового представника';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
+  const productsByAgentDate = useMemo(() => {
+    const map: Record<string, ProductSummaryRow[]> = {};
+
+    const grouped: Record<string, Sale[]> = {};
+    selectedSales.forEach(item => {
+      const dateKey = parseSaleDate(item.дата) || '';
+      const key = `${item.агент || 'Без торгового представника'}||${dateKey}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    Object.entries(grouped).forEach(([key, rows]) => {
+      map[key] = aggregateProductsFromSales(rows);
+    });
+
+    return map;
+  }, [selectedSales]);
+
   const format = (n: number) => numberFormatter.format(n);
 
   const uniqueDepartments = useMemo(
@@ -618,7 +974,7 @@ export default function SalesPage({
     return [...new Set(data.map(d => d.агент).filter(Boolean))];
   }, [data]);
 
-  const shouldShowStores = showStores || showProducts || showByDates;
+  const shouldShowStores = showStores;
   const shouldShowHierarchy = showByDepartments || showByAgents;
 
   const handleDepartmentChange = (value: string) => {
@@ -899,6 +1255,18 @@ export default function SalesPage({
                     <span>Усі ТМ</span>
                   </label>
 
+                  <label
+                    className={`${styles.brandChip} ${styles.brandChipAll} ${isOrimiBrandSelectionActive ? styles.brandChipAllActive : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={styles.brandChipCheckbox}
+                      checked={isOrimiBrandSelectionActive}
+                      onChange={() => setSelectedBrands(orimiBrandSelection)}
+                    />
+                    <span>Усі ТМ Orimi</span>
+                  </label>
+
                   {brandOptions.map(option => {
                     const isChecked = activeBrandSet.has(option.brand);
 
@@ -1004,7 +1372,9 @@ export default function SalesPage({
                           {format(sum)}
                         </span>
                       </span>
-                      <span className={styles.storeSku}>SKU: {sku}</span>
+                      {showProducts && (
+                        <span className={styles.storeSku}>SKU: {sku}</span>
+                      )}
                     </div>
                     {showByDates && dates.length > 0 && (
                       <div className={styles.dateGroupList}>
@@ -1024,7 +1394,7 @@ export default function SalesPage({
                                 Сума: {format(dateGroup.sum)}
                               </span>
                               <span className={styles.dateGroupMetaItem}>
-                                SKU: {dateGroup.sku}
+                                {showProducts ? `SKU: ${dateGroup.sku}` : ''}
                               </span>
                             </div>
 
@@ -1086,107 +1456,808 @@ export default function SalesPage({
             <div className={styles.subBlock}>
               <div className={styles.subHeader}>
                 <h3 className={styles.subTitle}>
-                  Відділ → Торговий представник → Дата → ТТ (
-                  {prioritizedHierarchy.length})
+                  Ієрархія ({prioritizedHierarchy.length})
                 </h3>
               </div>
 
               <div className={styles.storeList}>
-                {prioritizedHierarchy.map(departmentRow => (
-                  <div key={departmentRow.name} className={styles.storeCard}>
-                    <div className={styles.storeRow}>
-                      <span className={styles.storeName}>
-                        {departmentRow.name}
-                      </span>
-                      <span className={styles.storeAmountBlock}>
-                        <span className={styles.storeSum}>
-                          {format(departmentRow.sum)}
-                        </span>
-                      </span>
-                      <span className={styles.storeSku}>
-                        ТТ: {departmentRow.stores}
-                      </span>
-                      <span className={styles.storeSku}>
-                        SKU: {departmentRow.sku}
-                      </span>
-                      <span className={styles.storeSku}>
-                        К-сть: {format(departmentRow.quantity)}
-                      </span>
-                    </div>
+                {showByDepartments
+                  ? prioritizedHierarchy.map(departmentRow => (
+                      <div
+                        key={departmentRow.name}
+                        className={styles.storeCard}
+                      >
+                        <div className={styles.storeRow}>
+                          <span className={styles.storeName}>
+                            {departmentRow.name}
+                          </span>
+                          <span className={styles.storeAmountBlock}>
+                            <span className={styles.storeSum}>
+                              {format(departmentRow.sum)}
+                            </span>
+                          </span>
+                          {showStores && (
+                            <span className={styles.storeSku}>
+                              ТТ: {departmentRow.stores}
+                            </span>
+                          )}
+                          {showProducts && (
+                            <span className={styles.storeSku}>
+                              SKU: {departmentRow.sku}
+                            </span>
+                          )}
+                          <span className={styles.storeSku}>
+                            Вага: {format(departmentRow.weight)}
+                          </span>
+                          <span className={styles.storeSku}>
+                            К-сть: {format(departmentRow.quantity)}
+                          </span>
+                        </div>
 
-                    <div className={styles.dateGroupList}>
-                      {departmentRow.agents.map(agentRow => (
+                        {!showByAgents &&
+                          (showByDates ? (
+                            <div className={styles.dateGroupList}>
+                              {(
+                                datesByDepartment[departmentRow.name] ?? []
+                              ).map(dateRow => {
+                                const dateProducts =
+                                  productsByDepartmentDate[
+                                    `${departmentRow.name}||${dateRow.key}`
+                                  ] ?? [];
+
+                                return (
+                                  <div
+                                    key={`${departmentRow.name}-${dateRow.key || 'no-date'}`}
+                                    className={styles.dateGroup}
+                                  >
+                                    <div className={styles.dateGroupRow}>
+                                      <span className={styles.dateGroupLabel}>
+                                        {dateRow.label}
+                                      </span>
+                                      <span
+                                        className={styles.dateGroupMetaItem}
+                                      >
+                                        К-сть: {format(dateRow.quantity)}
+                                      </span>
+                                      <span
+                                        className={styles.dateGroupMetaItem}
+                                      >
+                                        Сума: {format(dateRow.sum)}
+                                      </span>
+                                      <span
+                                        className={styles.dateGroupMetaItem}
+                                      >
+                                        Вага: {format(dateRow.weight)}
+                                      </span>
+                                      {showProducts && (
+                                        <span
+                                          className={styles.dateGroupMetaItem}
+                                        >
+                                          SKU: {dateRow.sku}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {showStores && (
+                                      <ul className={styles.productList}>
+                                        {dateRow.stores.map(storeRow => (
+                                          <li
+                                            key={`${departmentRow.name}-${dateRow.key || 'no-date'}-${storeRow.name}`}
+                                            className={styles.productItem}
+                                          >
+                                            <span
+                                              className={styles.productName}
+                                            >
+                                              {storeRow.name}
+                                            </span>
+                                            <span
+                                              className={styles.productMeta}
+                                            >
+                                              <span
+                                                className={styles.productQty}
+                                              >
+                                                {format(storeRow.quantity)}
+                                              </span>
+                                              <span
+                                                className={styles.productAmount}
+                                              >
+                                                {format(storeRow.sum)}
+                                              </span>
+                                              <span
+                                                className={styles.productPrice}
+                                              >
+                                                Вага: {format(storeRow.weight)}
+                                              </span>
+                                              {showProducts && (
+                                                <span
+                                                  className={
+                                                    styles.productPrice
+                                                  }
+                                                >
+                                                  SKU: {storeRow.sku}
+                                                </span>
+                                              )}
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+
+                                    {showProducts &&
+                                      !showStores &&
+                                      dateProducts.length > 0 && (
+                                        <ul className={styles.productList}>
+                                          {dateProducts.map(product => (
+                                            <li
+                                              key={`${departmentRow.name}-${dateRow.key || 'no-date'}-${product.name}`}
+                                              className={styles.productItem}
+                                            >
+                                              <span
+                                                className={styles.productName}
+                                              >
+                                                {product.name}
+                                              </span>
+                                              <span
+                                                className={styles.productMeta}
+                                              >
+                                                <span
+                                                  className={styles.productQty}
+                                                >
+                                                  {format(product.quantity)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.productAmount
+                                                  }
+                                                >
+                                                  {format(product.amount)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.productPrice
+                                                  }
+                                                >
+                                                  Вага: {format(product.weight)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.productPrice
+                                                  }
+                                                >
+                                                  ТТ: {product.tt}
+                                                </span>
+                                              </span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            showProducts && (
+                              <ul className={styles.productList}>
+                                {(
+                                  productsByDepartment[departmentRow.name] ?? []
+                                ).map(product => (
+                                  <li
+                                    key={`${departmentRow.name}-${product.name}`}
+                                    className={styles.productItem}
+                                  >
+                                    <span className={styles.productName}>
+                                      {product.name}
+                                    </span>
+                                    <span className={styles.productMeta}>
+                                      <span className={styles.productQty}>
+                                        {format(product.quantity)}
+                                      </span>
+                                      <span className={styles.productAmount}>
+                                        {format(product.amount)}
+                                      </span>
+                                      <span className={styles.productPrice}>
+                                        Вага: {format(product.weight)}
+                                      </span>
+                                      <span className={styles.productPrice}>
+                                        ТТ: {product.tt}
+                                      </span>
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )
+                          ))}
+
+                        {showByAgents && (
+                          <div className={styles.dateGroupList}>
+                            {departmentRow.agents.map(agentRow => {
+                              const stores = aggregateStoresFromDates(
+                                agentRow.dates
+                              );
+                              const agentProducts =
+                                productsByDeptAgent[
+                                  `${departmentRow.name}||${agentRow.name}`
+                                ] ?? [];
+
+                              return (
+                                <div
+                                  key={`${departmentRow.name}-${agentRow.name}`}
+                                  className={styles.dateGroup}
+                                >
+                                  <div className={styles.dateGroupRow}>
+                                    <span className={styles.dateGroupLabel}>
+                                      {agentRow.name}
+                                    </span>
+                                    <span className={styles.dateGroupMetaItem}>
+                                      К-сть: {format(agentRow.quantity)}
+                                    </span>
+                                    <span className={styles.dateGroupMetaItem}>
+                                      Сума: {format(agentRow.sum)}
+                                    </span>
+                                    <span className={styles.dateGroupMetaItem}>
+                                      Вага: {format(agentRow.weight)}
+                                    </span>
+                                    {showStores && (
+                                      <span
+                                        className={styles.dateGroupMetaItem}
+                                      >
+                                        ТТ: {agentRow.stores}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {showByDates ? (
+                                    <div className={styles.dateGroupList}>
+                                      {agentRow.dates.map(dateRow =>
+                                        (() => {
+                                          const dateProducts =
+                                            productsByDeptAgentDate[
+                                              `${departmentRow.name}||${agentRow.name}||${dateRow.key}`
+                                            ] ?? [];
+
+                                          return (
+                                            <div
+                                              key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}`}
+                                              className={styles.dateGroup}
+                                            >
+                                              <div
+                                                className={styles.dateGroupRow}
+                                              >
+                                                <span
+                                                  className={
+                                                    styles.dateGroupLabel
+                                                  }
+                                                >
+                                                  {dateRow.label}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.dateGroupMetaItem
+                                                  }
+                                                >
+                                                  К-сть:{' '}
+                                                  {format(dateRow.quantity)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.dateGroupMetaItem
+                                                  }
+                                                >
+                                                  Сума: {format(dateRow.sum)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.dateGroupMetaItem
+                                                  }
+                                                >
+                                                  Вага: {format(dateRow.weight)}
+                                                </span>
+                                                {showProducts && (
+                                                  <span
+                                                    className={
+                                                      styles.dateGroupMetaItem
+                                                    }
+                                                  >
+                                                    SKU: {dateRow.sku}
+                                                  </span>
+                                                )}
+                                              </div>
+
+                                              {showStores && (
+                                                <ul
+                                                  className={styles.productList}
+                                                >
+                                                  {dateRow.stores.map(
+                                                    storeRow => (
+                                                      <li
+                                                        key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}-${storeRow.name}`}
+                                                        className={
+                                                          styles.productItem
+                                                        }
+                                                      >
+                                                        <span
+                                                          className={
+                                                            styles.productName
+                                                          }
+                                                        >
+                                                          {storeRow.name}
+                                                        </span>
+                                                        <span
+                                                          className={
+                                                            styles.productMeta
+                                                          }
+                                                        >
+                                                          <span
+                                                            className={
+                                                              styles.productQty
+                                                            }
+                                                          >
+                                                            {format(
+                                                              storeRow.quantity
+                                                            )}
+                                                          </span>
+                                                          <span
+                                                            className={
+                                                              styles.productAmount
+                                                            }
+                                                          >
+                                                            {format(
+                                                              storeRow.sum
+                                                            )}
+                                                          </span>
+                                                          <span
+                                                            className={
+                                                              styles.productPrice
+                                                            }
+                                                          >
+                                                            Вага:{' '}
+                                                            {format(
+                                                              storeRow.weight
+                                                            )}
+                                                          </span>
+                                                          {showProducts && (
+                                                            <span
+                                                              className={
+                                                                styles.productPrice
+                                                              }
+                                                            >
+                                                              SKU:{' '}
+                                                              {storeRow.sku}
+                                                            </span>
+                                                          )}
+                                                        </span>
+                                                      </li>
+                                                    )
+                                                  )}
+                                                </ul>
+                                              )}
+
+                                              {showProducts &&
+                                                !showStores &&
+                                                dateProducts.length > 0 && (
+                                                  <ul
+                                                    className={
+                                                      styles.productList
+                                                    }
+                                                  >
+                                                    {dateProducts.map(
+                                                      product => (
+                                                        <li
+                                                          key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}-${product.name}`}
+                                                          className={
+                                                            styles.productItem
+                                                          }
+                                                        >
+                                                          <span
+                                                            className={
+                                                              styles.productName
+                                                            }
+                                                          >
+                                                            {product.name}
+                                                          </span>
+                                                          <span
+                                                            className={
+                                                              styles.productMeta
+                                                            }
+                                                          >
+                                                            <span
+                                                              className={
+                                                                styles.productQty
+                                                              }
+                                                            >
+                                                              {format(
+                                                                product.quantity
+                                                              )}
+                                                            </span>
+                                                            <span
+                                                              className={
+                                                                styles.productAmount
+                                                              }
+                                                            >
+                                                              {format(
+                                                                product.amount
+                                                              )}
+                                                            </span>
+                                                            <span
+                                                              className={
+                                                                styles.productPrice
+                                                              }
+                                                            >
+                                                              Вага:{' '}
+                                                              {format(
+                                                                product.weight
+                                                              )}
+                                                            </span>
+                                                            <span
+                                                              className={
+                                                                styles.productPrice
+                                                              }
+                                                            >
+                                                              ТТ: {product.tt}
+                                                            </span>
+                                                          </span>
+                                                        </li>
+                                                      )
+                                                    )}
+                                                  </ul>
+                                                )}
+                                            </div>
+                                          );
+                                        })()
+                                      )}
+                                    </div>
+                                  ) : (
+                                    showStores &&
+                                    stores.length > 0 && (
+                                      <ul className={styles.productList}>
+                                        {stores.map(storeRow => (
+                                          <li
+                                            key={`${departmentRow.name}-${agentRow.name}-${storeRow.name}`}
+                                            className={styles.productItem}
+                                          >
+                                            <span
+                                              className={styles.productName}
+                                            >
+                                              {storeRow.name}
+                                            </span>
+                                            <span
+                                              className={styles.productMeta}
+                                            >
+                                              <span
+                                                className={styles.productQty}
+                                              >
+                                                {format(storeRow.quantity)}
+                                              </span>
+                                              <span
+                                                className={styles.productAmount}
+                                              >
+                                                {format(storeRow.sum)}
+                                              </span>
+                                              <span
+                                                className={styles.productPrice}
+                                              >
+                                                Вага: {format(storeRow.weight)}
+                                              </span>
+                                              {showProducts && (
+                                                <span
+                                                  className={
+                                                    styles.productPrice
+                                                  }
+                                                >
+                                                  SKU: {storeRow.sku}
+                                                </span>
+                                              )}
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )
+                                  )}
+
+                                  {showProducts &&
+                                    !showByDates &&
+                                    !showStores &&
+                                    agentProducts.length > 0 && (
+                                      <ul className={styles.productList}>
+                                        {agentProducts.map(product => (
+                                          <li
+                                            key={`${departmentRow.name}-${agentRow.name}-${product.name}`}
+                                            className={styles.productItem}
+                                          >
+                                            <span
+                                              className={styles.productName}
+                                            >
+                                              {product.name}
+                                            </span>
+                                            <span
+                                              className={styles.productMeta}
+                                            >
+                                              <span
+                                                className={styles.productQty}
+                                              >
+                                                {format(product.quantity)}
+                                              </span>
+                                              <span
+                                                className={styles.productAmount}
+                                              >
+                                                {format(product.amount)}
+                                              </span>
+                                              <span
+                                                className={styles.productPrice}
+                                              >
+                                                Вага: {format(product.weight)}
+                                              </span>
+                                              <span
+                                                className={styles.productPrice}
+                                              >
+                                                ТТ: {product.tt}
+                                              </span>
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  : showByAgents &&
+                    prioritizedAgents.map(agentRow => {
+                      const stores = aggregateStoresFromDates(agentRow.dates);
+                      const agentProducts =
+                        productsByAgent[agentRow.name] ?? [];
+
+                      return (
                         <div
-                          key={`${departmentRow.name}-${agentRow.name}`}
-                          className={styles.dateGroup}
+                          key={`${agentRow.departmentName}-${agentRow.name}`}
+                          className={styles.storeCard}
                         >
-                          <div className={styles.dateGroupRow}>
-                            <span className={styles.dateGroupLabel}>
+                          <div className={styles.storeRow}>
+                            <span className={styles.storeName}>
                               {agentRow.name}
                             </span>
-                            <span className={styles.dateGroupMetaItem}>
+                            <span className={styles.storeAmountBlock}>
+                              <span className={styles.storeSum}>
+                                {format(agentRow.sum)}
+                              </span>
+                            </span>
+                            {showStores && (
+                              <span className={styles.storeSku}>
+                                ТТ: {agentRow.stores}
+                              </span>
+                            )}
+                            <span className={styles.storeSku}>
+                              Вага: {format(agentRow.weight)}
+                            </span>
+                            <span className={styles.storeSku}>
                               К-сть: {format(agentRow.quantity)}
                             </span>
+                          </div>
+                          <div className={styles.dateGroupRow}>
                             <span className={styles.dateGroupMetaItem}>
-                              Сума: {format(agentRow.sum)}
-                            </span>
-                            <span className={styles.dateGroupMetaItem}>
-                              ТТ: {agentRow.stores}
+                              Відділ: {agentRow.departmentName}
                             </span>
                           </div>
 
-                          <div className={styles.dateGroupList}>
-                            {agentRow.dates.map(dateRow => (
-                              <div
-                                key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}`}
-                                className={styles.dateGroup}
-                              >
-                                <div className={styles.dateGroupRow}>
-                                  <span className={styles.dateGroupLabel}>
-                                    {dateRow.label}
-                                  </span>
-                                  <span className={styles.dateGroupMetaItem}>
-                                    К-сть: {format(dateRow.quantity)}
-                                  </span>
-                                  <span className={styles.dateGroupMetaItem}>
-                                    Сума: {format(dateRow.sum)}
-                                  </span>
-                                  <span className={styles.dateGroupMetaItem}>
-                                    SKU: {dateRow.sku}
-                                  </span>
-                                </div>
+                          {showByDates ? (
+                            <div className={styles.dateGroupList}>
+                              {agentRow.dates.map(dateRow =>
+                                (() => {
+                                  const dateProducts =
+                                    productsByAgentDate[
+                                      `${agentRow.name}||${dateRow.key}`
+                                    ] ?? [];
 
-                                <ul className={styles.productList}>
-                                  {dateRow.stores.map(storeRow => (
-                                    <li
-                                      key={`${departmentRow.name}-${agentRow.name}-${dateRow.key || 'no-date'}-${storeRow.name}`}
-                                      className={styles.productItem}
+                                  return (
+                                    <div
+                                      key={`${agentRow.departmentName}-${agentRow.name}-${dateRow.key || 'no-date'}`}
+                                      className={styles.dateGroup}
                                     >
-                                      <span className={styles.productName}>
-                                        {storeRow.name}
+                                      <div className={styles.dateGroupRow}>
+                                        <span className={styles.dateGroupLabel}>
+                                          {dateRow.label}
+                                        </span>
+                                        <span
+                                          className={styles.dateGroupMetaItem}
+                                        >
+                                          К-сть: {format(dateRow.quantity)}
+                                        </span>
+                                        <span
+                                          className={styles.dateGroupMetaItem}
+                                        >
+                                          Сума: {format(dateRow.sum)}
+                                        </span>
+                                        <span
+                                          className={styles.dateGroupMetaItem}
+                                        >
+                                          Вага: {format(dateRow.weight)}
+                                        </span>
+                                        {showProducts && (
+                                          <span
+                                            className={styles.dateGroupMetaItem}
+                                          >
+                                            SKU: {dateRow.sku}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {showStores && (
+                                        <ul className={styles.productList}>
+                                          {dateRow.stores.map(storeRow => (
+                                            <li
+                                              key={`${agentRow.departmentName}-${agentRow.name}-${dateRow.key || 'no-date'}-${storeRow.name}`}
+                                              className={styles.productItem}
+                                            >
+                                              <span
+                                                className={styles.productName}
+                                              >
+                                                {storeRow.name}
+                                              </span>
+                                              <span
+                                                className={styles.productMeta}
+                                              >
+                                                <span
+                                                  className={styles.productQty}
+                                                >
+                                                  {format(storeRow.quantity)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.productAmount
+                                                  }
+                                                >
+                                                  {format(storeRow.sum)}
+                                                </span>
+                                                <span
+                                                  className={
+                                                    styles.productPrice
+                                                  }
+                                                >
+                                                  Вага:{' '}
+                                                  {format(storeRow.weight)}
+                                                </span>
+                                                {showProducts && (
+                                                  <span
+                                                    className={
+                                                      styles.productPrice
+                                                    }
+                                                  >
+                                                    SKU: {storeRow.sku}
+                                                  </span>
+                                                )}
+                                              </span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+
+                                      {showProducts &&
+                                        !showStores &&
+                                        dateProducts.length > 0 && (
+                                          <ul className={styles.productList}>
+                                            {dateProducts.map(product => (
+                                              <li
+                                                key={`${agentRow.departmentName}-${agentRow.name}-${dateRow.key || 'no-date'}-${product.name}`}
+                                                className={styles.productItem}
+                                              >
+                                                <span
+                                                  className={styles.productName}
+                                                >
+                                                  {product.name}
+                                                </span>
+                                                <span
+                                                  className={styles.productMeta}
+                                                >
+                                                  <span
+                                                    className={
+                                                      styles.productQty
+                                                    }
+                                                  >
+                                                    {format(product.quantity)}
+                                                  </span>
+                                                  <span
+                                                    className={
+                                                      styles.productAmount
+                                                    }
+                                                  >
+                                                    {format(product.amount)}
+                                                  </span>
+                                                  <span
+                                                    className={
+                                                      styles.productPrice
+                                                    }
+                                                  >
+                                                    Вага:{' '}
+                                                    {format(product.weight)}
+                                                  </span>
+                                                  <span
+                                                    className={
+                                                      styles.productPrice
+                                                    }
+                                                  >
+                                                    ТТ: {product.tt}
+                                                  </span>
+                                                </span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        )}
+                                    </div>
+                                  );
+                                })()
+                              )}
+                            </div>
+                          ) : (
+                            showStores &&
+                            stores.length > 0 && (
+                              <ul className={styles.productList}>
+                                {stores.map(storeRow => (
+                                  <li
+                                    key={`${agentRow.departmentName}-${agentRow.name}-${storeRow.name}`}
+                                    className={styles.productItem}
+                                  >
+                                    <span className={styles.productName}>
+                                      {storeRow.name}
+                                    </span>
+                                    <span className={styles.productMeta}>
+                                      <span className={styles.productQty}>
+                                        {format(storeRow.quantity)}
                                       </span>
-                                      <span className={styles.productMeta}>
-                                        <span className={styles.productQty}>
-                                          {format(storeRow.quantity)}
-                                        </span>
-                                        <span className={styles.productAmount}>
-                                          {format(storeRow.sum)}
-                                        </span>
+                                      <span className={styles.productAmount}>
+                                        {format(storeRow.sum)}
+                                      </span>
+                                      <span className={styles.productPrice}>
+                                        Вага: {format(storeRow.weight)}
+                                      </span>
+                                      {showProducts && (
                                         <span className={styles.productPrice}>
                                           SKU: {storeRow.sku}
                                         </span>
+                                      )}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )
+                          )}
+
+                          {showProducts &&
+                            !showByDates &&
+                            !showStores &&
+                            agentProducts.length > 0 && (
+                              <ul className={styles.productList}>
+                                {agentProducts.map(product => (
+                                  <li
+                                    key={`${agentRow.departmentName}-${agentRow.name}-${product.name}`}
+                                    className={styles.productItem}
+                                  >
+                                    <span className={styles.productName}>
+                                      {product.name}
+                                    </span>
+                                    <span className={styles.productMeta}>
+                                      <span className={styles.productQty}>
+                                        {format(product.quantity)}
                                       </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
+                                      <span className={styles.productAmount}>
+                                        {format(product.amount)}
+                                      </span>
+                                      <span className={styles.productPrice}>
+                                        Вага: {format(product.weight)}
+                                      </span>
+                                      <span className={styles.productPrice}>
+                                        ТТ: {product.tt}
+                                      </span>
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                      );
+                    })}
               </div>
             </div>
           )}

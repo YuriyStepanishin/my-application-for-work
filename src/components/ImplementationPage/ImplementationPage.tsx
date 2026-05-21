@@ -12,8 +12,10 @@ import { DEPARTMENT_ORDER } from './agentsConfig';
 import {
   loadPlanColumns,
   calcColumnFact,
+  calcColumnFactDetailsByStore,
   isGrnMetric,
   type PlanColumn,
+  type StoreFactDetail,
 } from './planColumnsStorage';
 import styles from './ImplementationPage.module.css';
 
@@ -143,14 +145,20 @@ type DataRow = {
   cols: ColValues[];
 };
 
+type DetailModalState = {
+  title: string;
+  grn: boolean;
+  items: StoreFactDetail[];
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ImplementationPage({ onBack }: { onBack: () => void }) {
+  const [detailModal, setDetailModal] = useState<DetailModalState | null>(null);
   const renderDepartments = useMemo(
     () => getRenderableDepartmentsByScope(),
     []
   );
-  const [planColumns] = useState<PlanColumn[]>(loadPlanColumns);
 
   const {
     data = [],
@@ -159,6 +167,14 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
   } = useQuery<Sale[]>({
     queryKey: ['sales'],
     queryFn: fetchSales,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: planColumns = [], isLoading: isPlanLoading } = useQuery<
+    PlanColumn[]
+  >({
+    queryKey: ['plan-targets'],
+    queryFn: loadPlanColumns,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -247,7 +263,34 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
     year: 'numeric',
   });
 
-  if (isLoading) return <Loader />;
+  function openFactDetails(
+    rowType: 'dept' | 'agent' | 'total',
+    rowLabel: string,
+    columnIndex: number
+  ) {
+    const column = planColumns[columnIndex];
+    if (!column) return;
+
+    let scopeSales: Sale[] = [];
+    if (rowType === 'total') {
+      scopeSales = currentMonthSales;
+    } else if (rowType === 'agent') {
+      scopeSales = agentSalesIndex[rowLabel] ?? [];
+    } else {
+      const dept = renderDepartments.find(item => item.label === rowLabel);
+      if (!dept) return;
+      scopeSales = dept.agents.flatMap(agent => agentSalesIndex[agent] ?? []);
+    }
+
+    const items = calcColumnFactDetailsByStore(scopeSales, column);
+    setDetailModal({
+      title: `${rowLabel} - ${column.label}`,
+      grn: isGrnMetric(column.metric),
+      items,
+    });
+  }
+
+  if (isLoading || isPlanLoading) return <Loader />;
   if (error) return <div className={styles.error}>Помилка завантаження</div>;
 
   return (
@@ -299,6 +342,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                     fact={c.fact}
                     grn={isGrnMetric(planColumns[ci].metric)}
                     styles={styles}
+                    onFactClick={() => openFactDetails(row.type, row.label, ci)}
                   />
                 ))}
               </tr>
@@ -314,6 +358,9 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   fact={c.fact}
                   grn={isGrnMetric(planColumns[ci].metric)}
                   styles={styles}
+                  onFactClick={() =>
+                    openFactDetails('total', 'Загальний підсумок', ci)
+                  }
                 />
               ))}
             </tr>
@@ -355,7 +402,15 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                             {grn ? fmt(c.plan) : c.plan}
                           </td>
                           <td className={styles.numCell}>
-                            {fmtFact(c.fact, grn)}
+                            <button
+                              type="button"
+                              className={styles.factButton}
+                              onClick={() =>
+                                openFactDetails(row.type, row.label, ci)
+                              }
+                            >
+                              {fmtFact(c.fact, grn)}
+                            </button>
                           </td>
                           <td
                             className={`${styles.numCell} ${styles.pctCell} ${getPctClass(c.fact, c.plan, styles)}`}
@@ -373,7 +428,15 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                         {grn ? fmt(totals.cols[ci].plan) : totals.cols[ci].plan}
                       </td>
                       <td className={styles.numCell}>
-                        {fmtFact(totals.cols[ci].fact, grn)}
+                        <button
+                          type="button"
+                          className={styles.factButton}
+                          onClick={() =>
+                            openFactDetails('total', 'Загальний підсумок', ci)
+                          }
+                        >
+                          {fmtFact(totals.cols[ci].fact, grn)}
+                        </button>
                       </td>
                       <td
                         className={`${styles.numCell} ${styles.pctCell} ${getPctClass(totals.cols[ci].fact, totals.cols[ci].plan, styles)}`}
@@ -392,6 +455,53 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       <button className={styles.backBtn} onClick={onBack}>
         ← Назад
       </button>
+
+      {detailModal && (
+        <div className={styles.modalLayer}>
+          <div
+            className={styles.modalBackdrop}
+            onClick={() => setDetailModal(null)}
+          />
+          <div className={styles.modalDialog} role="dialog" aria-modal="true">
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>{detailModal.title}</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setDetailModal(null)}
+                aria-label="Закрити"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              {detailModal.items.length === 0 ? (
+                <p className={styles.emptyText}>
+                  Немає даних по торгових точках
+                </p>
+              ) : (
+                <table className={styles.detailsTable}>
+                  <thead>
+                    <tr>
+                      <th>Торгова точка</th>
+                      <th>Показник</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailModal.items.map(item => (
+                      <tr key={item.store}>
+                        <td>{item.store}</td>
+                        <td>{fmtFact(item.value, detailModal.grn)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -410,17 +520,23 @@ function ColCells({
   plan,
   fact,
   grn,
+  onFactClick,
   styles: s,
 }: {
   plan: number;
   fact: number;
   grn: boolean;
+  onFactClick: () => void;
   styles: Record<string, string>;
 }) {
   return (
     <>
       <td className={s.numCell}>{grn ? fmt(plan) : plan}</td>
-      <td className={s.numCell}>{fmtFact(fact, grn)}</td>
+      <td className={s.numCell}>
+        <button type="button" className={s.factButton} onClick={onFactClick}>
+          {fmtFact(fact, grn)}
+        </button>
+      </td>
       <td className={`${s.numCell} ${s.pctCell} ${getPctClass(fact, plan, s)}`}>
         {pct(fact, plan)}
       </td>

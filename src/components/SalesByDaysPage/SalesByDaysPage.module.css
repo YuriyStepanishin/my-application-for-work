@@ -8,12 +8,13 @@
   margin: 0 auto;
   padding: 16px;
   box-sizing: border-box;
+  color: #dce9ff;
 }
 
 .error {
   padding: 40px;
   text-align: center;
-  color: red;
+  color: #fecaca;
 }
 
 .section {
@@ -30,10 +31,10 @@
 .brandButton {
   height: 36px;
   padding: 0 12px;
-  border: 1px solid #a8bcb0;
+  border: 1px solid rgba(108, 152, 232, 0.34);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
-  color: #224434;
+  background: rgba(11, 41, 92, 0.72);
+  color: #d9e8ff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -44,15 +45,15 @@
 }
 
 .brandButtonActive {
-  background: #2f4f3a;
-  color: #fff;
-  border-color: #2f4f3a;
+  background: linear-gradient(165deg, #2a87ff, #1667e7);
+  color: #f7faff;
+  border-color: rgba(140, 183, 255, 0.62);
 }
 
 .title {
   margin: 0 0 10px;
   font-size: 18px;
-  color: #224434;
+  color: #e6f1ff;
 }
 
 .chartsSection {
@@ -68,8 +69,8 @@
 }
 
 .chartCard {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid #c7d8cc;
+  background: rgba(9, 34, 79, 0.78);
+  border: 1px solid rgba(108, 152, 232, 0.24);
   border-radius: 12px;
   padding: 10px;
 }
@@ -77,7 +78,7 @@
 .chartTitle {
   margin: 0 0 8px;
   font-size: 14px;
-  color: #224434;
+  color: #e6f0ff;
 }
 
 .chartBody {
@@ -94,7 +95,7 @@
 
 .chartDate {
   font-size: 12px;
-  color: #355a47;
+  color: #cddffb;
   white-space: nowrap;
 }
 
@@ -102,7 +103,7 @@
   width: 100%;
   height: 8px;
   border-radius: 999px;
-  background: #dde9e0;
+  background: rgba(50, 86, 152, 0.34);
   overflow: hidden;
 }
 
@@ -120,7 +121,7 @@
   text-align: right;
   font-size: 12px;
   font-weight: 600;
-  color: #1f3f2f;
+  color: #deecff;
   white-space: nowrap;
 }
 
@@ -132,28 +133,38 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  background: #fff;
+  background: rgba(8, 31, 73, 0.86);
+  border: 1px solid rgba(108, 152, 232, 0.2);
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .table th,
 .table td {
-  border: 1px solid #ddd;
+  border: 1px solid rgba(108, 152, 232, 0.2);
   padding: 8px;
   font-size: clamp(12px, 1.6vw, 14px);
   line-height: 1.25;
+  color: #dce9ff;
 }
 
 .table th {
-  background: rgba(240, 245, 241, 0.92);
-  color: #224434;
+  background: rgba(13, 44, 97, 0.88);
+  color: #edf5ff;
 }
 
 .weekTotalRow {
-  background: rgba(227, 238, 230, 0.9);
+  background: rgba(20, 64, 132, 0.45);
 }
 
 .grandTotalRow {
-  background: rgba(208, 226, 213, 0.95);
+  background: rgba(26, 81, 158, 0.56);
+}
+
+.weekTotalRow td,
+.grandTotalRow td {
+  color: #f2f7ff;
+  font-weight: 700;
 }
 
 .table td:nth-child(2),
@@ -175,16 +186,16 @@
   z-index: 20;
   height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.28);
+  border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
-  color: #2f4f3a;
+  background: rgba(14, 38, 79, 0.46);
+  color: #eef5ff;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
+  box-shadow: 0 8px 20px rgba(3, 18, 45, 0.35);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -193,17 +204,17 @@
 
 @media (hover: hover) {
   .backButton:hover {
-    background: rgba(255, 255, 255, 0.38);
+    background: rgba(20, 52, 107, 0.58);
     transform: translateY(-1px);
   }
 
   .brandButton:hover {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(17, 54, 114, 0.86);
     transform: translateY(-1px);
   }
 
   .brandButtonActive:hover {
-    background: #2f4f3a;
+    background: linear-gradient(165deg, #2a87ff, #1667e7);
   }
 }
 

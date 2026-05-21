@@ -224,11 +224,12 @@ function handleStoreCheck(data) {
  */
 function handlePhotoUpload(data) {
   var folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
+  var photoDate = resolvePhotoDate(data);
 
   // Підпапка: Відділ / ТП / Дата
   var subFolderName = [
     data.representative || data.store || 'unknown',
-    data.createdDate || formatDate(new Date()),
+    photoDate,
   ].join(' — ');
 
   var subFolder = getOrCreateFolder(folder, subFolderName);
@@ -267,6 +268,24 @@ function handlePhotoUpload(data) {
 
 function num(value) {
   return typeof value === 'number' ? value : 0;
+}
+
+function resolvePhotoDate(data) {
+  var photos = data && Array.isArray(data.photos) ? data.photos : [];
+
+  for (var i = 0; i < photos.length; i++) {
+    var p = photos[i] || {};
+    var candidate = String(p.capturedAt || '').trim();
+    if (candidate) return candidate;
+  }
+
+  var fromCreatedDate = String((data && data.createdDate) || '').trim();
+  if (fromCreatedDate) return fromCreatedDate;
+
+  var fromDate = String((data && data.date) || '').trim();
+  if (fromDate) return fromDate;
+
+  return formatDate(new Date());
 }
 
 function formatDate(date) {

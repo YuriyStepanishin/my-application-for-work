@@ -1,547 +1,598 @@
-/* ===== MAP BUTTON ===== */
-.mapButton {
-  margin: 0;
-  padding: 10px 20px;
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
-}
-.mapButton:hover {
-  background: #1d4ed8;
-}
-/* ===== ФОН ===== */
 .background {
   position: fixed;
-  top: 0;
-  left: 0;
-
+  inset: 0;
   width: 100%;
   height: 100%;
-
   object-fit: cover;
-
+  filter: saturate(0.62) brightness(0.44) contrast(1.12);
   z-index: 0;
 }
 
-/* ===== КОНТЕЙНЕР ===== */
+.backgroundOverlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 18% 20%,
+      rgba(41, 130, 255, 0.22),
+      transparent 30%
+    ),
+    radial-gradient(circle at 75% 75%, rgba(0, 211, 255, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(5, 20, 49, 0.86), rgba(4, 15, 37, 0.88));
+  z-index: 1;
+  pointer-events: none;
+}
+
 .buttonContainer {
   position: fixed;
+  z-index: 10;
+  top: 0;
   bottom: 0;
   left: 0;
+  width: min(340px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 14px 18px;
+  padding-top: max(22px, env(safe-area-inset-top));
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  background:
+    linear-gradient(170deg, rgba(6, 26, 61, 0.96), rgba(4, 20, 49, 0.94)),
+    radial-gradient(circle at 0% 0%, rgba(28, 125, 255, 0.2), transparent 35%);
+  border-right: 1px solid rgba(91, 150, 255, 0.22);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  overflow-y: auto;
+}
 
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  right: 0;
-
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.brandBlock {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  margin-bottom: 6px;
+}
 
-  padding: 12px;
+.brandLogo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ecf4ff;
+  background: linear-gradient(165deg, #2e8cff, #1767e7);
+  box-shadow: 0 10px 20px rgba(23, 103, 231, 0.4);
+}
 
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  padding-left: max(12px, env(safe-area-inset-left));
-  padding-right: max(12px, env(safe-area-inset-right));
+.brandMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
-  z-index: 10;
+.brandName {
+  color: #f0f5ff;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.brandSub {
+  color: rgba(191, 210, 245, 0.82);
+  font-size: 11px;
 }
 
 .sidebarTitle {
-  display: none;
+  margin: 0;
+  padding: 3px 6px;
+  color: rgba(150, 182, 236, 0.78);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-/* ===== ОСНОВНА КНОПКА (СКЛО + ЗОЛОТО) ===== */
-.button {
-  flex: 1;
+.topGroup,
+.bottomGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  height: auto;
+.topGroup {
   min-height: 0;
-  aspect-ratio: 1 / 1;
+}
 
-  border-radius: 16px;
-  position: relative;
-  overflow: hidden;
+.bottomGroup {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(105, 145, 220, 0.18);
+}
 
-  /* напівпрозорий фон */
-  background: rgba(20, 20, 20, 0.35);
-
-  /* glass effect */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  /* золота рамка */
-  border: 2px solid rgba(212, 175, 55, 0.85);
-
-  /* текст */
-  color: #f5e6c8;
-
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.6px;
-
-  font-family:
-    'Segoe UI', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
-
+.button {
+  width: 100%;
+  border: 1px solid rgba(111, 154, 232, 0.2);
+  border-radius: 12px;
+  min-height: 52px;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 46, 98, 0.64),
+    rgba(12, 35, 79, 0.7)
+  );
+  color: #dbe8ff;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-
-  text-align: center;
-
+  gap: 10px;
+  text-align: left;
+  padding: 9px 11px;
   cursor: pointer;
-
-  /* glow */
-  box-shadow:
-    0 0 12px rgba(212, 175, 55, 0.35),
-    inset 0 0 8px rgba(212, 175, 55, 0.15);
-
-  /* читабельність */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-
+  position: relative;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
+}
+
+.iconWrap {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    165deg,
+    rgba(46, 140, 255, 0.26),
+    rgba(31, 95, 208, 0.3)
+  );
+  border: 1px solid rgba(108, 162, 244, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
 }
 
 .menuLabel {
-  display: none;
+  font-size: 13px;
+  line-height: 1.22;
+  font-weight: 600;
 }
 
 .badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 7px;
+  top: 7px;
+  right: 8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff8f1f 0%, #ff5a2a 100%);
-  color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  box-shadow: 0 0 0 4px rgba(255, 111, 44, 0.2);
+  color: #fff;
+  background: linear-gradient(165deg, #2dd56f, #1ca75a);
+  box-shadow: 0 0 0 3px rgba(45, 213, 111, 0.15);
 }
 
-.topGroup {
-  display: contents;
-}
-
-.bottomGroup {
-  display: contents;
-}
-
-/* hover */
-@media (hover: hover) {
-  .button:hover {
-    transform: scale(1.05);
-    background: rgba(20, 20, 20, 0.45);
-
-    box-shadow:
-      0 0 18px rgba(212, 175, 55, 0.6),
-      inset 0 0 12px rgba(212, 175, 55, 0.25);
-  }
-
-  .backButton:hover {
-    transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.38);
-    box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
-  }
-}
-
-/* натискання */
-.button:active {
-  transform: scale(0.97);
-
-  box-shadow:
-    0 0 8px rgba(212, 175, 55, 0.5),
-    inset 0 0 16px rgba(212, 175, 55, 0.35);
-}
-
-/* ===== КНОПКА НАЗАД ===== */
-.backButton {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 20;
-  height: 48px;
-  padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.28);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
-  color: #2f4f3a;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.backButton:active {
-  transform: scale(0.98);
-}
-.icon {
-  width: 70%;
-  height: 70%;
-  max-width: 70%;
-  max-height: 70%;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
-}
-
-/* ===== FOOTER ===== */
 .footer {
   position: fixed;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  gap: 12px;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(175, 203, 255, 0.8);
   font-size: 11px;
-  color: rgba(245, 230, 200, 0.6);
-  z-index: 5;
-  padding: 4px 8px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: 6px;
-  background: rgba(10, 10, 10, 0.3);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(8, 28, 64, 0.75);
+  border: 1px solid rgba(104, 154, 236, 0.24);
 }
 
 .refreshButton {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 20;
-  height: 48px;
-  padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.35);
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 12;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  color: #2f4f3a;
-  font-size: 15px;
+  min-height: 40px;
+  border: 1px solid rgba(122, 164, 232, 0.24);
+  background: rgba(10, 35, 79, 0.74);
+  color: rgba(220, 233, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+}
+
+.refreshText {
+  white-space: nowrap;
+}
+
+.dashboardArea {
+  position: fixed;
+  z-index: 6;
+  top: 18px;
+  right: 16px;
+  left: 360px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.dashboardCard {
+  border: 1px solid rgba(110, 154, 232, 0.3);
+  border-radius: 18px;
+  background:
+    linear-gradient(170deg, rgba(6, 27, 65, 0.9), rgba(5, 21, 52, 0.88)),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(52, 142, 255, 0.16),
+      transparent 45%
+    );
+  box-shadow: 0 18px 36px rgba(1, 13, 30, 0.45);
+  padding: 16px;
+}
+
+.dashboardTitle {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #eff5ff;
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kpiItem {
+  border: 1px solid rgba(110, 154, 232, 0.24);
+  border-radius: 14px;
+  background: rgba(12, 39, 88, 0.72);
+  padding: 10px 12px;
+}
+
+.kpiLabel {
+  display: block;
+  font-size: 12px;
+  color: rgba(172, 198, 244, 0.86);
+  margin-bottom: 6px;
+}
+
+.kpiValue {
+  font-size: 24px;
+  color: #f3f8ff;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.chartCard {
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  border-radius: 16px;
+  background: rgba(7, 30, 71, 0.84);
+  padding: 14px;
+  min-height: 220px;
+}
+
+.trendCard {
+  grid-column: 2 / 3;
+  min-height: 190px;
+}
+
+.chartTitle {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #e7f1ff;
+}
+
+.chartHint {
+  margin: 14px 0 0;
+  color: rgba(174, 199, 243, 0.86);
+  font-size: 13px;
+}
+
+.barList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.barItem {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.barMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.barName {
+  color: #dbe9ff;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barValue {
+  color: #eaf3ff;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.barTrack {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(38, 75, 142, 0.36);
+  overflow: hidden;
+}
+
+.barFill,
+.barFillAlt {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.barFill {
+  background: linear-gradient(90deg, #2f8fff, #46c0ff);
+}
+
+.barFillAlt {
+  background: linear-gradient(90deg, #26d38e, #69f0b4);
+}
+
+.barFillWarn {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff9f43, #ffd166);
+}
+
+.sparklineWrap {
+  border: 1px solid rgba(110, 154, 232, 0.24);
+  border-radius: 10px;
+  background: rgba(11, 39, 88, 0.5);
+  padding: 8px 8px 4px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 74px;
+}
+
+.sparklineLine {
+  fill: none;
+  stroke: #54b6ff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparklineLabels {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(171, 196, 240, 0.86);
+}
+
+.sparklineLabels span {
+  text-align: center;
+  white-space: nowrap;
 }
 
 .refreshIcon {
-  font-size: 16px;
-  line-height: 1;
-  opacity: 0.56;
+  font-size: 14px;
 }
 
-/* ===== MOBILE ===== */
-@media (max-width: 767px) {
-  .refreshButton {
-    display: none;
-  }
-
-  .buttonContainer {
-    max-width: 560px;
-    gap: 10px;
-  }
-
-  .button {
-    font-size: 15px;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 8px 14px 8px;
-    min-height: auto;
-  }
-
-  .menuLabel {
-    display: block;
-    font-size: clamp(10px, 2.5vw, 13px);
-    font-weight: 600;
-    color: rgb(7, 0, 0);
-    line-height: 1.1;
-    text-align: center;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  }
-
-  .icon {
-    width: 80px;
-    height: 80px;
-    max-width: 80px;
-    max-height: 80px;
-  }
-}
-
-/* ===== TABLET ===== */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .buttonContainer {
-    top: 0;
-    bottom: 0;
-    right: auto;
-
-    width: 300px;
-    max-width: 300px;
-    margin: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    padding: 24px 16px;
-    padding-top: max(24px, env(safe-area-inset-top));
-    padding-left: max(16px, env(safe-area-inset-left));
-
+@media (hover: hover) {
+  .button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(122, 164, 232, 0.45);
+    box-shadow: 0 12px 22px rgba(4, 20, 45, 0.5);
     background: linear-gradient(
       180deg,
-      rgba(10, 10, 10, 0.78) 0%,
-      rgba(10, 10, 10, 0.58) 55%,
-      rgba(10, 10, 10, 0.45) 100%
+      rgba(24, 56, 115, 0.72),
+      rgba(15, 41, 90, 0.76)
     );
-
-    border-right: 1px solid rgba(212, 175, 55, 0.35);
-    box-shadow: 12px 0 30px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .sidebarTitle {
-    display: block;
-    margin: 4px 0 8px;
-    padding-left: 4px;
-
-    color: rgba(245, 230, 200, 0.92);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-  }
-
-  .button {
-    width: 100%;
-    aspect-ratio: auto;
-    height: auto;
-    min-height: 64px;
-
-    border-radius: 14px;
-    justify-content: flex-start;
-    padding: 12px 14px;
-
-    background: rgba(20, 20, 20, 0.45);
-    border: 1px solid rgba(212, 175, 55, 0.4);
-
-    box-shadow:
-      0 0 10px rgba(212, 175, 55, 0.18),
-      inset 0 0 7px rgba(212, 175, 55, 0.1);
-  }
-
-  .menuLabel {
-    display: inline;
-    color: #f5e6c8;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    line-height: 1.2;
-    text-align: left;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-  }
-
-  .bottomGroup {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .topGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .icon {
-    width: 28px;
-    height: 28px;
-    max-width: none;
-    max-height: none;
-  }
-
-  .button:hover {
-    transform: none;
-  }
-
-  .button:active {
-    transform: none;
-  }
-}
-
-/* ===== DESKTOP ===== */
-@media (min-width: 1024px) {
-  .refreshButton {
-    position: fixed;
-    bottom: 14px;
-    right: 18px;
-    z-index: 12;
-
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-
-    padding: 9px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(212, 175, 55, 0.28);
-
-    background: rgba(12, 12, 12, 0.3);
-    color: rgba(245, 230, 200, 0.88);
-
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-
-    font-family: 'Segoe UI', 'SF Pro Display', Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      transform 0.15s ease;
   }
 
   .refreshButton:hover {
-    background: rgba(215, 215, 215, 0.9);
-    transform: translateY(-1px);
+    border-color: rgba(132, 177, 255, 0.5);
+    background: rgba(13, 43, 96, 0.9);
   }
+}
 
-  .refreshButton:active {
-    transform: scale(0.98);
-  }
+.button:active {
+  transform: scale(0.98);
+}
 
-  @media (hover: hover) {
-    .refreshButton:hover {
-      background: rgba(215, 215, 215, 0.9);
-      transform: translateY(-1px);
-    }
-  }
+.backButton,
+.mapButton {
+  display: none;
+}
 
+@media (max-width: 1023px) {
   .buttonContainer {
-    top: 0;
-    bottom: 0;
-    right: auto;
+    top: auto;
+    width: 100%;
+    max-height: 76vh;
+    border-right: none;
+    border-top: 1px solid rgba(91, 150, 255, 0.22);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 12px;
+    padding-top: 10px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background:
+      linear-gradient(175deg, rgba(6, 23, 57, 0.97), rgba(4, 17, 43, 0.95)),
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(28, 125, 255, 0.22),
+        transparent 36%
+      );
+  }
 
-    width: 320px;
-    max-width: 320px;
-    margin: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    padding: 28px 20px;
-    padding-top: max(28px, env(safe-area-inset-top));
-    padding-left: max(20px, env(safe-area-inset-left));
-
-    background: linear-gradient(
-      180deg,
-      rgba(10, 10, 10, 0.78) 0%,
-      rgba(10, 10, 10, 0.58) 55%,
-      rgba(10, 10, 10, 0.45) 100%
-    );
-
-    border-right: 1px solid rgba(212, 175, 55, 0.35);
-    box-shadow: 14px 0 34px rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    overflow-y: auto;
-    overscroll-behavior: contain;
+  .brandBlock {
+    display: none;
   }
 
   .sidebarTitle {
-    display: block;
-    margin: 4px 0 8px;
-    padding-left: 4px;
+    display: none;
+  }
 
-    color: rgba(245, 230, 200, 0.92);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
+  .topGroup,
+  .bottomGroup {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .button {
-    width: 100%;
-    aspect-ratio: auto;
-    height: auto;
-    min-height: 68px;
-
+    min-height: 90px;
     border-radius: 14px;
-    justify-content: flex-start;
-    padding: 14px 16px;
-
-    background: rgba(20, 20, 20, 0.45);
-    border: 1px solid rgba(212, 175, 55, 0.4);
-
-    box-shadow:
-      0 0 10px rgba(212, 175, 55, 0.18),
-      inset 0 0 7px rgba(212, 175, 55, 0.1);
-  }
-
-  .menuLabel {
-    display: inline;
-    color: #f5e6c8;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    line-height: 1.25;
-    text-align: left;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-  }
-
-  .bottomGroup {
-    margin-top: auto;
-    display: flex;
+    padding: 8px 6px;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
-    gap: 12px;
+    text-align: center;
+    gap: 8px;
   }
 
-  .topGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .iconWrap {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
   }
 
   .icon {
-    width: 30px;
-    height: 30px;
+    width: 19px;
+    height: 19px;
   }
 
-  .button:hover {
-    transform: none;
+  .menuLabel {
+    font-size: 11px;
+    font-weight: 600;
   }
 
-  .button:active {
-    transform: none;
+  .badge {
+    top: 6px;
+    right: 6px;
+  }
+
+  .refreshButton {
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    right: auto;
+    bottom: auto;
+    min-height: 34px;
+    font-size: 11px;
+    padding: 0 10px;
+  }
+
+  .refreshText {
+    display: inline;
+  }
+
+  .dashboardArea {
+    left: 10px;
+    right: 10px;
+    top: 56px;
+    bottom: 30vh;
+  }
+
+  .dashboardTitle {
+    font-size: 15px;
+  }
+
+  .kpiRow {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiValue {
+    font-size: 20px;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .trendCard {
+    grid-column: auto;
+  }
+
+  .sparklineLabels {
+    gap: 6px;
+  }
+
+  .footer {
+    left: auto;
+    right: 10px;
+    top: 10px;
+    bottom: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .topGroup,
+  .bottomGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .button {
+    min-height: 86px;
+  }
+
+  .dashboardArea {
+    bottom: 34vh;
+  }
+}
+
+@media (max-height: 860px) and (min-width: 1024px) {
+  .topGroup {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .button {
+    min-height: 50px;
+  }
+
+  .menuLabel {
+    font-size: 12px;
   }
 }

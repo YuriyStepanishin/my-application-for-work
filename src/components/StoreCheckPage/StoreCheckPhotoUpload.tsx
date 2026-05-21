@@ -6,6 +6,7 @@ import {
   type ChangeEvent,
 } from 'react';
 import imageCompression from 'browser-image-compression';
+import exifr from 'exifr';
 
 import { saveReport } from '../../api/saveReport';
 import { STORE_CHECK_PHOTOS_FOLDER_URL } from '../../api/config';
@@ -27,6 +28,48 @@ const COMPRESSION_OPTIONS = {
   initialQuality: 0.9,
   useWebWorker: true,
 };
+
+function formatDateOnlyLocal(value: Date): string {
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, '0');
+  const d = String(value.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+async function readPhotoMeta(file: File): Promise<{
+  capturedAt?: string;
+  device?: string;
+}> {
+  try {
+    const exif = await exifr.parse(file, {
+      pick: [
+        'DateTimeOriginal',
+        'CreateDate',
+        'DateTimeDigitized',
+        'Make',
+        'Model',
+      ],
+    });
+
+    const rawDate =
+      (exif?.DateTimeOriginal as Date | undefined) ||
+      (exif?.CreateDate as Date | undefined) ||
+      (exif?.DateTimeDigitized as Date | undefined);
+
+    const capturedAt =
+      rawDate instanceof Date && !Number.isNaN(rawDate.getTime())
+        ? formatDateOnlyLocal(rawDate)
+        : undefined;
+
+    const make = String(exif?.Make || '').trim();
+    const model = String(exif?.Model || '').trim();
+    const device = [make, model].filter(Boolean).join(' ').trim() || undefined;
+
+    return { capturedAt, device };
+  } catch {
+    return {};
+  }
+}
 
 export default function StoreCheckPhotoUpload({
   ttName,
@@ -81,6 +124,8 @@ export default function StoreCheckPhotoUpload({
                   base64: photo.base64,
                   type: photo.type,
                   name: photo.name,
+                  capturedAt: photo.date,
+                  device: photo.device,
                 },
               ],
             },
@@ -134,6 +179,7 @@ export default function StoreCheckPhotoUpload({
       setProcessing(true);
 
       for (const file of files) {
+        const meta = await readPhotoMeta(file);
         const compressed = await imageCompression(file, COMPRESSION_OPTIONS);
 
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -153,7 +199,8 @@ export default function StoreCheckPhotoUpload({
           ttName,
           department,
           representative,
-          date,
+          date: meta.capturedAt || date,
+          device: meta.device,
           createdAt: Date.now(),
         };
 

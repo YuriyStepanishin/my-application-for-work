@@ -50,6 +50,7 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
     try {
       setSaving(true);
       const dbPhotos = await db.photos.toArray();
+      const captureDate = dbPhotos.find(photo => photo.capturedAt)?.capturedAt;
 
       const result = await saveReport(
         {
@@ -57,7 +58,7 @@ export default function ReportBonusForm({ storeData, onBack }: Props) {
           representative: storeData.representative,
           store: storeData.store,
 
-          createdDate, // ← ключова різниця
+          createdDate: captureDate || createdDate,
 
           category,
           comment,
