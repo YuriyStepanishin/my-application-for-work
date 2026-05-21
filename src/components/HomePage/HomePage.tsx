@@ -480,7 +480,7 @@ export default function HomePage({
             )}
           </article>
 
-          <article className={`${styles.chartCard} ${styles.trendCard}`}>
+          <article className={styles.chartCard}>
             <h3 className={styles.chartTitle}>
               ТОП 10 клієнтів по кількості SKU
             </h3>

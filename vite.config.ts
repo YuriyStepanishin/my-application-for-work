@@ -22,7 +22,7 @@ export default defineConfig({
       },
       '/api/plan-targets': {
         target:
-          'https://script.google.com/macros/s/AKfycbxS1DQ-oL3zzFU6bir5pF7NaoE2IM3t7zOS65dvaFQQfz0FSsNyE2BOKXgUdyXS0s7YDQ',
+          'https://script.google.com/macros/s/AKfycbwfKHCRUY6pL2tEyAxTVJISqx18zJtrsH-n30rUPSbWrufIjbjTmDzjT55VsbKdXIIyow',
         changeOrigin: true,
         secure: true,
         rewrite: () => '/exec',

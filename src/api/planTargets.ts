@@ -1,6 +1,5 @@
 import { PLAN_TARGETS_URL } from './config';
 import type { PlanColumn } from '../components/ImplementationPage/planColumnsStorage';
-import { loadPlanColumnsLocal, savePlanColumnsLocal } from './planTargetsLocal';
 
 interface PlanTargetsResponse {
   success: boolean;
@@ -41,38 +40,27 @@ async function parseResponse(response: Response): Promise<PlanTargetsResponse> {
 }
 
 export async function fetchPlanColumns(): Promise<PlanColumn[]> {
-  try {
-    const response = await fetch(buildUrl('getPlanColumns'));
-    const json = await parseResponse(response);
-    const columns = Array.isArray(json.data) ? json.data : [];
-    savePlanColumnsLocal(columns);
-    return columns;
-  } catch {
-    return loadPlanColumnsLocal();
-  }
+  const response = await fetch(buildUrl('getPlanColumns'));
+  const json = await parseResponse(response);
+  return Array.isArray(json.data) ? json.data : [];
 }
 
 export async function savePlanColumnsToSheet(
   columns: PlanColumn[]
 ): Promise<void> {
-  try {
-    const formData = new FormData();
-    formData.append(
-      'data',
-      JSON.stringify({
-        action: 'savePlanColumns',
-        columns,
-      })
-    );
+  const formData = new FormData();
+  formData.append(
+    'data',
+    JSON.stringify({
+      action: 'savePlanColumns',
+      columns,
+    })
+  );
 
-    const response = await fetch(PLAN_TARGETS_URL, {
-      method: 'POST',
-      body: formData,
-    });
+  const response = await fetch(PLAN_TARGETS_URL, {
+    method: 'POST',
+    body: formData,
+  });
 
-    await parseResponse(response);
-    savePlanColumnsLocal(columns);
-  } catch {
-    savePlanColumnsLocal(columns);
-  }
+  await parseResponse(response);
 }

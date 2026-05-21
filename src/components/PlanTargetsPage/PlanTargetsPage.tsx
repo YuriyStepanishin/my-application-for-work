@@ -691,7 +691,72 @@ function ColumnEditorModal({
                   placeholder="Оберіть одну або кілька ТМ"
                   classNamePrefix="multiDropdown"
                   menuPortalTarget={document.body}
-                  styles={{ menuPortal: base => ({ ...base, zIndex: 1200 }) }}
+                  styles={{
+                    menuPortal: base => ({ ...base, zIndex: 1200 }),
+                    control: (base, state) => ({
+                      ...base,
+                      backgroundColor: '#ffffff',
+                      borderColor: state.isFocused ? '#1976d2' : '#9ca3af',
+                      boxShadow: state.isFocused
+                        ? '0 0 0 2px rgba(25, 118, 210, 0.18)'
+                        : 'none',
+                      minHeight: 40,
+                    }),
+                    menu: base => ({
+                      ...base,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      boxShadow: '0 10px 24px rgba(0, 0, 0, 0.14)',
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected
+                        ? '#1976d2'
+                        : state.isFocused
+                          ? '#e3f2fd'
+                          : '#ffffff',
+                      color: state.isSelected ? '#ffffff' : '#111827',
+                      fontWeight: state.isSelected ? 700 : 500,
+                    }),
+                    placeholder: base => ({ ...base, color: '#6b7280' }),
+                    singleValue: base => ({ ...base, color: '#111827' }),
+                    input: base => ({ ...base, color: '#111827' }),
+                    multiValue: base => ({
+                      ...base,
+                      backgroundColor: '#e8f0fe',
+                    }),
+                    multiValueLabel: base => ({
+                      ...base,
+                      color: '#1f3a8a',
+                      fontWeight: 600,
+                    }),
+                    multiValueRemove: base => ({
+                      ...base,
+                      color: '#1f3a8a',
+                      ':hover': {
+                        backgroundColor: '#dbeafe',
+                        color: '#1e40af',
+                      },
+                    }),
+                    indicatorSeparator: base => ({
+                      ...base,
+                      backgroundColor: '#d1d5db',
+                    }),
+                    dropdownIndicator: (base, state) => ({
+                      ...base,
+                      color: state.isFocused ? '#1976d2' : '#4b5563',
+                      ':hover': {
+                        color: '#1976d2',
+                      },
+                    }),
+                    clearIndicator: base => ({
+                      ...base,
+                      color: '#4b5563',
+                      ':hover': {
+                        color: '#111827',
+                      },
+                    }),
+                  }}
                 />
                 <div className={styles.assortmentModeRadioGroup}>
                   <label className={styles.assortmentModeRadioItem}>
@@ -743,7 +808,72 @@ function ColumnEditorModal({
                     noOptionsMessage={() => 'Немає доступних позицій'}
                     classNamePrefix="multiDropdown"
                     menuPortalTarget={document.body}
-                    styles={{ menuPortal: base => ({ ...base, zIndex: 1200 }) }}
+                    styles={{
+                      menuPortal: base => ({ ...base, zIndex: 1200 }),
+                      control: (base, state) => ({
+                        ...base,
+                        backgroundColor: '#ffffff',
+                        borderColor: state.isFocused ? '#1976d2' : '#9ca3af',
+                        boxShadow: state.isFocused
+                          ? '0 0 0 2px rgba(25, 118, 210, 0.18)'
+                          : 'none',
+                        minHeight: 40,
+                      }),
+                      menu: base => ({
+                        ...base,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #d1d5db',
+                        boxShadow: '0 10px 24px rgba(0, 0, 0, 0.14)',
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? '#1976d2'
+                          : state.isFocused
+                            ? '#e3f2fd'
+                            : '#ffffff',
+                        color: state.isSelected ? '#ffffff' : '#111827',
+                        fontWeight: state.isSelected ? 700 : 500,
+                      }),
+                      placeholder: base => ({ ...base, color: '#6b7280' }),
+                      singleValue: base => ({ ...base, color: '#111827' }),
+                      input: base => ({ ...base, color: '#111827' }),
+                      multiValue: base => ({
+                        ...base,
+                        backgroundColor: '#e8f0fe',
+                      }),
+                      multiValueLabel: base => ({
+                        ...base,
+                        color: '#1f3a8a',
+                        fontWeight: 600,
+                      }),
+                      multiValueRemove: base => ({
+                        ...base,
+                        color: '#1f3a8a',
+                        ':hover': {
+                          backgroundColor: '#dbeafe',
+                          color: '#1e40af',
+                        },
+                      }),
+                      indicatorSeparator: base => ({
+                        ...base,
+                        backgroundColor: '#d1d5db',
+                      }),
+                      dropdownIndicator: (base, state) => ({
+                        ...base,
+                        color: state.isFocused ? '#1976d2' : '#4b5563',
+                        ':hover': {
+                          color: '#1976d2',
+                        },
+                      }),
+                      clearIndicator: base => ({
+                        ...base,
+                        color: '#4b5563',
+                        ':hover': {
+                          color: '#111827',
+                        },
+                      }),
+                    }}
                   />
                 </div>
               )}

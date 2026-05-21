@@ -10,6 +10,7 @@
 
 var SPREADSHEET_ID = '1qjZIgcd4baODxL9exaUZdSBTa5cAASoHkhSqak-hY38';
 var SHEET_NAME = 'PlanTargets';
+var BACKUP_KEY = 'plan-targets-backup-v1';
 
 var HEADER_ROW = [
   'id',
@@ -53,6 +54,7 @@ function doPost(e) {
 
     var columns = Array.isArray(payload.columns) ? payload.columns : [];
     writePlanColumns(columns);
+    saveBackupColumns(columns);
 
     return jsonResponse({ success: true, result: { count: columns.length } });
   } catch (err) {
@@ -117,7 +119,9 @@ function readPlanColumns() {
   ensureHeaderRow(sheet);
 
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return [];
+  if (lastRow <= 1) {
+    return loadBackupColumns();
+  }
 
   var rows = sheet.getRange(2, 1, lastRow - 1, HEADER_ROW.length).getValues();
   var columns = [];
@@ -177,6 +181,29 @@ function writePlanColumns(columns) {
   });
 
   sheet.getRange(2, 1, rows.length, HEADER_ROW.length).setValues(rows);
+}
+
+function saveBackupColumns(columns) {
+  try {
+    PropertiesService.getScriptProperties().setProperty(
+      BACKUP_KEY,
+      JSON.stringify(Array.isArray(columns) ? columns : [])
+    );
+  } catch (err) {
+    // Backup is best-effort only.
+  }
+}
+
+function loadBackupColumns() {
+  try {
+    var raw = PropertiesService.getScriptProperties().getProperty(BACKUP_KEY);
+    if (!raw) return [];
+
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
 }
 
 function parseJsonArray(value) {

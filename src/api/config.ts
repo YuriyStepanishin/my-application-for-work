@@ -15,4 +15,4 @@ export const STORE_CHECK_URL =
 
 export const PLAN_TARGETS_URL = import.meta.env.DEV
   ? '/api/plan-targets'
-  : 'https://script.google.com/macros/s/AKfycbxS1DQ-oL3zzFU6bir5pF7NaoE2IM3t7zOS65dvaFQQfz0FSsNyE2BOKXgUdyXS0s7YDQ/exec';
+  : 'https://script.google.com/macros/s/AKfycbwfKHCRUY6pL2tEyAxTVJISqx18zJtrsH-n30rUPSbWrufIjbjTmDzjT55VsbKdXIIyow/exec';
