@@ -27,6 +27,13 @@ export default defineConfig({
         secure: true,
         rewrite: () => '/exec',
       },
+      '/api/store-check': {
+        target:
+          'https://script.google.com/macros/s/AKfycbzVsmmO3h6adCmEyHOtk4nGMsyYtaa_0oBLMZfsCcWYd5-SikPxlZ6uZG2CMkujx8Sc',
+        changeOrigin: true,
+        secure: true,
+        rewrite: () => '/exec',
+      },
     },
   },
   plugins: [

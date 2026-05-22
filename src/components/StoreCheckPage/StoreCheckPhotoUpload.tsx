@@ -8,8 +8,7 @@ import {
 import imageCompression from 'browser-image-compression';
 import exifr from 'exifr';
 
-import { saveReport } from '../../api/saveReport';
-import { STORE_CHECK_PHOTOS_FOLDER_URL } from '../../api/config';
+import { uploadStoreCheckPhoto } from '../../api/saveStoreCheck';
 import { storeCheckPhotoDB, type StoreCheckPhoto } from './storeCheckPhotoDB';
 import styles from './StoreCheckPhotoUpload.module.css';
 
@@ -20,7 +19,7 @@ interface Props {
   date: string;
 }
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 7;
 
 const COMPRESSION_OPTIONS = {
   maxSizeMB: 1.5,
@@ -35,7 +34,6 @@ function formatDateOnlyLocal(value: Date): string {
   const d = String(value.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
 async function readPhotoMeta(file: File): Promise<{
   capturedAt?: string;
   device?: string;
@@ -82,13 +80,22 @@ export default function StoreCheckPhotoUpload({
   const [processing, setProcessing] = useState(false);
   const isUploadingRef = useRef(false);
 
+  const isCurrentFormPhoto = useCallback(
+    (photo: StoreCheckPhoto) =>
+      photo.ttName === ttName &&
+      photo.department === department &&
+      photo.representative === representative,
+    [ttName, department, representative]
+  );
+
   const refresh = useCallback(async () => {
     const rows = await storeCheckPhotoDB.photos
       .where('ttName')
       .equals(ttName)
+      .and(isCurrentFormPhoto)
       .sortBy('createdAt');
     setPhotos(rows);
-  }, [ttName]);
+  }, [ttName, isCurrentFormPhoto]);
 
   const tryUploadAll = useCallback(async () => {
     if (isUploadingRef.current || !navigator.onLine) return;
@@ -98,7 +105,7 @@ export default function StoreCheckPhotoUpload({
       const toUpload = await storeCheckPhotoDB.photos
         .where('status')
         .anyOf(['pending', 'error'])
-        .and(p => p.ttName === ttName)
+        .and(isCurrentFormPhoto)
         .toArray();
 
       for (const photo of toUpload) {
@@ -110,31 +117,31 @@ export default function StoreCheckPhotoUpload({
         await refresh();
 
         try {
-          const result = await saveReport(
-            {
-              department: photo.department,
-              representative: photo.representative,
-              store: photo.ttName,
-              createdDate: photo.date,
-              category: 'storecheck',
-              comment: '',
-              folderUrl: STORE_CHECK_PHOTOS_FOLDER_URL,
-              photos: [
-                {
-                  base64: photo.base64,
-                  type: photo.type,
-                  name: photo.name,
-                  capturedAt: photo.date,
-                  device: photo.device,
-                },
-              ],
-            },
-            'bonus'
-          );
-
-          await storeCheckPhotoDB.photos.update(photo.id, {
-            status: result.success ? 'done' : 'error',
+          const result = await uploadStoreCheckPhoto({
+            department: photo.department,
+            representative: photo.representative,
+            store: photo.ttName,
+            createdDate: photo.date,
+            photos: [
+              {
+                base64: photo.base64,
+                type: photo.type,
+                name: photo.name,
+                capturedAt: photo.date,
+                device: photo.device,
+              },
+            ],
           });
+
+          if (result.success) {
+            await storeCheckPhotoDB.photos.update(photo.id, {
+              status: 'done',
+            });
+          } else {
+            await storeCheckPhotoDB.photos.update(photo.id, {
+              status: 'error',
+            });
+          }
         } catch {
           await storeCheckPhotoDB.photos.update(photo.id, {
             status: 'error',
@@ -146,7 +153,7 @@ export default function StoreCheckPhotoUpload({
     } finally {
       isUploadingRef.current = false;
     }
-  }, [ttName, refresh]);
+  }, [isCurrentFormPhoto, refresh]);
 
   useEffect(() => {
     void refresh();
@@ -167,6 +174,7 @@ export default function StoreCheckPhotoUpload({
     const currentCount = await storeCheckPhotoDB.photos
       .where('ttName')
       .equals(ttName)
+      .and(isCurrentFormPhoto)
       .count();
 
     if (currentCount + files.length > MAX_PHOTOS) {

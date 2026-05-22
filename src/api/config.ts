@@ -7,12 +7,8 @@ export const BONUS_API_URL =
 export const SALES_URL =
   'https://script.google.com/macros/s/AKfycbwVr7l4-MYv8lZyuSC2WF9_DMS6p79LVKq9f1rhcgmn1TiuTf72RG-6IQG_ZDvhgsq3/exec';
 
-export const STORE_CHECK_PHOTOS_FOLDER_URL =
-  'https://drive.google.com/drive/folders/1lv-_uceNjbLVfb8dK1crV3kW-YE0L6_y';
-
 export const STORE_CHECK_URL =
-  'https://script.google.com/macros/s/AKfycbzVsmmO3h6adCmEyHOtk4nGMsyYtaa_0oBLMZfsCcWYd5-SikPxlZ6uZG2CMkujx8Sc/exec';
+  'https://script.google.com/macros/s/AKfycbz5imcsK7X37VIDn2MJthqC8wfdjfjy7sOEKLTjwBQRXCgxB1-pRdFBaT_Iy4uLi6fp/exec';
 
-export const PLAN_TARGETS_URL = import.meta.env.DEV
-  ? '/api/plan-targets'
-  : 'https://script.google.com/macros/s/AKfycbwfKHCRUY6pL2tEyAxTVJISqx18zJtrsH-n30rUPSbWrufIjbjTmDzjT55VsbKdXIIyow/exec';
+export const PLAN_TARGETS_URL =
+  'https://script.google.com/macros/s/AKfycbwfKHCRUY6pL2tEyAxTVJISqx18zJtrsH-n30rUPSbWrufIjbjTmDzjT55VsbKdXIIyow/exec';

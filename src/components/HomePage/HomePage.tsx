@@ -18,6 +18,12 @@ type TopClientRow = {
   value: number;
 };
 
+type TopProductRow = {
+  name: string;
+  quantity: number;
+  value: number;
+};
+
 function getCurrentMonthKey(date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -69,6 +75,7 @@ interface Props {
   onOpenActiveCustomerBase: () => void;
   onOpenImplementation: () => void;
   onOpenStoreCheck: () => void;
+  onOpenStoreCheckReview: () => void;
   onOpenMessages: () => void;
   unreadMessagesCount: number;
   onOpenPlanTargets: () => void;
@@ -92,6 +99,7 @@ export default function HomePage({
   onOpenActiveCustomerBase,
   onOpenImplementation,
   onOpenStoreCheck,
+  onOpenStoreCheckReview,
   onOpenMessages,
   unreadMessagesCount,
   onOpenPlanTargets,
@@ -138,6 +146,7 @@ export default function HomePage({
     const storeAmount: Record<string, number> = {};
     const storeSkuSet: Record<string, Set<string>> = {};
     const productQuantity: Record<string, number> = {};
+    const productAmount: Record<string, number> = {};
     const stores = new Set<string>();
 
     let totalAmount = 0;
@@ -161,6 +170,7 @@ export default function HomePage({
       }
       if (product) {
         productQuantity[product] = (productQuantity[product] || 0) + quantity;
+        productAmount[product] = (productAmount[product] || 0) + amount;
       }
       if (store && product) {
         if (!storeSkuSet[store]) storeSkuSet[store] = new Set<string>();
@@ -177,9 +187,20 @@ export default function HomePage({
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
-    const topProducts = Object.entries(productQuantity)
-      .map(([name, quantity]) => ({ name, quantity }))
+    const productStats: TopProductRow[] = Object.entries(productQuantity).map(
+      ([name, quantity]) => ({
+        name,
+        quantity,
+        value: productAmount[name] || 0,
+      })
+    );
+
+    const topProductsByQuantity = productStats
       .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
+
+    const topProductsByAmount = [...productStats]
+      .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
     const topClientsSku: TopClientRow[] = Object.entries(storeSkuSet)
@@ -194,7 +215,8 @@ export default function HomePage({
       storesCount: stores.size,
       salesCount: monthlySalesRows,
       topClients,
-      topProducts,
+      topProductsByQuantity,
+      topProductsByAmount,
       topClientsSku,
     };
   }, [sales]);
@@ -217,8 +239,19 @@ export default function HomePage({
   }, [photoReports]);
 
   const maxProductQty =
-    salesInsights.topProducts.length > 0
-      ? Math.max(...salesInsights.topProducts.map(item => item.quantity), 1)
+    salesInsights.topProductsByQuantity.length > 0
+      ? Math.max(
+          ...salesInsights.topProductsByQuantity.map(item => item.quantity),
+          1
+        )
+      : 1;
+
+  const maxProductAmount =
+    salesInsights.topProductsByAmount.length > 0
+      ? Math.max(
+          ...salesInsights.topProductsByAmount.map(item => item.value),
+          1
+        )
       : 1;
 
   const maxClientAmount =
@@ -284,10 +317,10 @@ export default function HomePage({
       visible: canOpenImplementation,
     },
     {
-      key: 'store-check',
-      label: 'StoreCheck',
+      key: 'store-check-review',
+      label: 'Перегляд StoreCheck',
       icon: '/icons/storecheck.svg',
-      onClick: onOpenStoreCheck,
+      onClick: onOpenStoreCheckReview,
       visible: true,
     },
     {
@@ -313,6 +346,13 @@ export default function HomePage({
       icon: '/icons/promo-icon-64.svg',
       onClick: onOpenDisplay,
       visible: canOpenDisplayReport,
+    },
+    {
+      key: 'store-check',
+      label: 'Додавання StoreCheck',
+      icon: '/icons/storecheck.svg',
+      onClick: onOpenStoreCheck,
+      visible: true,
     },
   ];
 
@@ -454,11 +494,11 @@ export default function HomePage({
             <h3 className={styles.chartTitle}>Топ 10 товарів (шт)</h3>
             {salesLoading ? (
               <p className={styles.chartHint}>Завантаження...</p>
-            ) : salesInsights.topProducts.length === 0 ? (
+            ) : salesInsights.topProductsByQuantity.length === 0 ? (
               <p className={styles.chartHint}>Немає даних для графіка</p>
             ) : (
               <ul className={styles.barList}>
-                {salesInsights.topProducts.map(item => (
+                {salesInsights.topProductsByQuantity.map(item => (
                   <li key={item.name} className={styles.barItem}>
                     <div className={styles.barMeta}>
                       <span className={styles.barName}>{item.name}</span>
@@ -471,6 +511,36 @@ export default function HomePage({
                         className={styles.barFillAlt}
                         style={{
                           width: `${(item.quantity / maxProductQty) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+
+          <article className={styles.chartCard}>
+            <h3 className={styles.chartTitle}>Топ 10 товарів (грн)</h3>
+            {salesLoading ? (
+              <p className={styles.chartHint}>Завантаження...</p>
+            ) : salesInsights.topProductsByAmount.length === 0 ? (
+              <p className={styles.chartHint}>Немає даних для графіка</p>
+            ) : (
+              <ul className={styles.barList}>
+                {salesInsights.topProductsByAmount.map(item => (
+                  <li key={item.name} className={styles.barItem}>
+                    <div className={styles.barMeta}>
+                      <span className={styles.barName}>{item.name}</span>
+                      <span className={styles.barValue}>
+                        {moneyFormatter.format(item.value)} ₴
+                      </span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <div
+                        className={styles.barFillAlt}
+                        style={{
+                          width: `${(item.value / maxProductAmount) * 100}%`,
                         }}
                       />
                     </div>

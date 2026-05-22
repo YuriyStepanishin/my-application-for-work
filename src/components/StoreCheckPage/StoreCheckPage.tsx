@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 
 import { saveStoreCheck } from '../../api/saveStoreCheck';
-import { getCurrentAuthorizedEmail } from '../../config/userRoles';
 import Loader from '../Loader/Loader';
 import StoreSelector from '../StoreSelector/StoreSelector';
 import StoreCheckPhotoUpload from './StoreCheckPhotoUpload';
+import { storeCheckPhotoDB } from './storeCheckPhotoDB';
 import styles from './StoreCheckPage.module.css';
 
 const NUMERIC_SECTIONS = [
@@ -138,7 +138,6 @@ type Props = {
 };
 
 export default function StoreCheckPage({ onBack }: Props) {
-  const authEmail = getCurrentAuthorizedEmail();
   const [selectedStore, setSelectedStore] = useState<SelectedStore | null>(
     null
   );
@@ -158,8 +157,6 @@ export default function StoreCheckPage({ onBack }: Props) {
       department={selectedStore.department}
       representative={selectedStore.representative}
       ttName={selectedStore.store}
-      authEmail={authEmail}
-      onBack={onBack}
       onChangeStore={() => setSelectedStore(null)}
     />
   );
@@ -169,8 +166,6 @@ type FormProps = {
   department: string;
   representative: string;
   ttName: string;
-  authEmail: string | null;
-  onBack: () => void;
   onChangeStore: () => void;
 };
 
@@ -178,11 +173,9 @@ function StoreCheckForm({
   department,
   representative,
   ttName,
-  authEmail,
-
   onChangeStore,
 }: FormProps) {
-  const [date, setDate] = useState(() => {
+  const [date] = useState(() => {
     const kyivDate = new Date().toLocaleString('en-CA', {
       timeZone: 'Europe/Kyiv',
       year: 'numeric',
@@ -195,7 +188,8 @@ function StoreCheckForm({
   const [territory, setTerritory] = useState('');
   const [categoryOrimi, setCategoryOrimi] = useState('');
   const [categoryDelicia, setCategoryDelicia] = useState('');
-  const [comment, setComment] = useState('');
+  const [commentOrimi, setCommentOrimi] = useState('');
+  const [commentDelicia, setCommentDelicia] = useState('');
   const [numbers, setNumbers] = useState<NumericFormState>(EMPTY_NUMBERS);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -260,7 +254,6 @@ function StoreCheckForm({
         ttName: ttName.trim(),
         department,
         representative,
-        userEmail: authEmail ?? undefined,
 
         princessa: toNumber(numbers.princessa),
         greenfield: toNumber(numbers.greenfield),
@@ -305,7 +298,8 @@ function StoreCheckForm({
         ]),
         categoryOrimi: categoryOrimi || undefined,
         categoryDelicia: categoryDelicia || undefined,
-        comment: comment.trim(),
+        comment: commentOrimi.trim() || undefined,
+        commentDelicia: commentDelicia.trim() || undefined,
       });
 
       if (!result.success) {
@@ -319,17 +313,21 @@ function StoreCheckForm({
           ? `StoreCheck збережено. ID: ${result.result.id}`
           : 'StoreCheck успішно збережено.'
       );
-      setTerritory('');
       setMessageType('success');
-      const kyivDate = new Date().toLocaleString('en-CA', {
-        timeZone: 'Europe/Kyiv',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
-      setDate(kyivDate);
-      setComment('');
-      setNumbers(EMPTY_NUMBERS);
+
+      await storeCheckPhotoDB.photos
+        .where('ttName')
+        .equals(ttName)
+        .and(
+          photo =>
+            photo.department === department &&
+            photo.representative === representative
+        )
+        .delete();
+
+      window.setTimeout(() => {
+        onChangeStore();
+      }, 600);
     } finally {
       setSaving(false);
     }
@@ -341,19 +339,21 @@ function StoreCheckForm({
 
       <header className={styles.header}>
         <h2 className={styles.title}>{ttName}</h2>
+        <p className={styles.subtitle}>
+          {department} • {representative}
+        </p>
       </header>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <section className={styles.contentCard}>
-          <div className={styles.cardHeader}></div>
+        <section className={`${styles.contentCard} ${styles.heroCard}`}>
+          <div className={styles.metaGrid}>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>Дата</span>
+              <span className={styles.metaValue}>{date}</span>
+            </div>
 
-          <div className={styles.gridTwo}>
-            <label className={styles.field}>
-              <span className={styles.label}>{date}</span>
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>Територія</span>
+            <label className={styles.metaItem}>
+              <span className={styles.metaLabel}>Територія</span>
               <input
                 className={styles.inputTerritory}
                 type="text"
@@ -364,44 +364,74 @@ function StoreCheckForm({
             </label>
           </div>
         </section>
-        <select
-          value={categoryOrimi}
-          onChange={e => setCategoryOrimi(e.target.value)}
-          className={styles.select}
-        >
-          <option value="" disabled hidden>
-            Категорія Orimi
-          </option>
 
-          <option value="1">1 категорія (1–6 м.)</option>
-          <option value="2">2 категорія (6–9 м.)</option>
-          <option value="3">3 категорія (9–15 м.)</option>
-          <option value="4">4 категорія (15–30 м.)</option>
-          <option value="5">5 категорія (30+ м.)</option>
-        </select>
+        <div className={styles.filtersGrid}>
+          <section className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Категорія Orimi</h3>
+            </div>
 
-        <select
-          value={categoryDelicia}
-          onChange={e => setCategoryDelicia(e.target.value)}
-          className={styles.select}
-        >
-          <option value="" disabled hidden>
-            Категорія Delicia
-          </option>
+            <select
+              value={categoryOrimi}
+              onChange={e => setCategoryOrimi(e.target.value)}
+              className={styles.select}
+            >
+              <option value="" disabled hidden>
+                Категорія Orimi
+              </option>
 
-          <option value="СМ">Категорія (Супер Маркет)</option>
-          <option value="А">Категорія А (площа до 200 м2)</option>
-          <option value="В">Категорія В (площа 50-150 м2)</option>
-          <option value="С">Категорія С ( площа до 50 м2)</option>
-          <option value="СП">Спецроздріб</option>
-          <option value="Г">Гурт</option>
-          <option value="НК">Нетрадиційний канал</option>
-        </select>
+              <option value="1">1 категорія (1–6 м.)</option>
+              <option value="2">2 категорія (6–9 м.)</option>
+              <option value="3">3 категорія (9–15 м.)</option>
+              <option value="4">4 категорія (15–30 м.)</option>
+              <option value="5">5 категорія (30+ м.)</option>
+            </select>
+          </section>
+
+          <section className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Категорія Delicia</h3>
+            </div>
+
+            <select
+              value={categoryDelicia}
+              onChange={e => setCategoryDelicia(e.target.value)}
+              className={styles.select}
+            >
+              <option value="" disabled hidden>
+                Категорія Delicia
+              </option>
+
+              <option value="СМ">Категорія (Супер Маркет)</option>
+              <option value="А">Категорія А (площа до 200 м2)</option>
+              <option value="В">Категорія В (площа 50-150 м2)</option>
+              <option value="С">Категорія С ( площа до 50 м2)</option>
+              <option value="СП">Спецроздріб</option>
+              <option value="Г">Гурт</option>
+              <option value="НК">Нетрадиційний канал</option>
+            </select>
+          </section>
+        </div>
 
         {NUMERIC_SECTIONS.map(section => (
           <section key={section.title} className={styles.contentCard}>
-            <div className={styles.cardHeader}>
+            <div className={styles.sectionHeader}>
               <h3 className={styles.cardTitle}>{section.title}</h3>
+              {section.title === 'Чай' && (
+                <div className={styles.sectionTotal}>Разом: {teaTotal}</div>
+              )}
+
+              {section.title === 'Кава' && (
+                <div className={styles.sectionTotal}>Разом: {coffeeTotal}</div>
+              )}
+
+              {section.title === 'Strauss' && (
+                <div className={styles.sectionTotal}>Разом: {straussTotal}</div>
+              )}
+
+              {section.title === 'Вода' && (
+                <div className={styles.sectionTotal}>Разом: {waterTotal}</div>
+              )}
             </div>
 
             <div className={styles.numericGrid}>
@@ -421,24 +451,6 @@ function StoreCheckForm({
               ))}
             </div>
 
-            {section.title === 'Чай' && (
-              <div className={styles.totalRow}>Разом чай: {teaTotal}</div>
-            )}
-
-            {section.title === 'Кава' && (
-              <div className={styles.totalRow}>Разом кава: {coffeeTotal}</div>
-            )}
-
-            {section.title === 'Strauss' && (
-              <div className={styles.totalRow}>
-                Разом Strauss: {straussTotal}
-              </div>
-            )}
-
-            {section.title === 'Вода' && (
-              <div className={styles.totalRow}>Разом вода: {waterTotal}</div>
-            )}
-
             {section.title === 'Delicia / Інше' && (
               <div className={styles.totalsSplit}>
                 <div className={styles.totalRow}>Delicia: {deliciaTotal}</div>
@@ -453,26 +465,14 @@ function StoreCheckForm({
             <h3 className={styles.cardTitle}>Коментар</h3>
           </div>
 
-          <label className={styles.field}>
+          <label className={`${styles.field} ${styles.fieldBlock}`}>
             <textarea
               className={styles.textarea}
-              value={comment}
-              onChange={event => setComment(event.target.value)}
+              value={commentOrimi}
+              onChange={event => setCommentOrimi(event.target.value)}
               placeholder="Коментар по точці, щодо чайно-ковової групи, води"
             />
           </label>
-
-          {message && (
-            <div
-              className={
-                messageType === 'success'
-                  ? styles.successMessage
-                  : styles.errorMessage
-              }
-            >
-              {message}
-            </div>
-          )}
         </section>
 
         <section className={styles.contentCard}>
@@ -480,26 +480,14 @@ function StoreCheckForm({
             <h3 className={styles.cardTitle}>Коментар для Delicia</h3>
           </div>
 
-          <label className={styles.field}>
+          <label className={`${styles.field} ${styles.fieldBlock}`}>
             <textarea
               className={styles.textarea}
-              value={comment}
-              onChange={event => setComment(event.target.value)}
+              value={commentDelicia}
+              onChange={event => setCommentDelicia(event.target.value)}
               placeholder="Коментар для store-check Delicia"
             />
           </label>
-
-          {message && (
-            <div
-              className={
-                messageType === 'success'
-                  ? styles.successMessage
-                  : styles.errorMessage
-              }
-            >
-              {message}
-            </div>
-          )}
         </section>
 
         <section className={styles.contentCard}>
@@ -509,6 +497,18 @@ function StoreCheckForm({
             representative={representative}
             date={date}
           />
+
+          {message && (
+            <div
+              className={
+                messageType === 'success'
+                  ? styles.successMessage
+                  : styles.errorMessage
+              }
+            >
+              {message}
+            </div>
+          )}
         </section>
 
         <div className={styles.actions}>
@@ -517,7 +517,7 @@ function StoreCheckForm({
             className={styles.submitButton}
             disabled={saving}
           >
-            {saving ? 'Збереження...' : 'Зберегти'}
+            {saving ? 'Збереження...' : 'ЗБЕРЕГТИ'}
           </button>
         </div>
       </form>

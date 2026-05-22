@@ -38,7 +38,8 @@ interface ApiResponse {
 // ← додаємо type
 export async function saveReport(
   data: SaveReportPayload,
-  type: 'display' | 'bonus'
+  type: 'display' | 'bonus',
+  action: 'saveReport' | 'uploadPhoto' = 'saveReport'
 ): Promise<ApiResponse> {
   try {
     const formData = new FormData();
@@ -46,7 +47,7 @@ export async function saveReport(
     formData.append(
       'data',
       JSON.stringify({
-        action: 'saveReport',
+        action,
         ...data,
       })
     );

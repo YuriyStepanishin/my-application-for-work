@@ -33,6 +33,9 @@ const InfoBoardPage = lazy(
 const StoreCheckPage = lazy(
   () => import('./components/StoreCheckPage/StoreCheckPage')
 );
+const StoreCheckReviewPage = lazy(
+  () => import('./components/StoreCheckReviewPage')
+);
 const PlanTargetsPage = lazy(
   () => import('./components/PlanTargetsPage/PlanTargetsPage')
 );
@@ -60,6 +63,7 @@ export default function App() {
     | 'active-customer-base'
     | 'implementation'
     | 'store-check'
+    | 'store-check-review'
     | 'messages'
     | 'plan-targets'
   >('home');
@@ -193,6 +197,16 @@ export default function App() {
     );
   }
 
+  if (page === 'store-check-review') {
+    return (
+      <>
+        <Suspense fallback={<Loader />}>
+          <StoreCheckReviewPage onBack={() => setPage('home')} />
+        </Suspense>
+      </>
+    );
+  }
+
   if (page === 'plan-targets' && canAccess('plan-targets')) {
     return (
       <>
@@ -261,6 +275,9 @@ export default function App() {
             }
             onOpenStoreCheck={() =>
               runProtectedAction(() => setPage('store-check'))
+            }
+            onOpenStoreCheckReview={() =>
+              runProtectedAction(() => setPage('store-check-review'))
             }
             onOpenPlanTargets={() =>
               runProtectedAction(() => setPage('plan-targets'), 'plan-targets')

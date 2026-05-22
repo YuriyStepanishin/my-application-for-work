@@ -120,6 +120,8 @@
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
 
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
@@ -134,10 +136,17 @@
 }
 
 .info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 12px;
   font-size: 14px;
   line-height: 1.4;
   color: #153454;
+}
+
+.infoContent {
+  flex: 1;
 }
 
 .sums {
@@ -157,7 +166,8 @@
 
 .deleteBtn {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 12px;
+  align-self: flex-start;
   padding: 4px 12px;
   border: 1px solid #c0392b;
   border-radius: 8px;

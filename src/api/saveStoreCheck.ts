@@ -6,7 +6,6 @@ interface StoreCheckPayload {
   address?: string;
   department?: string;
   representative?: string;
-  userEmail?: string;
   princessa: number;
   greenfield: number;
   tess: number;
@@ -49,6 +48,7 @@ interface StoreCheckPayload {
   categoryOrimi?: string;
   categoryDelicia?: string;
   comment?: string;
+  commentDelicia?: string;
 }
 
 interface StoreCheckResponse {
@@ -59,13 +59,91 @@ interface StoreCheckResponse {
   };
 }
 
+interface StoreCheckPhotoPayload {
+  department: string;
+  representative: string;
+  store: string;
+  createdDate: string;
+  photos: Array<{
+    base64: string;
+    type: string;
+    name: string;
+    capturedAt?: string;
+    device?: string;
+  }>;
+}
+
 export async function saveStoreCheck(
   payload: StoreCheckPayload
 ): Promise<StoreCheckResponse> {
   try {
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(payload));
+
     const response = await fetch(STORE_CHECK_URL, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: formData,
+    });
+
+    const raw = await response.text();
+    let data: StoreCheckResponse;
+
+    try {
+      data = JSON.parse(raw) as StoreCheckResponse;
+    } catch {
+      const normalized = raw.toLocaleLowerCase('uk-UA');
+      if (
+        normalized.includes('doget') ||
+        normalized.includes('dopost') ||
+        normalized.includes('функцію сценарію')
+      ) {
+        return {
+          success: false,
+          error:
+            'Apps Script deployment не містить doGet/doPost. Оновіть і перевикотіть Web App.',
+        };
+      }
+
+      return {
+        success: false,
+        error: `Сервер повернув не-JSON відповідь (HTTP ${response.status}).`,
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || `HTTP ${response.status}`,
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('saveStoreCheck error:', error);
+
+    return {
+      success: false,
+      error: 'Network error',
+    };
+  }
+}
+
+export async function uploadStoreCheckPhoto(
+  payload: StoreCheckPhotoPayload
+): Promise<StoreCheckResponse> {
+  try {
+    const formData = new FormData();
+    formData.append(
+      'data',
+      JSON.stringify({
+        action: 'uploadPhoto',
+        ...payload,
+      })
+    );
+
+    const response = await fetch(STORE_CHECK_URL, {
+      method: 'POST',
+      body: formData,
     });
 
     const data = (await response.json()) as StoreCheckResponse;
@@ -79,7 +157,7 @@ export async function saveStoreCheck(
 
     return data;
   } catch (error) {
-    console.error('saveStoreCheck error:', error);
+    console.error('uploadStoreCheckPhoto error:', error);
 
     return {
       success: false,

@@ -12,6 +12,7 @@ import {
 } from '../../api/fetchReports';
 import { fetchSales } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
+import Popup from '../Popup/Popup';
 import {
   getCurrentAuthorizedEmail,
   getUserRepresentative,
@@ -45,6 +46,9 @@ export default function PhotoGallery({ onBack }: Props) {
   const canDelete = userRole === 'admin' || userRole === 'supervisor';
   const [deletedDriveIds, setDeletedDriveIds] = useState<Set<string>>(
     new Set()
+  );
+  const [pendingDeletePhoto, setPendingDeletePhoto] = useState<Photo | null>(
+    null
   );
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
   const [department, setDepartment] = useState('all');
@@ -81,7 +85,10 @@ export default function PhotoGallery({ onBack }: Props) {
     gcTime: 1000 * 60 * 30,
     select: (reports: Report[]): Photo[] => {
       const transformed = reports
-        .filter(report => report.category.trim().toLowerCase() !== 'storecheck')
+        .filter(report => {
+          const category = report.category.trim().toLowerCase();
+          return category !== 'storecheck' && category !== 'сторчек';
+        })
         .flatMap((report, reportIndex) =>
           normalizePhotoUrls(report.photos).map((rawUrl, photoIndex) => {
             const sources = buildImageSources(rawUrl);
@@ -312,9 +319,10 @@ export default function PhotoGallery({ onBack }: Props) {
     });
   };
 
-  const handleDeletePhoto = async (photo: Photo, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm(`Видалити фото для ТТ "${photo.store}"?`)) return;
+  const confirmDeletePhoto = async () => {
+    if (!pendingDeletePhoto) return;
+
+    const photo = pendingDeletePhoto;
     if (photo.driveId) {
       try {
         await deletePhoto(photo.driveId);
@@ -323,6 +331,12 @@ export default function PhotoGallery({ onBack }: Props) {
       }
     }
     setDeletedDriveIds(prev => new Set(prev).add(photo.driveId || photo.id));
+    setPendingDeletePhoto(null);
+  };
+
+  const handleDeletePhoto = (photo: Photo, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPendingDeletePhoto(photo);
   };
 
   if (isLoading) return <Loader />;
@@ -424,20 +438,22 @@ export default function PhotoGallery({ onBack }: Props) {
               />
 
               <div className={styles.info}>
-                <div>ТТ: {photo.store}</div>
-                <div>Категорія: {photo.category}</div>
-                <div>{photo.date}</div>
-                {photo.comment && (
-                  <div className={styles.comment}>{photo.comment}</div>
-                )}
-                {storeSums[photo.store]?.days70 > 0 && (
-                  <div className={styles.sums}>
-                    Сума: {storeSums[photo.store].month.toLocaleString('uk-UA')}{' '}
-                    грн ({' '}
-                    {storeSums[photo.store].days70.toLocaleString('uk-UA')} грн
-                    )
-                  </div>
-                )}
+                <div className={styles.infoContent}>
+                  <div>ТТ: {photo.store}</div>
+                  <div>Категорія: {photo.category}</div>
+                  <div>{photo.date}</div>
+                  {photo.comment && (
+                    <div className={styles.comment}>{photo.comment}</div>
+                  )}
+                  {storeSums[photo.store]?.days70 > 0 && (
+                    <div className={styles.sums}>
+                      Сума:{' '}
+                      {storeSums[photo.store].month.toLocaleString('uk-UA')} грн
+                      ( {storeSums[photo.store].days70.toLocaleString('uk-UA')}{' '}
+                      грн )
+                    </div>
+                  )}
+                </div>
                 {canDelete && (
                   <button
                     className={styles.deleteBtn}
@@ -486,6 +502,16 @@ export default function PhotoGallery({ onBack }: Props) {
             }}
           />
         </div>
+      )}
+
+      {pendingDeletePhoto && (
+        <Popup
+          message={`Видалити фото для ТТ "${pendingDeletePhoto.store}"?\nФото буде видалене і в галереї, і на бекенді.`}
+          onClose={() => setPendingDeletePhoto(null)}
+          onConfirm={() => void confirmDeletePhoto()}
+          confirmLabel="Видалити"
+          cancelLabel="Скасувати"
+        />
       )}
     </>
   );
