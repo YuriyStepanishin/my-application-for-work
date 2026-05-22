@@ -57,6 +57,8 @@ export default function HomePage({
   canOpenImplementation,
   canOpenMessages,
 }: Props) {
+  const withVersion = (iconPath: string) => `${iconPath}?v=${__APP_VERSION__}`;
+
   const handleRefreshApp = async () => {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.getRegistration();
@@ -69,35 +71,35 @@ export default function HomePage({
     {
       key: 'sales',
       label: 'Продажі',
-      icon: '/icons/chart-icon-64.svg',
+      icon: withVersion('/icons/chart-icon-64.svg'),
       onClick: onOpenSales,
       visible: canOpenSales,
     },
     {
       key: 'gallery',
       label: 'Фотогалерея',
-      icon: '/icons/gallery-icon-64.svg',
+      icon: withVersion('/icons/gallery-icon-64.svg'),
       onClick: onOpenGallery,
       visible: canOpenGallery,
     },
     {
       key: 'sales-by-days',
       label: 'Історія продажів',
-      icon: '/icons/ClientProduct.svg',
+      icon: withVersion('/icons/ClientProduct.svg'),
       onClick: onOpenRouteHistory,
       visible: canOpenRouteHistory,
     },
     {
       key: 'active-customer-base',
       label: 'Поточне АКБ',
-      icon: '/icons/calendar-icon-64.svg',
+      icon: withVersion('/icons/calendar-icon-64.svg'),
       onClick: onOpenActiveCustomerBase,
       visible: canOpenActiveCustomerBase,
     },
     {
       key: 'messages',
       label: 'Дошка інформації',
-      icon: '/icons/message-icon-64.svg',
+      icon: withVersion('/icons/message-icon-64.svg'),
       onClick: onOpenMessages,
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : null,
       visible: canOpenMessages,
@@ -105,21 +107,21 @@ export default function HomePage({
     {
       key: 'implementation',
       label: 'Виконання показників',
-      icon: '/icons/implementation.svg',
+      icon: withVersion('/icons/implementation.svg'),
       onClick: onOpenImplementation,
       visible: canOpenImplementation,
     },
     {
       key: 'store-check-review',
       label: 'Перегляд StoreCheck',
-      icon: '/icons/storecheck.svg',
+      icon: withVersion('/icons/storecheck.svg'),
       onClick: onOpenStoreCheckReview,
       visible: true,
     },
     {
       key: 'plan-targets',
       label: 'Планові показники',
-      icon: '/icons/icons_planning.svg',
+      icon: withVersion('/icons/icons_planning.svg'),
       onClick: onOpenPlanTargets,
       visible: canOpenPlanTargets,
     },
@@ -129,21 +131,21 @@ export default function HomePage({
     {
       key: 'bonus',
       label: 'Додавання фотозвіту',
-      icon: '/icons/camera-icon-64.svg',
+      icon: withVersion('/icons/camera-icon-64.svg'),
       onClick: onOpenBonus,
       visible: canOpenBonusReport,
     },
     {
       key: 'display',
       label: 'Додавання фотозвіту для Акція на представленність',
-      icon: '/icons/promo-icon-64.svg',
+      icon: withVersion('/icons/promo-icon-64.svg'),
       onClick: onOpenDisplay,
       visible: canOpenDisplayReport,
     },
     {
       key: 'store-check',
       label: 'Додавання StoreCheck',
-      icon: '/icons/storecheck.svg',
+      icon: withVersion('/icons/storecheck.svg'),
       onClick: onOpenStoreCheck,
       visible: true,
     },

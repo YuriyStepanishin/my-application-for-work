@@ -4,6 +4,14 @@ import styles from './DateTime.module.css';
 export default function DateTime() {
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
+  const quotes = useMemo(
+    () => [
+      '«Люди не купують товари. Вони купують послуги, історії, магію та рішення своїх проблем».',
+      '«Не відкладайте на завтра те, що можна зробити сьогодні» (Народна мудрість)',
+    ],
+    []
+  );
+
   useEffect(() => {
     const timerId = window.setInterval(() => {
       setCurrentTime(new Date());
@@ -54,11 +62,21 @@ export default function DateTime() {
 
   return (
     <div className={styles.kyivDateTime} aria-live="polite" aria-atomic="true">
-      <span className={styles.kyivDateTimeLabel}>Хмельницький</span>
+      <div className={styles.kyivHeader}>
+        <span className={styles.uaFlag} aria-hidden="true" />
+        <span className={styles.kyivDateTimeLabel}>Хмельницький</span>
+      </div>
       <strong className={styles.kyivDateTimeValue}>{kyivTime}</strong>
       <span className={styles.kyivDateTimeSub}>
         {kyivWeekday}, {kyivDate}
       </span>
+      <div className={styles.kyivQuote}>
+        {quotes.map(quote => (
+          <p key={quote} className={styles.kyivQuoteLine}>
+            {quote}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
