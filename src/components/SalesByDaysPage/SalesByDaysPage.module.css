@@ -189,7 +189,8 @@
   border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
   background: rgba(14, 38, 79, 0.46);
-  color: #eef5ff;
+  color: #f7fbff;
+  text-shadow: 0 1px 2px rgba(2, 8, 20, 0.65);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;

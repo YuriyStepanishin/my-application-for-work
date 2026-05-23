@@ -209,9 +209,13 @@ export function metricLabel(metric: MetricType, threshold: number): string {
   }
 }
 
-function normalizeDisplayOrder(value: number | undefined): number | undefined {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
-  const normalized = Math.trunc(value);
+function normalizeDisplayOrder(value: unknown): number | undefined {
+  const raw =
+    typeof value === 'string' ? Number(value.trim().replace(',', '.')) : value;
+
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return undefined;
+
+  const normalized = Math.trunc(raw);
   return normalized > 0 ? normalized : undefined;
 }
 

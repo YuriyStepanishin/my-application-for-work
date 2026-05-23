@@ -26,15 +26,23 @@
 }
 
 .backButton {
-  height: 42px;
-  padding: 0 16px;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  height: 48px;
+  padding: 0 18px;
   border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
   background: rgba(14, 38, 79, 0.46);
-  color: #eef5ff;
-  font-size: 14px;
+  color: #f7fbff;
+  text-shadow: 0 1px 2px rgba(2, 8, 20, 0.65);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(3, 18, 45, 0.35);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -132,12 +140,14 @@
 
 .remainingTitleCell {
   text-align: left;
-  min-width: 240px;
+  min-width: 170px;
 }
 
 .remainingNameCell {
   color: #e8f2ff;
   font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .remainingNumCell {
@@ -412,20 +422,116 @@
 }
 
 @media (max-width: 640px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .chartCard {
+    min-height: auto;
+    padding: 12px;
+  }
+
+  .barMeta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .barName {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    line-height: 1.25;
+  }
+
+  .barValue {
+    font-size: 12px;
+  }
+
   .remainingHint {
     font-size: 11px;
   }
 
-  .remainingTable th,
-  .remainingTable td {
-    padding: 6px 8px;
+  .remainingTableWrap {
+    overflow: visible;
+    border: 0;
   }
 
-  .remainingTitleCell {
-    min-width: 170px;
+  .remainingTable {
+    min-width: 0;
+    background: transparent;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .remainingTable thead {
+    display: none;
+  }
+
+  .remainingTable tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .remainingTable tr {
+    display: grid;
+    gap: 1px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(96, 137, 208, 0.3);
+    background: rgba(8, 31, 73, 0.82);
+  }
+
+  .remainingTable td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    border-bottom: 1px solid rgba(96, 137, 208, 0.2);
+    padding: 8px 10px;
+    font-size: 12px;
+    min-width: 0;
+  }
+
+  .remainingTable tr td:last-child {
+    border-bottom: 0;
+  }
+
+  .remainingTable td::before {
+    content: attr(data-label);
+    color: rgba(172, 198, 244, 0.88);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .remainingNameCell {
+    align-items: flex-start;
+    flex-direction: column;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .remainingNameCell::before {
+    margin-bottom: 2px;
   }
 
   .remainingNumCell {
-    min-width: 84px;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .remainingTitleCell {
+    min-width: 0;
   }
 }

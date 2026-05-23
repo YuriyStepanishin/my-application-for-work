@@ -363,7 +363,7 @@ export default function InfoBoardPage({
     });
 
     return storesInReports.size;
-  }, [photoReports]);
+  }, [photoReports, currentMonthKey]);
 
   const remainingTargets = useMemo(() => {
     return planColumns
@@ -747,17 +747,23 @@ export default function InfoBoardPage({
               <tbody>
                 {remainingTargets.map(item => (
                   <tr key={item.id}>
-                    <td className={styles.remainingNameCell}>{item.label}</td>
-                    <td className={styles.remainingNumCell}>
+                    <td
+                      className={styles.remainingNameCell}
+                      data-label="Показник"
+                    >
+                      {item.label}
+                    </td>
+                    <td className={styles.remainingNumCell} data-label="ПЛАН">
                       {formatMetricValue(item.plan, item.grn, integerFormatter)}
                     </td>
-                    <td className={styles.remainingNumCell}>
+                    <td className={styles.remainingNumCell} data-label="ФАКТ">
                       {formatMetricValue(item.fact, item.grn, integerFormatter)}
                     </td>
-                    <td className={styles.remainingNumCell}>
+                    <td className={styles.remainingNumCell} data-label="%%">
                       {formatPercentValue(item.factPercent)}
                     </td>
                     <td
+                      data-label="ЗАЛИШОК"
                       className={`${styles.remainingNumCell} ${
                         item.remaining > 0
                           ? styles.remainingWarn
@@ -771,6 +777,7 @@ export default function InfoBoardPage({
                       )}
                     </td>
                     <td
+                      data-label="ПРОГНОЗ"
                       className={`${styles.remainingNumCell} ${
                         item.forecast >= item.plan
                           ? styles.remainingGood
@@ -784,6 +791,7 @@ export default function InfoBoardPage({
                       )}
                     </td>
                     <td
+                      data-label="ПРОГНОЗ %%"
                       className={`${styles.remainingNumCell} ${
                         item.forecastPercent >= 100
                           ? styles.remainingGood

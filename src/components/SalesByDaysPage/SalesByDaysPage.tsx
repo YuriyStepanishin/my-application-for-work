@@ -715,11 +715,11 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
                       style={{
                         fontWeight: 600,
                         fontSize: '13px',
-                        color: '#224434',
+                        color: '#9fd1ff',
                         marginTop: '8px',
                         marginBottom: '4px',
                         paddingLeft: '4px',
-                        borderLeft: '3px solid #2f4f3a',
+                        borderLeft: '3px solid rgba(116, 174, 255, 0.9)',
                       }}
                     >
                       {dayOfWeek.label}

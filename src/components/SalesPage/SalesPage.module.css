@@ -595,16 +595,17 @@
   z-index: 20;
   height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(47, 79, 58, 0.28);
+  border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
-  color: #2f4f3a;
+  background: rgba(14, 38, 79, 0.46);
+  color: #f7fbff;
+  text-shadow: 0 1px 2px rgba(2, 8, 20, 0.65);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(47, 79, 58, 0.12);
+  box-shadow: 0 8px 20px rgba(3, 18, 45, 0.35);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -846,6 +847,12 @@
 .sidebarSaveButton,
 .button {
   background: rgba(10, 38, 85, 0.78);
+}
+
+.button {
+  border: 1px solid rgba(156, 185, 236, 0.42);
+  background: rgba(14, 38, 79, 0.46);
+  color: #eef5ff;
 }
 
 .salesByDaysButton,

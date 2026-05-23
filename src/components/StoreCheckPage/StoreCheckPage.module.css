@@ -8,7 +8,11 @@
   padding: 24px;
   padding-top: max(24px, env(safe-area-inset-top));
   padding-bottom: max(24px, env(safe-area-inset-bottom));
-  background: linear-gradient(168deg, rgba(7, 30, 70, 0.94), rgba(5, 23, 55, 0.92));
+  background: linear-gradient(
+    168deg,
+    rgba(7, 30, 70, 0.94),
+    rgba(5, 23, 55, 0.92)
+  );
   border: 1px solid rgba(105, 152, 232, 0.24);
   border-radius: 24px;
   box-shadow: 0 24px 46px rgba(1, 11, 28, 0.48);
@@ -284,18 +288,19 @@
   right: 16px;
   bottom: 16px;
   z-index: 20;
-  min-height: 48px;
+  height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(108, 152, 232, 0.28);
+  border: 1px solid rgba(156, 185, 236, 0.42);
   border-radius: 999px;
-  background: rgba(9, 35, 80, 0.78);
-  color: #c9dcff;
+  background: rgba(14, 38, 79, 0.46);
+  color: #f7fbff;
+  text-shadow: 0 1px 2px rgba(2, 8, 20, 0.65);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 10px 24px rgba(4, 16, 40, 0.3);
+  box-shadow: 0 8px 20px rgba(3, 18, 45, 0.35);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -310,7 +315,7 @@
   }
 
   .backButton:hover {
-    background: rgba(12, 44, 99, 0.92);
+    background: rgba(20, 52, 107, 0.58);
     transform: translateY(-1px);
   }
 }
