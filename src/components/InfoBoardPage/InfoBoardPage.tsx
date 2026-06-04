@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import styles from './InfoBoardPage.module.css';
-import { getUserRole } from '../../config/userRoles';
+import { canUserSeeBrand, getUserRole } from '../../config/userRoles';
 import { useMessagesCenter } from '../../hooks/useMessagesCenter';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import { fetchReports, type Report } from '../../api/fetchReports';
 import { loadPlanColumns } from '../ImplementationPage/planColumnsStorage';
 import {
+  canViewPlanColumnByEmail,
   calcColumnFact,
   isGrnMetric,
   type PlanColumn,
@@ -290,6 +291,7 @@ export default function InfoBoardPage({
       const store = (row.торгова_точка || '').trim();
       const dateKey = parseSaleDateKey(row.дата || '');
       if (!dateKey || !dateKey.startsWith(currentMonthKey)) return;
+      if (!canUserSeeBrand(userEmail, row.бренд)) return;
 
       totalAmount += amount;
 
@@ -347,7 +349,7 @@ export default function InfoBoardPage({
       topProductsByAmount,
       topClientsSku,
     };
-  }, [sales]);
+  }, [sales, userEmail]);
 
   const currentMonthLabel = formatMonthLabel(salesInsights.currentMonthKey);
 
@@ -366,7 +368,11 @@ export default function InfoBoardPage({
   }, [photoReports, currentMonthKey]);
 
   const remainingTargets = useMemo(() => {
-    return planColumns
+    const visibleColumns = planColumns.filter(column =>
+      canViewPlanColumnByEmail(userEmail, column)
+    );
+
+    return visibleColumns
       .map(column => {
         const plan = sumPlanTargets(column);
         const fact = calcColumnFact(currentMonthSales, column);
@@ -392,6 +398,7 @@ export default function InfoBoardPage({
   }, [
     currentMonthSales,
     planColumns,
+    userEmail,
     workingDayStats.elapsed,
     workingDayStats.total,
   ]);

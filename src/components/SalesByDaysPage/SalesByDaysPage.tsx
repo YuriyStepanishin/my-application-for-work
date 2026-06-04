@@ -3,6 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 import SalesFilter from '../SalesFilter/SalesFilter';
+import {
+  canUserSeeBrand,
+  getCurrentAuthorizedEmail,
+} from '../../config/userRoles';
 import styles from './SalesByDaysPage.module.css';
 
 type DayStats = {
@@ -122,6 +126,7 @@ function isDeliciaBrand(brand: string): boolean {
 }
 
 export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
+  const authEmail = getCurrentAuthorizedEmail();
   const [agent, setAgent] = useState('');
   const [department, setDepartment] = useState('');
   const [brands, setBrands] = useState<Set<string>>(new Set());
@@ -177,6 +182,8 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
   // ФІЛЬТРАЦІЯ ВЖЕ ПО НОВИХ ДАТАХ
   const filteredByDepartmentAgent = useMemo(() => {
     return transformedData.filter(i => {
+      if (!canUserSeeBrand(authEmail, i.бренд)) return false;
+
       if (department && i.відділ !== department) return false;
 
       if (agent && i.агент !== agent) return false;
@@ -201,7 +208,7 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
 
       return true;
     });
-  }, [transformedData, agent, department, dateFrom, dateTo]);
+  }, [transformedData, agent, department, dateFrom, dateTo, authEmail]);
 
   const filtered = useMemo(() => {
     if (brands.size === 0) return filteredByDepartmentAgent;

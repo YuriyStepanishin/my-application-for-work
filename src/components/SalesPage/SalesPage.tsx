@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { fetchSales, type Sale } from '../../api/fetchSales';
 import { fetchReports } from '../../api/fetchReports';
 import {
+  canUserSeeBrand,
   getCurrentAuthorizedEmail,
   getUserRepresentative,
   getUserRole,
@@ -345,7 +346,12 @@ export default function SalesPage({
     const result: Record<string, BrandData> = {};
 
     filtered.forEach(i => {
-      if (!i.бренд || EXCLUDED_BRANDS.has(i.бренд)) return;
+      if (
+        !i.бренд ||
+        EXCLUDED_BRANDS.has(i.бренд) ||
+        !canUserSeeBrand(authEmail, i.бренд)
+      )
+        return;
 
       if (!result[i.бренд]) {
         result[i.бренд] = {
@@ -375,7 +381,7 @@ export default function SalesPage({
     });
 
     return result;
-  }, [filtered]);
+  }, [filtered, authEmail]);
 
   const availableBrandSet = useMemo(
     () => new Set(Object.keys(groupedAllBrands)),
@@ -464,13 +470,20 @@ export default function SalesPage({
 
   const selectedSales = useMemo(() => {
     if (effectiveSelectedBrands.length === 0) {
-      return filtered.filter(item => !EXCLUDED_BRANDS.has(item.бренд));
+      return filtered.filter(
+        item =>
+          !EXCLUDED_BRANDS.has(item.бренд) &&
+          canUserSeeBrand(authEmail, item.бренд)
+      );
     }
 
     return filtered.filter(
-      item => !EXCLUDED_BRANDS.has(item.бренд) && activeBrandSet.has(item.бренд)
+      item =>
+        !EXCLUDED_BRANDS.has(item.бренд) &&
+        canUserSeeBrand(authEmail, item.бренд) &&
+        activeBrandSet.has(item.бренд)
     );
-  }, [filtered, effectiveSelectedBrands, activeBrandSet]);
+  }, [filtered, effectiveSelectedBrands, activeBrandSet, authEmail]);
 
   const selectedStores = useMemo<StoreDetailsRow[]>(() => {
     const storeMap: Record<

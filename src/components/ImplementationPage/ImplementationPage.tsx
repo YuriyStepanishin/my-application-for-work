@@ -11,6 +11,7 @@ import {
 import { DEPARTMENT_ORDER } from './agentsConfig';
 import {
   loadPlanColumns,
+  canViewPlanColumnByEmail,
   calcColumnFact,
   calcColumnFactDetailsByStore,
   isGrnMetric,
@@ -154,6 +155,7 @@ type DetailModalState = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ImplementationPage({ onBack }: { onBack: () => void }) {
+  const authEmail = getCurrentAuthorizedEmail();
   const [detailModal, setDetailModal] = useState<DetailModalState | null>(null);
   const renderDepartments = useMemo(
     () => getRenderableDepartmentsByScope(),
@@ -180,6 +182,12 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
 
   const currentMonth = useMemo(() => getCurrentMonthKey(), []);
 
+  const visiblePlanColumns = useMemo(
+    () =>
+      planColumns.filter(column => canViewPlanColumnByEmail(authEmail, column)),
+    [planColumns, authEmail]
+  );
+
   const currentMonthSales = useMemo(
     () => data.filter(s => parseDateMonth(s.дата) === currentMonth),
     [data, currentMonth]
@@ -201,13 +209,13 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
 
   const { rows, totals } = useMemo(() => {
     const rows: DataRow[] = [];
-    const totalCols: ColValues[] = planColumns.map(() => ({
+    const totalCols: ColValues[] = visiblePlanColumns.map(() => ({
       plan: 0,
       fact: 0,
     }));
 
     for (const dept of renderDepartments) {
-      const deptCols: ColValues[] = planColumns.map(() => ({
+      const deptCols: ColValues[] = visiblePlanColumns.map(() => ({
         plan: 0,
         fact: 0,
       }));
@@ -215,7 +223,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
 
       for (const agent of dept.agents) {
         const agentSales = agentSalesIndex[agent] ?? [];
-        const cols: ColValues[] = planColumns.map((col, ci) => {
+        const cols: ColValues[] = visiblePlanColumns.map((col, ci) => {
           const fact = calcColumnFact(agentSales, col);
           // If this dept uses total mode for the column, individual agent plan is not shown
           const plan =
@@ -234,7 +242,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
         type: 'dept',
         label: dept.label,
         cols: deptCols.map((dc, ci) => {
-          const col = planColumns[ci];
+          const col = visiblePlanColumns[ci];
           // If dept uses total mode for this column, use deptPlans instead of agent sum
           const plan =
             (col.deptMode?.[dept.dept] ?? 'individual') === 'total'
@@ -245,7 +253,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
       });
       rows.push(...agentRows);
       deptCols.forEach((dc, ci) => {
-        const col = planColumns[ci];
+        const col = visiblePlanColumns[ci];
         const dPlan =
           (col.deptMode?.[dept.dept] ?? 'individual') === 'total'
             ? (col.deptPlans?.[dept.dept] ?? 0)
@@ -256,7 +264,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
     }
 
     return { rows, totals: { cols: totalCols } };
-  }, [renderDepartments, agentSalesIndex, planColumns]);
+  }, [renderDepartments, agentSalesIndex, visiblePlanColumns]);
 
   const monthLabel = new Date().toLocaleString('uk-UA', {
     month: 'long',
@@ -268,7 +276,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
     rowLabel: string,
     columnIndex: number
   ) {
-    const column = planColumns[columnIndex];
+    const column = visiblePlanColumns[columnIndex];
     if (!column) return;
 
     let scopeSales: Sale[] = [];
@@ -314,14 +322,14 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
               <th className={styles.colDept} rowSpan={2}>
                 Відділ / ТП
               </th>
-              {planColumns.map(col => (
+              {visiblePlanColumns.map(col => (
                 <th key={col.id} className={styles.colGroup} colSpan={3}>
                   {col.label}
                 </th>
               ))}
             </tr>
             <tr>
-              {planColumns.map(col => (
+              {visiblePlanColumns.map(col => (
                 <ColumnSubHeaders key={col.id} />
               ))}
             </tr>
@@ -340,7 +348,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                     key={ci}
                     plan={c.plan}
                     fact={c.fact}
-                    grn={isGrnMetric(planColumns[ci].metric)}
+                    grn={isGrnMetric(visiblePlanColumns[ci].metric)}
                     styles={styles}
                     onFactClick={() => openFactDetails(row.type, row.label, ci)}
                   />
@@ -356,7 +364,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
                   key={ci}
                   plan={c.plan}
                   fact={c.fact}
-                  grn={isGrnMetric(planColumns[ci].metric)}
+                  grn={isGrnMetric(visiblePlanColumns[ci].metric)}
                   styles={styles}
                   onFactClick={() =>
                     openFactDetails('total', 'Загальний підсумок', ci)
@@ -370,7 +378,7 @@ export default function ImplementationPage({ onBack }: { onBack: () => void }) {
 
       {/* ── MOBILE ── */}
       <div className={styles.mobileOnly}>
-        {planColumns.map((col, ci) => {
+        {visiblePlanColumns.map((col, ci) => {
           const grn = isGrnMetric(col.metric);
           return (
             <div key={col.id}>

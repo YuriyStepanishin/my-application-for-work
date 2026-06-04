@@ -4,7 +4,9 @@ import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 import SearchInput from '../SearchInput';
 import {
+  canUserSeeBrand,
   getCurrentAuthorizedEmail,
+  getUserTrademarkAccessBrands,
   getUserRepresentative,
   getUserRole,
 } from '../../config/userRoles';
@@ -175,6 +177,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
     const query = searchTerm.trim().toLowerCase();
 
     return data.filter(item => {
+      if (!canUserSeeBrand(authEmail, item.бренд)) return false;
       if (department && item.відділ !== department) return false;
       if (agent && item.агент !== agent) return false;
       if (!item.торгова_точка) return false;
@@ -188,7 +191,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
       return true;
     });
-  }, [data, department, agent, searchTerm]);
+  }, [data, department, agent, searchTerm, authEmail]);
 
   const weekKeys = useMemo(() => {
     const keys: string[] = [];
@@ -242,35 +245,44 @@ export default function RouteHistoryPage({ onBack }: Props) {
   }, [filtered, searchTerm, currentWeekday, storeNameCollator]);
 
   const visibleBrands = useMemo(() => {
-    const princessBrandsFromData = [
+    const normalized = (value: string) =>
+      value
+        .replace(/\u00A0/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLocaleLowerCase('uk-UA');
+
+    const configuredBrands = getUserTrademarkAccessBrands(authEmail).filter(
+      brand => canUserSeeBrand(authEmail, brand)
+    );
+
+    const configuredSet = new Set(configuredBrands.map(normalized));
+
+    const brandsFromData = [
       ...new Set(
         filtered
           .map(item => item.бренд)
-          .filter((brand): brand is string =>
-            Boolean(brand && brand.startsWith('Принцеса'))
-          )
+          .filter((brand): brand is string => Boolean(brand))
       ),
-    ].sort((a, b) => a.localeCompare(b, 'uk'));
+    ]
+      .filter(brand => canUserSeeBrand(authEmail, brand))
+      .filter(brand => !configuredSet.has(normalized(brand)))
+      .sort((a, b) => a.localeCompare(b, 'uk'));
 
-    const knownPrincess = new Set(
-      REQUIRED_BRANDS.filter(brand => brand.startsWith('Принцеса'))
-    );
-
-    const extraPrincessBrands = princessBrandsFromData.filter(
-      brand => !knownPrincess.has(brand)
-    );
+    if (configuredBrands.length > 0) {
+      return [...configuredBrands, ...brandsFromData];
+    }
 
     return [
-      'Greenfield',
-      'TESS',
-      ...REQUIRED_BRANDS.filter(brand => brand.startsWith('Принцеса')),
-      ...extraPrincessBrands,
-      'Жокей',
-      'JARDIN',
-      'PIAZZA',
-      'Деліція',
+      ...REQUIRED_BRANDS.filter(brand => canUserSeeBrand(authEmail, brand)),
+      ...brandsFromData.filter(
+        brand =>
+          !REQUIRED_BRANDS.some(
+            requiredBrand => normalized(requiredBrand) === normalized(brand)
+          )
+      ),
     ];
-  }, [filtered]);
+  }, [filtered, authEmail]);
 
   const storeHistory = useMemo<StoreHistory[]>(() => {
     const storesSet = new Set(routeStores);

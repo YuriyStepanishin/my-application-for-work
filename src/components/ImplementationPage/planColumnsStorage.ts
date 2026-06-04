@@ -1,9 +1,10 @@
 import type { Sale } from '../../api/fetchSales';
+import { canUserSeeBrand } from '../../config/userRoles';
 import {
   fetchPlanColumns,
   savePlanColumnsToSheet,
 } from '../../api/planTargets';
-import { type BrandFilter, matchesBrand } from './agentsConfig';
+import { ORIMI_BRANDS, type BrandFilter, matchesBrand } from './agentsConfig';
 
 export type AssortmentMode = 'all' | 'specific';
 export type MetricBase = 'sum' | 'tt' | 'sku';
@@ -514,6 +515,54 @@ export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
       return total / storeSkus.size;
     }
   }
+}
+
+function canAccessBrandFilterByEmail(
+  email: string | null,
+  filter: BrandFilter
+) {
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'all_orimi':
+      return ORIMI_BRANDS.some(brand => canUserSeeBrand(email, brand));
+    case 'greenfield':
+      return canUserSeeBrand(email, 'Greenfield');
+    case 'tess':
+      return canUserSeeBrand(email, 'TESS');
+    case 'jockey':
+      return canUserSeeBrand(email, 'Жокей');
+    case 'jardin':
+      return canUserSeeBrand(email, 'JARDIN');
+    case 'piazza':
+      return canUserSeeBrand(email, 'PIAZZA');
+    case 'princessa_nuri':
+      return canUserSeeBrand(email, 'Принцеса Нурі');
+    case 'princessa_kandi':
+      return canUserSeeBrand(email, 'Принцеса Канді');
+    case 'princessa_yava':
+      return canUserSeeBrand(email, 'Принцеса Ява');
+    case 'princessa_gita':
+      return canUserSeeBrand(email, 'Принцеса Гіта');
+    case 'princessa':
+      return [
+        'Принцеса Нурі',
+        'Принцеса Канді',
+        'Принцеса Ява',
+        'Принцеса Гіта',
+      ].some(brand => canUserSeeBrand(email, brand));
+    case 'delicia':
+      return canUserSeeBrand(email, 'Деліція');
+  }
+}
+
+export function canViewPlanColumnByEmail(
+  email: string | null,
+  column: PlanColumn
+): boolean {
+  const brands = selectedBrands(column);
+  if (brands.length === 0) return true;
+  return brands.some(filter => canAccessBrandFilterByEmail(email, filter));
 }
 
 export function calcColumnFactDetailsByStore(

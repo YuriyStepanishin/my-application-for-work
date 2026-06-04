@@ -4,6 +4,7 @@ import { fetchSales, type Sale } from '../../api/fetchSales';
 import Loader from '../Loader/Loader';
 import SearchInput from '../SearchInput';
 import {
+  canUserSeeBrand,
   getCurrentAuthorizedEmail,
   getUserRepresentative,
   getUserRole,
@@ -20,17 +21,6 @@ type StoreAggregate = {
   deliciaSum: number;
 };
 
-const ORIMI = [
-  'Greenfield',
-  'TESS',
-  'Принцеса Нурі',
-  'Принцеса Канді',
-  'Принцеса Ява',
-  'Жокей',
-  'JARDIN',
-  'PIAZZA',
-];
-
 const DELICIA = 'Деліція';
 
 function normalizeBrand(brand: string): string {
@@ -41,7 +31,6 @@ function normalizeBrand(brand: string): string {
     .toLocaleLowerCase('uk-UA');
 }
 
-const ORIMI_SET = new Set(ORIMI.map(normalizeBrand));
 const DELICIA_NORMALIZED = normalizeBrand(DELICIA);
 
 function parseDateObject(input: string): Date | null {
@@ -117,6 +106,7 @@ export default function ActiveCustomerBase({ onBack }: Props) {
   const authEmail = getCurrentAuthorizedEmail();
   const userRole = getUserRole(authEmail);
   const ownRepresentative = getUserRepresentative(authEmail);
+  const canSeeDelicia = canUserSeeBrand(authEmail, DELICIA);
   const isSupervisor = userRole === 'supervisor';
   const isAgent = userRole === 'agent';
   const storeNameCollator = useMemo(
@@ -214,12 +204,16 @@ export default function ActiveCustomerBase({ onBack }: Props) {
           delicia: 0,
         };
 
-        if (ORIMI_SET.has(normalizedBrand)) {
-          current.orimi += item.сума || 0;
+        const hasBrandAccess = canUserSeeBrand(authEmail, item.бренд);
+        if (!hasBrandAccess) {
+          monthSumsByStore.set(storeKey, current);
+          return;
         }
 
         if (normalizedBrand === DELICIA_NORMALIZED) {
           current.delicia += item.сума || 0;
+        } else {
+          current.orimi += item.сума || 0;
         }
 
         monthSumsByStore.set(storeKey, current);
@@ -240,6 +234,7 @@ export default function ActiveCustomerBase({ onBack }: Props) {
     currentWeekday,
     currentYear,
     currentMonth,
+    authEmail,
     storeNameCollator,
   ]);
 
@@ -400,9 +395,11 @@ export default function ActiveCustomerBase({ onBack }: Props) {
             <span className={styles.summaryItem}>
               Orimi: <b>{formatQty(summary.totalSum)} грн</b>
             </span>
-            <span className={styles.summaryItem}>
-              Delicia: <b>{formatQty(summary.totalDeliciaSum)} грн</b>
-            </span>
+            {canSeeDelicia && (
+              <span className={styles.summaryItem}>
+                Delicia: <b>{formatQty(summary.totalDeliciaSum)} грн</b>
+              </span>
+            )}
           </div>
 
           <div className={styles.summaryTrafficGroup}>
@@ -419,15 +416,17 @@ export default function ActiveCustomerBase({ onBack }: Props) {
               </span>
             </div>
 
-            <div className={styles.trafficSubgroup}>
-              <span className={styles.trafficLabel}>Delicia:</span>
-              <span className={styles.summaryItem}>
-                🟢: <b>{summary.deliciaGreenStores}</b> ТТ
-              </span>
-              <span className={styles.summaryItem}>
-                🔴: <b>{summary.deliciaRedStores}</b> ТТ
-              </span>
-            </div>
+            {canSeeDelicia && (
+              <div className={styles.trafficSubgroup}>
+                <span className={styles.trafficLabel}>Delicia:</span>
+                <span className={styles.summaryItem}>
+                  🟢: <b>{summary.deliciaGreenStores}</b> ТТ
+                </span>
+                <span className={styles.summaryItem}>
+                  🔴: <b>{summary.deliciaRedStores}</b> ТТ
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -449,7 +448,7 @@ export default function ActiveCustomerBase({ onBack }: Props) {
                   <tr>
                     <th>Назва ТТ</th>
                     <th>Orimi</th>
-                    <th>Delicia</th>
+                    {canSeeDelicia && <th>Delicia</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -459,9 +458,11 @@ export default function ActiveCustomerBase({ onBack }: Props) {
                       <td className={styles.valueCell}>
                         {renderOrimiValue(store.sum)}
                       </td>
-                      <td className={styles.valueCell}>
-                        {renderDeliciaValue(store.deliciaSum)}
-                      </td>
+                      {canSeeDelicia && (
+                        <td className={styles.valueCell}>
+                          {renderDeliciaValue(store.deliciaSum)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -483,10 +484,12 @@ export default function ActiveCustomerBase({ onBack }: Props) {
                       <span className={styles.mobileLabel}>Сума Orimi</span>
                       {renderOrimiValue(store.sum)}
                     </div>
-                    <div className={styles.mobileSumItem}>
-                      <span className={styles.mobileLabel}>Сума Delicia</span>
-                      {renderDeliciaValue(store.deliciaSum)}
-                    </div>
+                    {canSeeDelicia && (
+                      <div className={styles.mobileSumItem}>
+                        <span className={styles.mobileLabel}>Сума Delicia</span>
+                        {renderDeliciaValue(store.deliciaSum)}
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
