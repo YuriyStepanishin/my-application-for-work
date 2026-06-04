@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Select, { type MultiValue } from 'react-select';
 import { fetchSales, type Sale } from '../../api/fetchSales';
@@ -16,6 +16,7 @@ import {
   metricLabel,
   loadPlanColumns,
   savePlanColumns,
+  sortPlanColumns,
   thresholdLabel,
   type MetricBase,
   type MetricUnit,
@@ -56,6 +57,7 @@ function buildEmpty(): PlanColumn {
 export default function PlanTargetsPage({ onBack }: Props) {
   const queryClient = useQueryClient();
   const [columns, setColumns] = useState<PlanColumn[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
   const [editing, setEditing] = useState<PlanColumn | null>(null);
   const [saved, setSaved] = useState(false);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
@@ -70,16 +72,20 @@ export default function PlanTargetsPage({ onBack }: Props) {
     staleTime: 1000 * 60 * 5,
   });
 
-  useEffect(() => {
-    if (loadedColumns.length > 0) {
-      setColumns(loadedColumns);
-    }
-  }, [loadedColumns]);
+  const effectiveColumns = useMemo(
+    () => (isDirty ? sortPlanColumns(columns) : sortPlanColumns(loadedColumns)),
+    [columns, isDirty, loadedColumns]
+  );
 
   const saveMutation = useMutation({
     mutationFn: savePlanColumns,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['plan-targets'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['plan-targets'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['info-board-plan-targets'],
+        }),
+      ]);
       setSaved(true);
       setPopupMessage('Збережено');
       setTimeout(() => setSaved(false), 2000);
@@ -90,12 +96,12 @@ export default function PlanTargetsPage({ onBack }: Props) {
   });
 
   const handleSaveAll = useCallback(() => {
-    void saveMutation.mutateAsync(columns);
-  }, [columns, saveMutation]);
+    void saveMutation.mutateAsync(sortPlanColumns(effectiveColumns));
+  }, [effectiveColumns, saveMutation]);
 
   function handleAddColumn() {
     const nextOrder =
-      columns.reduce(
+      effectiveColumns.reduce(
         (max, col) => Math.max(max, Math.trunc(col.displayOrder ?? 0)),
         0
       ) + 1;
@@ -112,23 +118,25 @@ export default function PlanTargetsPage({ onBack }: Props) {
   }
 
   function handleDeleteColumn(id: string) {
-    setColumns(prev => prev.filter(c => c.id !== id));
+    setIsDirty(true);
+    setColumns(sortPlanColumns(effectiveColumns.filter(c => c.id !== id)));
   }
 
   function handleSaveColumn(col: PlanColumn) {
-    setColumns(prev => {
-      const idx = prev.findIndex(c => c.id === col.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = col;
-        return next;
-      }
-      return [...prev, col];
-    });
+    setIsDirty(true);
+    const currentColumns = effectiveColumns;
+    const idx = currentColumns.findIndex(c => c.id === col.id);
+    if (idx >= 0) {
+      const next = [...currentColumns];
+      next[idx] = col;
+      setColumns(sortPlanColumns(next));
+    } else {
+      setColumns(sortPlanColumns([...currentColumns, col]));
+    }
     setEditing(null);
   }
 
-  if (isLoading && columns.length === 0) {
+  if (isLoading && effectiveColumns.length === 0) {
     return <Loader />;
   }
 
@@ -160,13 +168,13 @@ export default function PlanTargetsPage({ onBack }: Props) {
         </button>
       </div>
 
-      {columns.length === 0 ? (
+      {effectiveColumns.length === 0 ? (
         <p className={styles.empty}>
           Немає колонок. Натисніть «+ Додати колонку».
         </p>
       ) : (
         <PersonnelTable
-          columns={columns}
+          columns={effectiveColumns}
           onEdit={handleEditColumn}
           onDelete={handleDeleteColumn}
         />

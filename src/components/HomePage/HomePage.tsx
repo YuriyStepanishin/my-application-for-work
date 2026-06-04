@@ -91,7 +91,7 @@ export default function HomePage({
     },
     {
       key: 'active-customer-base',
-      label: 'Поточне АКБ',
+      label: 'Цілі маршрута',
       icon: withVersion('/icons/calendar-icon-64.svg'),
       onClick: onOpenActiveCustomerBase,
       visible: canOpenActiveCustomerBase,

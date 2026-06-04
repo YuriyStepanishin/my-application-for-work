@@ -12,3 +12,6 @@ export const STORE_CHECK_URL =
 
 export const PLAN_TARGETS_URL =
   'https://script.google.com/macros/s/AKfycbwfKHCRUY6pL2tEyAxTVJISqx18zJtrsH-n30rUPSbWrufIjbjTmDzjT55VsbKdXIIyow/exec';
+
+export const ROUTES_URL =
+  'https://script.google.com/macros/s/AKfycbyVtClVRdBn3k1Bpm8F2zSjRHy7g9pIOzMxSBvZN17hHEXh8zSVElL8xDbmYXiqBAGU/exec';

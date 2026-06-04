@@ -15,6 +15,7 @@ var BACKUP_KEY = 'plan-targets-backup-v1';
 var HEADER_ROW = [
   'id',
   'label',
+  'displayOrder',
   'brand',
   'brands_json',
   'assortmentMode',
@@ -123,30 +124,49 @@ function readPlanColumns() {
     return loadBackupColumns();
   }
 
-  var rows = sheet.getRange(2, 1, lastRow - 1, HEADER_ROW.length).getValues();
+  var lastColumn = Math.max(sheet.getLastColumn(), HEADER_ROW.length);
+  var header = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
+  var rows = sheet.getRange(2, 1, lastRow - 1, lastColumn).getValues();
   var columns = [];
+
+  function readCell(row, key, fallbackIndex) {
+    var idx = header.indexOf(key);
+    if (idx < 0) idx = fallbackIndex;
+    if (idx < 0 || idx >= row.length) return '';
+    return row[idx];
+  }
+
+  function readNumberCell(row, key, fallbackIndex) {
+    var value = Number(readCell(row, key, fallbackIndex));
+    if (!isFinite(value)) return undefined;
+    return value;
+  }
 
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i];
     if (!row || row.length === 0) continue;
 
-    var id = String(row[0] || '').trim();
+    var id = String(readCell(row, 'id', 0) || '').trim();
     if (!id) continue;
 
     columns.push({
       id: id,
-      label: String(row[1] || ''),
-      brand: String(row[2] || ''),
-      brands: parseJsonArray(row[3]),
-      assortmentMode: String(row[4] || '') || undefined,
-      assortmentProduct: String(row[5] || ''),
-      assortmentProducts: parseJsonArray(row[6]),
-      metric: String(row[7] || 'tt_from_x'),
-      threshold: Number(row[8] || 0),
-      calcMode: String(row[9] || '') || undefined,
-      agentPlans: parseJsonObject(row[10]),
-      deptMode: parseJsonObject(row[11]),
-      deptPlans: parseJsonObject(row[12]),
+      label: String(readCell(row, 'label', 1) || ''),
+      displayOrder: readNumberCell(row, 'displayOrder', -1),
+      brand: String(readCell(row, 'brand', 2) || ''),
+      brands: parseJsonArray(readCell(row, 'brands_json', 3)),
+      assortmentMode:
+        String(readCell(row, 'assortmentMode', 4) || '') || undefined,
+      assortmentProduct: String(readCell(row, 'assortmentProduct', 5) || ''),
+      assortmentProducts: parseJsonArray(
+        readCell(row, 'assortmentProducts_json', 6)
+      ),
+      metric: String(readCell(row, 'metric', 7) || 'tt_from_x'),
+      threshold: Number(readCell(row, 'threshold', 8) || 0),
+      calcMode: String(readCell(row, 'calcMode', 9) || '') || undefined,
+      agentPlans: parseJsonObject(readCell(row, 'agentPlans_json', 10)),
+      deptMode: parseJsonObject(readCell(row, 'deptMode_json', 11)),
+      deptPlans: parseJsonObject(readCell(row, 'deptPlans_json', 12)),
     });
   }
 
@@ -165,6 +185,7 @@ function writePlanColumns(columns) {
     return [
       column.id || Utilities.getUuid(),
       column.label || '',
+      Number(column.displayOrder || 0),
       column.brand || '',
       JSON.stringify(column.brands || []),
       column.assortmentMode || 'all',

@@ -22,13 +22,13 @@
 
 .pageTitle {
   margin: 0;
-  color: #204133;
+  color: white;
   font-size: 24px;
 }
 
 .pageMeta {
   margin: 8px 0 0;
-  color: #305544;
+  color: white;
   font-size: 14px;
 }
 
@@ -187,6 +187,152 @@
   color: #214233;
   font-size: 14px;
   white-space: nowrap;
+}
+
+.goalsHeader {
+  font-size: 15px;
+  font-weight: 700;
+  color: #214233;
+  margin-bottom: 10px;
+}
+
+.goalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.storeGoalsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.storeGoalCard {
+  border: 1px solid #d8e3db;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 12px;
+}
+
+.storeGoalToggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #cdd8cf;
+  border-radius: 12px;
+  background: #eff6f0;
+  color: #1d3f30;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+}
+
+.storeGoalToggle:hover {
+  background: #e6f1e8;
+}
+
+.storeGoalToggleIcon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #dfece2;
+  color: #28503c;
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.storeGoalTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d3f30;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.storeGoalBody {
+  margin-top: 10px;
+}
+
+.goalCard {
+  border: 1px solid #d8e3db;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goalLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d3f30;
+}
+
+.goalStats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  color: #315546;
+  font-size: 13px;
+}
+
+.goalInlineRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.goalInlineValue {
+  width: auto;
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.goalFactBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.goalFactDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.goalFactTag,
+.goalFactTagMuted {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.goalFactTag {
+  background: #eef7f0;
+  color: #22503b;
+  border: 1px solid #cfe0d3;
+}
+
+.goalFactTagMuted {
+  background: #f3f4f5;
+  color: #60716a;
+  border: 1px dashed #c9d4cb;
 }
 
 .summaryMainGroup .summaryItem b,
@@ -454,6 +600,20 @@
 
   .summaryTrafficGroup {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .trafficSubgroup {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 6px;
+    column-gap: 6px;
+  }
+
+  .trafficLabel {
+    min-width: 0;
+    width: 100%;
+    text-align: center;
   }
 
   .summaryTrafficGroup .summaryItem {

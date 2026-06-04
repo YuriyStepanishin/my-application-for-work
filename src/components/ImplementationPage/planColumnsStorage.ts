@@ -133,6 +133,17 @@ function matchesAssortment(rawProduct: string, column: PlanColumn): boolean {
   return selected.includes(normalizeText(rawProduct));
 }
 
+export function filterSalesByPlanColumn(
+  agentSales: Sale[],
+  column: PlanColumn
+): Sale[] {
+  return agentSales.filter(
+    sale =>
+      matchesAnyBrand(sale.бренд, column) &&
+      matchesAssortment(sale.товар, column)
+  );
+}
+
 export function inferMetricControls(metric: MetricType): {
   base: MetricBase;
   unit: MetricUnit;
@@ -381,9 +392,7 @@ export async function savePlanColumns(cols: PlanColumn[]): Promise<void> {
 }
 
 export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
-  const filtered = agentSales.filter(
-    s => matchesAnyBrand(s.бренд, column) && matchesAssortment(s.товар, column)
-  );
+  const filtered = filterSalesByPlanColumn(agentSales, column);
   const calcMode = column.calcMode ?? 'period';
 
   const thresholdByMetric = (metric: MetricType): number => {
@@ -569,9 +578,7 @@ export function calcColumnFactDetailsByStore(
   agentSales: Sale[],
   column: PlanColumn
 ): StoreFactDetail[] {
-  const filtered = agentSales.filter(
-    s => matchesAnyBrand(s.бренд, column) && matchesAssortment(s.товар, column)
-  );
+  const filtered = filterSalesByPlanColumn(agentSales, column);
   const calcMode = column.calcMode ?? 'period';
 
   const saleValue = (sale: Sale, metric: MetricType): number => {

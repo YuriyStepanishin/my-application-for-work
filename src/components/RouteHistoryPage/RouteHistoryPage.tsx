@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSales, type Sale } from '../../api/fetchSales';
+import { fetchRoutes, type RouteRow } from '../../api/fetchRoutes';
 import Loader from '../Loader/Loader';
 import SearchInput from '../SearchInput';
 import {
@@ -81,6 +82,21 @@ function shiftDays(date: Date, days: number): Date {
   return shifted;
 }
 
+function getKyivDateNow(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Kyiv',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+
+  const year = Number(parts.find(part => part.type === 'year')?.value || '0');
+  const month = Number(parts.find(part => part.type === 'month')?.value || '1');
+  const day = Number(parts.find(part => part.type === 'day')?.value || '1');
+
+  return new Date(year, month - 1, day);
+}
+
 function normalizeWeekendToFriday(date: Date): Date {
   const day = date.getDay();
 
@@ -93,6 +109,24 @@ function normalizeWeekendToFriday(date: Date): Date {
 function getIsoWeekday(date: Date): number {
   const day = date.getDay();
   return day === 0 ? 7 : day;
+}
+
+function normalizeValue(value: string): string {
+  return value
+    .replace(/[\u2019\u02BC'`]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('uk-UA');
+}
+
+function getRouteDayLabel(date: Date): string {
+  const weekday = getIsoWeekday(date);
+  if (weekday === 1) return 'понеділок';
+  if (weekday === 2) return 'вівторок';
+  if (weekday === 3) return 'середа';
+  if (weekday === 4) return 'четвер';
+  return 'пʼятниця';
 }
 
 function getIsoWeekInfo(date: Date): { year: number; week: number } {
@@ -154,8 +188,16 @@ export default function RouteHistoryPage({ onBack }: Props) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const today = useMemo(() => normalizeWeekendToFriday(new Date()), []);
-  const currentWeekday = useMemo(() => getIsoWeekday(today), [today]);
+  const { data: routes = [], isLoading: isRoutesLoading } = useQuery<
+    RouteRow[]
+  >({
+    queryKey: ['routes'],
+    queryFn: fetchRoutes,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const today = useMemo(() => normalizeWeekendToFriday(getKyivDateNow()), []);
+  const currentRouteDay = useMemo(() => getRouteDayLabel(today), [today]);
 
   const uniqueDepartments = useMemo(
     () => [...new Set(data.map(item => item.відділ).filter(Boolean))].sort(),
@@ -225,24 +267,20 @@ export default function RouteHistoryPage({ onBack }: Props) {
 
   const routeStores = useMemo(() => {
     const stores = new Set<string>();
-    const hasSearch = searchTerm.trim().length > 0;
+    const allowedStores = new Set(filtered.map(item => item.торгова_точка));
+    const query = searchTerm.trim().toLowerCase();
+    const normalizedRouteDay = normalizeValue(currentRouteDay);
 
-    filtered.forEach(item => {
-      if (hasSearch) {
-        stores.add(item.торгова_точка);
-        return;
-      }
+    routes.forEach(item => {
+      if (normalizeValue(item.day) !== normalizedRouteDay) return;
+      if (!allowedStores.has(item.store)) return;
+      if (query && !item.store.toLowerCase().includes(query)) return;
 
-      const effectiveDate = getEffectiveDate(item);
-      if (!effectiveDate) return;
-
-      if (getIsoWeekday(effectiveDate) === currentWeekday) {
-        stores.add(item.торгова_точка);
-      }
+      stores.add(item.store);
     });
 
     return Array.from(stores).sort((a, b) => storeNameCollator.compare(a, b));
-  }, [filtered, searchTerm, currentWeekday, storeNameCollator]);
+  }, [routes, filtered, currentRouteDay, searchTerm, storeNameCollator]);
 
   const visibleBrands = useMemo(() => {
     const normalized = (value: string) =>
@@ -388,7 +426,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
   const formatHistoryCell = (value: number) =>
     value === 0 ? '-' : formatQty(value);
 
-  if (isLoading) return <Loader />;
+  if (isLoading || isRoutesLoading) return <Loader />;
   if (error) return <div className={styles.error}>Помилка</div>;
 
   return (
