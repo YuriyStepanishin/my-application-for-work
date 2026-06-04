@@ -30,7 +30,7 @@
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(110, 154, 232, 0.26);
   transition: transform 0.2s ease;
 }
 
@@ -40,7 +40,7 @@
   }
 
   .button:hover {
-    background: #1565c0;
+    background: linear-gradient(165deg, #2a83f5, #145fd9);
   }
 
   .removeButton:hover {
@@ -79,7 +79,7 @@
 .button {
   padding: 10px 16px;
   border: none;
-  background: #1976d2;
+  background: linear-gradient(165deg, #2e8cff, #1767e7);
   color: white;
   border-radius: 8px;
   cursor: pointer;

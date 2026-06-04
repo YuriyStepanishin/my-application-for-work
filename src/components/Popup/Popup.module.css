@@ -13,7 +13,7 @@
   width: min(92vw, 360px);
   border-radius: 14px;
   padding: 18px 16px;
-  background: #ffffff;
+  background: rgba(8, 30, 71, 0.86);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
   display: grid;
   gap: 12px;

@@ -31,7 +31,7 @@
 
 @media (hover: hover) {
   .photoButton:not(:disabled):hover {
-    background: #1565c0;
+    background: linear-gradient(165deg, #2a83f5, #145fd9);
   }
 }
 
@@ -79,7 +79,7 @@
   height: 64px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(110, 154, 232, 0.26);
 }
 
 .thumbStatus {

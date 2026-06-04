@@ -13,7 +13,7 @@
 .error {
   padding: 40px;
   text-align: center;
-  color: red;
+  color: #fecaca;
 }
 
 .header {
@@ -22,13 +22,13 @@
 
 .pageTitle {
   margin: 0;
-  color: white;
+  color: #eaf3ff;
   font-size: 24px;
 }
 
 .pageMeta {
   margin: 8px 0 0;
-  color: white;
+  color: #bcd3f5;
   font-size: 14px;
 }
 
@@ -38,9 +38,9 @@
   gap: 10px;
   align-items: end;
   padding: 12px;
-  border: 1px solid #bfd2c4;
+  border: 1px solid rgba(110, 154, 232, 0.26);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.74);
+  background: rgba(8, 30, 71, 0.78);
 }
 
 .field {
@@ -51,7 +51,7 @@
 
 .field span {
   font-size: 13px;
-  color: #315546;
+  color: #b7d0f7;
   font-weight: 600;
 }
 
@@ -59,9 +59,9 @@
   height: 42px;
   padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  background: rgba(8, 30, 71, 0.9);
+  color: #dbe8ff;
   font-size: 14px;
 }
 
@@ -69,9 +69,9 @@
   height: 42px;
   padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  background: rgba(8, 30, 71, 0.9);
+  color: #dbe8ff;
   font-size: 14px;
   font-weight: 600;
   display: flex;
@@ -86,9 +86,9 @@
   height: 42px;
   padding: 0 40px 0 36px;
   border-radius: 12px;
-  border: 1px solid #a8c0b0;
-  background: #f6fbf8;
-  color: #214233;
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  background: rgba(8, 30, 71, 0.9);
+  color: #dbe8ff;
   font-size: 14px;
   width: 100%;
   box-sizing: border-box;
@@ -99,12 +99,12 @@
 }
 
 .searchInput .input:focus {
-  border-color: #83a78f;
-  box-shadow: 0 0 0 3px rgba(131, 167, 143, 0.15);
+  border-color: rgba(112, 167, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(97, 155, 255, 0.24);
 }
 
 .searchInput .input::placeholder {
-  color: #7d9a88;
+  color: #8eaedc;
 }
 
 .searchInput .clearButton {
@@ -113,8 +113,8 @@
   height: 24px;
   border: none;
   border-radius: 999px;
-  background: rgba(33, 66, 51, 0.08);
-  color: #315546;
+  background: rgba(69, 114, 196, 0.22);
+  color: #b7d0f7;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +127,7 @@
 }
 
 .searchInput .clearButton:hover {
-  background: rgba(33, 66, 51, 0.16);
+  background: rgba(92, 140, 228, 0.34);
 }
 
 .searchInput .clearButton:active {
@@ -137,15 +137,15 @@
 .searchInput .icon {
   left: 12px;
   font-size: 14px;
-  color: #5b795f;
+  color: #8fb6ef;
 }
 
 .summaryCard {
   margin-top: 12px;
   padding: 10px 12px;
-  border: 1px solid #cadacc;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   border-radius: 12px;
-  background: #f4f9f5;
+  background: rgba(8, 29, 68, 0.86);
 }
 
 .summaryRow {
@@ -177,14 +177,14 @@
 }
 
 .trafficLabel {
-  color: #305544;
+  color: #b7d0f7;
   font-weight: 600;
   min-width: 60px;
 }
 
 .summaryItem {
   margin: 0;
-  color: #214233;
+  color: #dbe8ff;
   font-size: 14px;
   white-space: nowrap;
 }
@@ -192,7 +192,7 @@
 .goalsHeader {
   font-size: 15px;
   font-weight: 700;
-  color: #214233;
+  color: #dbe8ff;
   margin-bottom: 10px;
 }
 
@@ -209,10 +209,11 @@
 }
 
 .storeGoalCard {
-  border: 1px solid #d8e3db;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(8, 30, 71, 0.86);
   padding: 12px;
+  box-shadow: 0 8px 18px rgba(2, 12, 30, 0.32);
 }
 
 .storeGoalToggle {
@@ -222,18 +223,24 @@
   gap: 10px;
   align-items: center;
   padding: 10px 12px;
-  border: 1px solid #cdd8cf;
+  border: 1px solid rgba(110, 154, 232, 0.26);
   border-radius: 12px;
-  background: #eff6f0;
-  color: #1d3f30;
+  background: rgba(10, 35, 80, 0.82);
+  color: #dbe8ff;
   cursor: pointer;
   text-align: left;
   font: inherit;
   font-weight: 700;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .storeGoalToggle:hover {
-  background: #e6f1e8;
+  background: rgba(13, 40, 90, 0.82);
+  border-color: rgba(120, 170, 245, 0.52);
+  transform: translateY(-1px);
 }
 
 .storeGoalToggleIcon {
@@ -243,8 +250,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #dfece2;
-  color: #28503c;
+  border: 1px solid rgba(118, 168, 245, 0.48);
+  background: rgba(17, 53, 112, 0.88);
+  color: #d5e8ff;
   font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
@@ -254,7 +262,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #1d3f30;
+  color: #dbe8ff;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -264,9 +272,9 @@
 }
 
 .goalCard {
-  border: 1px solid #d8e3db;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   border-radius: 12px;
-  background: #fff;
+  background: rgba(8, 30, 71, 0.86);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -276,14 +284,14 @@
 .goalLabel {
   font-size: 13px;
   font-weight: 700;
-  color: #1d3f30;
+  color: #dbe8ff;
 }
 
 .goalStats {
   display: grid;
   grid-template-columns: 1fr;
   gap: 4px;
-  color: #315546;
+  color: #b7d0f7;
   font-size: 13px;
 }
 
@@ -324,15 +332,15 @@
 }
 
 .goalFactTag {
-  background: #eef7f0;
-  color: #22503b;
-  border: 1px solid #cfe0d3;
+  background: rgba(15, 50, 102, 0.68);
+  color: #d7e8ff;
+  border: 1px solid rgba(110, 154, 232, 0.24);
 }
 
 .goalFactTagMuted {
-  background: #f3f4f5;
-  color: #60716a;
-  border: 1px dashed #c9d4cb;
+  background: rgba(15, 42, 94, 0.76);
+  color: #9fbbe8;
+  border: 1px dashed rgba(110, 154, 232, 0.28);
 }
 
 .summaryMainGroup .summaryItem b,
@@ -347,9 +355,9 @@
 
 .desktopTableWrap {
   overflow-x: auto;
-  border: 1px solid #cadacc;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(8, 30, 71, 0.88);
 }
 
 .akbTable {
@@ -361,16 +369,16 @@
 
 .akbTable th,
 .akbTable td {
-  border: 1px solid #d8e3db;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   padding: 10px 12px;
   font-size: 14px;
-  color: #1f3d30;
+  color: #dbe8ff;
   line-height: 1.35;
   word-break: break-word;
 }
 
 .akbTable thead th {
-  background: #edf4ef;
+  background: rgba(10, 35, 80, 0.8);
   text-align: center;
   font-weight: 700;
 }
@@ -395,7 +403,7 @@
 }
 
 .storeNameCell {
-  color: #1d3f30;
+  color: #dbe8ff;
   font-weight: 700;
   line-height: 1.3;
   min-width: 0;
@@ -459,9 +467,9 @@
 }
 
 .mobileCard {
-  border: 1px solid #cadacc;
+  border: 1px solid rgba(110, 154, 232, 0.24);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(8, 30, 71, 0.88);
   padding: 12px;
 }
 
@@ -470,7 +478,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px 0;
-  border-bottom: 1px solid #e1ebe3;
+  border-bottom: 1px solid rgba(110, 154, 232, 0.22);
 }
 
 .mobileRow:last-child {
@@ -494,12 +502,12 @@
 .mobileLabel {
   font-size: 12px;
   font-weight: 700;
-  color: #5c6f61;
+  color: #9fbbe8;
 }
 
 .emptyCell {
   text-align: center;
-  color: #7a4a4a;
+  color: #f2b8b8;
   padding: 12px;
 }
 
@@ -578,9 +586,9 @@
     justify-content: center;
     min-height: 42px;
     padding: 8px 10px;
-    border: 1px solid #d8e5da;
+    border: 1px solid rgba(110, 154, 232, 0.24);
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(8, 30, 71, 0.82);
     text-align: center;
   }
 

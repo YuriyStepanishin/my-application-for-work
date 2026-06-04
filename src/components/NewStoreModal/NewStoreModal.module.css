@@ -16,7 +16,7 @@
   width: min(100%, 420px);
   max-width: 420px;
 
-  background: white;
+  background: rgba(8, 30, 71, 0.86);
 
   border-radius: 20px;
 
@@ -35,7 +35,7 @@
   font-size: 18px;
   font-weight: 600;
 
-  color: #2f4f3a;
+  color: #dbe8ff;
 
   margin-bottom: 4px;
 }
@@ -47,13 +47,13 @@
 
   border-radius: 14px;
 
-  border: 2px solid #b7cbbd;
+  border: 2px solid rgba(110, 154, 232, 0.3);
 
-  background: #e6f0e8;
+  background: rgba(10, 35, 80, 0.82);
 
   font-size: 16px;
 
-  color: #2f4f3a;
+  color: #dbe8ff;
 
   outline: none;
 
@@ -111,7 +111,7 @@
 
   background: transparent;
 
-  color: #2f4f3a;
+  color: #dbe8ff;
 
   font-size: 16px;
 

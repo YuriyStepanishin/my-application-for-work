@@ -18,8 +18,8 @@
 }
 
 .card {
-  background: white;
-  color: #1f3653;
+  background: rgba(8, 30, 71, 0.86);
+  color: #dbe8ff;
 
   padding: 28px;
 
@@ -65,7 +65,7 @@
 
 .card h2 {
   margin: 0;
-  color: #173a63;
+  color: #e7f1ff;
 }
 
 .card > div {

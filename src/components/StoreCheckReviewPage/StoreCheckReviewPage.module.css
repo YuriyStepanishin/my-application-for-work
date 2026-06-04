@@ -40,16 +40,16 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 2px solid #b7cbbd;
+  border: 2px solid rgba(110, 154, 232, 0.3);
   border-radius: 14px;
-  background: #e6f0e8;
+  background: rgba(10, 35, 80, 0.82);
   padding: 0 10px;
 }
 
 .statLabel {
   display: block;
   font-size: 10px;
-  color: #4d6b5a;
+  color: #9fbbe8;
   line-height: 1;
 }
 
@@ -58,7 +58,7 @@
   margin-top: 2px;
   font-size: 36px;
   line-height: 1;
-  color: #2f4f3a;
+  color: #dbe8ff;
 }
 
 .searchInput {
@@ -69,9 +69,9 @@
 .searchInput input {
   height: 56px;
   border-radius: 14px;
-  border: 2px solid #b7cbbd;
-  background: #e6f0e8;
-  color: #2f4f3a;
+  border: 2px solid rgba(110, 154, 232, 0.3);
+  background: rgba(10, 35, 80, 0.82);
+  color: #dbe8ff;
   font-size: 16px;
 }
 
@@ -80,10 +80,10 @@
   height: 56px;
   padding: 0 16px;
   border-radius: 14px;
-  border: 2px solid #b7cbbd;
-  background: #e6f0e8;
+  border: 2px solid rgba(110, 154, 232, 0.3);
+  background: rgba(10, 35, 80, 0.82);
   font-size: 16px;
-  color: #2f4f3a;
+  color: #dbe8ff;
   outline: none;
   cursor: pointer;
   appearance: none;
@@ -99,8 +99,8 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #c7d9f5;
+  background: rgba(8, 30, 71, 0.86);
+  border: 1px solid rgba(110, 154, 232, 0.3);
   border-radius: 14px;
   padding: 12px;
   box-shadow: 0 8px 20px rgba(16, 52, 108, 0.08);
@@ -115,13 +115,13 @@
 
 .store {
   margin: 0;
-  color: #12396f;
+  color: #e7f1ff;
   font-size: 18px;
 }
 
 .meta {
   margin: 4px 0 0;
-  color: #5d7398;
+  color: #9fbbe8;
   font-size: 13px;
 }
 
@@ -130,8 +130,8 @@
   margin: 10px 0;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #d3e0f4;
-  background: #edf3ff;
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  background: rgba(10, 36, 82, 0.84);
 }
 
 .photoLink {
@@ -152,7 +152,7 @@
   justify-content: center;
   gap: 8px;
   min-height: 180px;
-  color: #5f769a;
+  color: #9fbbe8;
   font-size: 14px;
 }
 
@@ -163,8 +163,8 @@
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 1px solid #cfdcf3;
-  background: #ffffff;
+  border: 1px solid rgba(110, 154, 232, 0.26);
+  background: rgba(8, 30, 71, 0.86);
   font-size: 22px;
 }
 
@@ -204,7 +204,7 @@
 
 .sectionTitle {
   margin: 10px 0 6px;
-  color: #173f76;
+  color: #b7d0f7;
   font-size: 14px;
 }
 
@@ -215,20 +215,20 @@
 }
 
 .sumItem {
-  border: 1px solid #d4e2f7;
+  border: 1px solid rgba(110, 154, 232, 0.26);
   border-radius: 10px;
   padding: 8px;
-  background: #f8fbff;
+  background: rgba(9, 35, 79, 0.82);
 }
 
 .sumLabel {
   display: block;
-  color: #4f678f;
+  color: #9fbbe8;
   font-size: 12px;
 }
 
 .sumValue {
-  color: #173d74;
+  color: #e3efff;
   font-size: 18px;
   font-weight: 700;
 }
@@ -302,8 +302,8 @@
   padding: 20px;
   border-radius: 12px;
   border: 1px solid rgba(183, 203, 189, 0.75);
-  background: rgba(255, 255, 255, 0.72);
-  color: #2f4f3a;
+  background: rgba(8, 30, 71, 0.76);
+  color: #dbe8ff;
   font-weight: 600;
   text-align: center;
 }
