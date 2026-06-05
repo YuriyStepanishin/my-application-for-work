@@ -476,6 +476,11 @@ export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
     return all;
   };
 
+  const totalSkuAcrossStores = (): number => {
+    const byStore = skuSetsByStore();
+    return [...byStore.values()].reduce((sum, set) => sum + set.size, 0);
+  };
+
   switch (column.metric) {
     case 'grn':
       return sumByThreshold('grn');
@@ -511,7 +516,7 @@ export function calcColumnFact(agentSales: Sale[], column: PlanColumn): number {
     }
 
     case 'total_sku': {
-      return skuSet().size;
+      return totalSkuAcrossStores();
     }
 
     case 'avg_sku': {
