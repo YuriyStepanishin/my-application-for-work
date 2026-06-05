@@ -81,39 +81,15 @@ function normalizeBrand(value: string): string {
   return normalizeValue(value);
 }
 
-function getExplicitTrademarkAccessList(trademarkAccess: string[]): string[] {
-  const seen = new Set<string>();
-
-  return trademarkAccess
-    .map(rule => rule.trim())
-    .filter(rule => Boolean(rule) && rule !== '*' && !rule.startsWith('!'))
-    .filter(rule => {
-      const key = normalizeBrand(rule);
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-}
-
-function canSeeByTrademarkAccessRule(
-  trademarkAccess: string[],
+function isBrandHiddenForProfile(
+  hiddenBrands: string[] | undefined,
   brand: string
 ): boolean {
-  const normalizedBrand = normalizeBrand(brand);
-  const normalizedRules = trademarkAccess.map(normalizeBrand).filter(Boolean);
-
-  const hasWildcard = normalizedRules.includes('*');
-  const denyRules = normalizedRules
-    .filter(rule => rule.startsWith('!'))
-    .map(rule => rule.slice(1))
-    .filter(Boolean);
-  const allowRules = normalizedRules.filter(
-    rule => rule !== '*' && !rule.startsWith('!')
+  const hidden = new Set(
+    (hiddenBrands ?? []).map(normalizeBrand).filter(Boolean)
   );
-
-  if (denyRules.includes(normalizedBrand)) return false;
-  if (allowRules.length > 0) return allowRules.includes(normalizedBrand);
-  return hasWildcard;
+  if (hidden.size === 0) return false;
+  return hidden.has(normalizeBrand(brand));
 }
 
 function getDepartmentsFromProfile(department: string): string[] {
@@ -178,27 +154,10 @@ export function canUserSeeBrand(
   const profile = userAccessMap[normalizedEmail];
   if (!profile) return true;
 
-  const trademarkAccess = profile.trademarkAccess ?? [];
-  if (trademarkAccess.length > 0) {
-    return canSeeByTrademarkAccessRule(trademarkAccess, brand);
-  }
+  // Explicit hidden brands from profile always win.
+  if (isBrandHiddenForProfile(profile.hiddenBrands, brand)) return false;
 
-  const hiddenBrands = profile.hiddenBrands ?? [];
-  if (hiddenBrands.length === 0) return true;
-
-  const hidden = new Set(hiddenBrands.map(normalizeBrand));
-  return !hidden.has(normalizeBrand(brand));
-}
-
-export function getUserTrademarkAccessBrands(email: string | null): string[] {
-  if (!email) return [];
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const profile = userAccessMap[normalizedEmail];
-  if (!profile) return [];
-
-  const trademarkAccess = profile.trademarkAccess ?? [];
-  return getExplicitTrademarkAccessList(trademarkAccess);
+  return true;
 }
 
 export function getRoleLabel(role: UserRole): string {

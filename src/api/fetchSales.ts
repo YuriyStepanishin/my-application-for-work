@@ -24,6 +24,7 @@ type MaybeObject = Record<string, unknown>;
 
 const AGENT_DEPARTMENT: Record<string, string> = {
   'Сотрудник ОРІМІ': 'Офіс',
+  'Сотрудник ОП': 'Офіс',
   'ВАКАНСІЯ ОФІС': 'Офіс',
   'Дюг Тетяна': "Кам'янець-Подільський відділ",
   'Івасишин Денис': "Кам'янець-Подільський відділ",
@@ -86,8 +87,16 @@ function resolveDepartment(raw: MaybeObject, agent: string): string {
   const explicitDepartment = cleanText(
     getFirstPresent(raw, ['відділ', 'Отдел'])
   );
+
+  const mappedDepartment = AGENT_DEPARTMENT[agent];
+  const normalizedExplicit = explicitDepartment.toLocaleLowerCase('uk-UA');
+  const isOtherDepartment = normalizedExplicit === 'інше';
+
+  if (explicitDepartment && !isOtherDepartment) return explicitDepartment;
+  if (mappedDepartment) return mappedDepartment;
   if (explicitDepartment) return explicitDepartment;
-  return AGENT_DEPARTMENT[agent] || 'Інше';
+
+  return 'Інше';
 }
 
 function normalizeSale(raw: MaybeObject): Sale {

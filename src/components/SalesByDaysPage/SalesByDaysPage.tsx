@@ -161,8 +161,7 @@ export default function SalesByDaysPage({ onBack }: { onBack: () => void }) {
         originalDate.getDate()
       );
 
-      // якщо сума >= 0 → мінус 1 день
-      if (amount >= 0) {
+      if (amount >= 0 && item.відділ !== 'Офіс') {
         adjustedDate.setDate(adjustedDate.getDate() - 1);
       }
 

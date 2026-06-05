@@ -19,7 +19,6 @@ type BrandData = {
   weight: number;
   stores: Set<string>;
   storeMap: Record<string, number>;
-  tt500: number;
 };
 
 type StoreDetailsRow = {
@@ -359,7 +358,6 @@ export default function SalesPage({
           weight: 0,
           stores: new Set(),
           storeMap: {},
-          tt500: 0,
         };
       }
 
@@ -374,10 +372,6 @@ export default function SalesPage({
 
       b.stores.add(key);
       b.storeMap[key] = (b.storeMap[key] || 0) + (i.сума || 0);
-    });
-
-    Object.values(result).forEach(b => {
-      b.tt500 = Object.values(b.storeMap).filter(sum => sum >= 500).length;
     });
 
     return result;
@@ -444,27 +438,20 @@ export default function SalesPage({
     let amount = 0;
     let weight = 0;
     const stores = new Set<string>();
-    const globalStoreMap: Record<string, number> = {};
 
     Object.values(grouped).forEach(b => {
       amount += b.amount;
       weight += b.weight;
 
-      Object.entries(b.storeMap).forEach(([store, sum]) => {
+      Object.keys(b.storeMap).forEach(store => {
         stores.add(store);
-        globalStoreMap[store] = (globalStoreMap[store] || 0) + sum;
       });
     });
-
-    const tt500 = Object.values(globalStoreMap).filter(
-      sum => sum >= 500
-    ).length;
 
     return {
       amount,
       weight,
       stores: stores.size,
-      tt500,
     };
   }, [grouped]);
 
@@ -1027,7 +1014,6 @@ export default function SalesPage({
         Блок: 'Зведення ТМ',
         Назва: b.brand,
         ТТ: b.stores.size,
-        'ТТ 500+': b.tt500,
         Вага: b.weight,
         Сума: b.amount,
       });
@@ -1037,7 +1023,6 @@ export default function SalesPage({
       Блок: 'Зведення ТМ',
       Назва: 'Усі торгові марки',
       ТТ: totalRow.stores,
-      'ТТ 500+': totalRow.tt500,
       Вага: totalRow.weight,
       Сума: totalRow.amount,
     });
@@ -1096,14 +1081,12 @@ export default function SalesPage({
     const summaryRows = brandsList.map(b => ({
       Бренд: b.brand,
       ТТ: b.stores.size,
-      'ТТ 500+': b.tt500,
       Вага: b.weight,
       Сума: b.amount,
     }));
     summaryRows.push({
       Бренд: 'Усі торгові марки',
       ТТ: totalRow.stores,
-      'ТТ 500+': totalRow.tt500,
       Вага: totalRow.weight,
       Сума: totalRow.amount,
     });
@@ -1327,7 +1310,6 @@ export default function SalesPage({
               <tr>
                 <th>Торгова марка</th>
                 <th>ТТ</th>
-                <th>500+</th>
                 <th>Вага</th>
                 <th>Сума</th>
               </tr>
@@ -1338,7 +1320,6 @@ export default function SalesPage({
                 <tr key={b.brand}>
                   <td className={styles.brandName}>{b.brand}</td>
                   <td>{b.stores.size}</td>
-                  <td>{b.tt500}</td>
                   <td>{format(b.weight)}</td>
                   <td>{format(b.amount)}</td>
                 </tr>
@@ -1350,9 +1331,6 @@ export default function SalesPage({
                 </td>
                 <td>
                   <b>{totalRow.stores}</b>
-                </td>
-                <td>
-                  <b>{totalRow.tt500}</b>
                 </td>
                 <td>
                   <b>{format(totalRow.weight)}</b>

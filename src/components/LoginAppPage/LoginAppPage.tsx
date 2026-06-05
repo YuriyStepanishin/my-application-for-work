@@ -28,7 +28,7 @@ export default function LoginAppPage({
       <h2>Вітаю 👋</h2>
 
       <div>
-        Ви увійшли як:
+        <span className={styles.email}>Ви увійшли як:</span>
         <div className={styles.email}>{email}</div>
         {roleLabel ? (
           <div className={styles.email}>Роль: {roleLabel}</div>

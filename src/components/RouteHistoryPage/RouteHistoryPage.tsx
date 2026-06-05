@@ -7,7 +7,6 @@ import SearchInput from '../SearchInput';
 import {
   canUserSeeBrand,
   getCurrentAuthorizedEmail,
-  getUserTrademarkAccessBrands,
   getUserRepresentative,
   getUserRole,
 } from '../../config/userRoles';
@@ -290,12 +289,6 @@ export default function RouteHistoryPage({ onBack }: Props) {
         .replace(/\s+/g, ' ')
         .toLocaleLowerCase('uk-UA');
 
-    const configuredBrands = getUserTrademarkAccessBrands(authEmail).filter(
-      brand => canUserSeeBrand(authEmail, brand)
-    );
-
-    const configuredSet = new Set(configuredBrands.map(normalized));
-
     const brandsFromData = [
       ...new Set(
         filtered
@@ -304,12 +297,7 @@ export default function RouteHistoryPage({ onBack }: Props) {
       ),
     ]
       .filter(brand => canUserSeeBrand(authEmail, brand))
-      .filter(brand => !configuredSet.has(normalized(brand)))
       .sort((a, b) => a.localeCompare(b, 'uk'));
-
-    if (configuredBrands.length > 0) {
-      return [...configuredBrands, ...brandsFromData];
-    }
 
     return [
       ...REQUIRED_BRANDS.filter(brand => canUserSeeBrand(authEmail, brand)),

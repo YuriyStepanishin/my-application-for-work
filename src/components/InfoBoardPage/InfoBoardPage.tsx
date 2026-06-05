@@ -115,7 +115,7 @@ function getWorkingDayStats(
     if (isWeekend) continue;
 
     total += 1;
-    if (currentDay <= day) elapsed += 1;
+    if (currentDay < day) elapsed += 1;
   }
 
   return { total, elapsed };
@@ -256,8 +256,10 @@ export default function InfoBoardPage({
 
   const currentMonthSales = useMemo(
     () =>
-      sales.filter(row =>
-        parseSaleDateKey(row.дата || '').startsWith(currentMonthKey)
+      sales.filter(
+        row =>
+          row.відділ !== 'Офіс' &&
+          parseSaleDateKey(row.дата || '').startsWith(currentMonthKey)
       ),
     [sales, currentMonthKey]
   );
@@ -378,7 +380,7 @@ export default function InfoBoardPage({
         const fact = calcColumnFact(currentMonthSales, column);
         const forecast =
           workingDayStats.elapsed > 0
-            ? (fact / workingDayStats.elapsed) * workingDayStats.total
+            ? (fact / workingDayStats.elapsed) * (workingDayStats.total - 1)
             : 0;
         const factPercent = plan > 0 ? (fact / plan) * 100 : 0;
         const forecastPercent = plan > 0 ? (forecast / plan) * 100 : 0;
